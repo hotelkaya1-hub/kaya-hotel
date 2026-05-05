@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>كايا هوتيل</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080f1e; --bg2:#0d1526; --bg3:#111d30;
+  --card:#172237; --card2:#1c293f; --border:#233047;
+  --accent:#c8a96e; --accent2:#e8c98e;
+  --text:#eef1f8; --text2:#8a96b2; --text3:#46536e;
+  --green:#34d399; --yellow:#fbbf24; --red:#f87171; --blue:#7c8cf8;
+  --airbnb:#ff5a5f; --gathern:#1dbf73; --whatsapp:#25d366; --manual:#7c8cf8;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Cairo',sans-serif;direction:rtl;}
+input,select,button{font-family:'Cairo',sans-serif;}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* layout */
+#app{height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#nav{flex-shrink:0;background:var(–bg2);border-top:1px solid var(–border);display:flex;padding-bottom:env(safe-area-inset-bottom);}
+
+/* nav items */
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:9px 0 7px;cursor:pointer;color:var(–text3);transition:color .2s;position:relative;border:none;background:none;}
+.nav-item.active{color:var(–accent);}
+.nav-item.active::before{content:’’;position:absolute;top:0;left:20%;right:20%;height:2px;background:var(–accent);border-radius:0 0 3px 3px;}
+.nav-icon{font-size:20px;margin-bottom:2px;line-height:1;}
+.nav-label{font-size:9px;font-weight:700;}
+.nav-badge{position:absolute;top:7px;right:16%;background:var(–accent);color:var(–bg);font-size:9px;font-weight:900;padding:1px 5px;border-radius:10px;}
+
+/* pages */
+.page{display:none;animation:fadeUp .3s ease;}
+.page.active{display:block;}
+
+/* cards */
+.card{background:var(–card);border:1px solid var(–border);border-radius:14px;overflow:hidden;}
+.card-pad{padding:16px;}
+
+/* stat grid */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;margin-bottom:18px;}
+.stat-card{background:var(–card);border:1px solid var(–border);border-radius:14px;padding:14px 16px;position:relative;overflow:hidden;}
+.stat-card::before{content:’’;position:absolute;top:-10px;left:-10px;width:55px;height:55px;border-radius:50%;opacity:.1;}
+.stat-card.gold::before{background:var(–accent);}
+.stat-card.green::before{background:var(–green);}
+.stat-card.red::before{background:var(–red);}
+.stat-card.blue::before{background:var(–blue);}
+.stat-icon{font-size:18px;margin-bottom:5px;}
+.stat-label{font-size:11px;color:var(–text3);font-weight:600;margin-bottom:3px;line-height:1.3;}
+.stat-value{font-size:18px;font-weight:900;line-height:1.1;}
+.stat-card.gold .stat-value{color:var(–accent);}
+.stat-card.green .stat-value{color:var(–green);}
+.stat-card.red .stat-value{color:var(–red);}
+.stat-card.blue .stat-value{color:var(–blue);}
+.stat-sub{font-size:10px;color:var(–text3);margin-top:3px;}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:‘Cairo’,sans-serif;font-weight:700;border:none;cursor:pointer;border-radius:10px;transition:opacity .15s;}
+.btn-primary{background:linear-gradient(135deg,var(–accent),var(–accent2));color:var(–bg);font-size:14px;padding:11px 22px;}
+.btn-sm{font-size:12px;padding:7px 14px;}
+.btn-ghost{background:transparent;color:var(–text2);border:1px solid var(–border);font-size:13px;padding:8px 16px;}
+.btn-danger{background:#f8717115;color:var(–red);border:1px solid #f8717130;font-size:11px;padding:5px 10px;border-radius:8px;}
+.btn-sync{background:rgba(200,169,110,.15);color:var(–accent);border:1px solid rgba(200,169,110,.3);font-size:12px;padding:8px 14px;}
+.btn-full{width:100%;}
+
+/* badges */
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+.badge-airbnb{background:rgba(255,90,95,.15);color:var(–airbnb);border:1px solid rgba(255,90,95,.3);}
+.badge-gathern{background:rgba(29,191,115,.15);color:var(–gathern);border:1px solid rgba(29,191,115,.3);}
+.badge-whatsapp{background:rgba(37,211,102,.15);color:var(–whatsapp);border:1px solid rgba(37,211,102,.3);}
+.badge-manual{background:rgba(124,140,248,.15);color:var(–manual);border:1px solid rgba(124,140,248,.3);}
+.badge-confirmed{background:rgba(52,211,153,.15);color:var(–green);}
+.badge-pending{background:rgba(251,191,36,.15);color:var(–yellow);}
+.badge-cancelled{background:rgba(248,113,113,.15);color:var(–red);}
+.badge-blocked{background:rgba(70,83,110,.15);color:var(–text3);}
+
+/* section */
+.section-title{font-size:13px;font-weight:800;color:var(–text2);margin-bottom:10px;}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+
+/* booking card */
+.booking-row{background:var(–card);border:1px solid var(–border);border-radius:14px;margin-bottom:10px;overflow:hidden;}
+.booking-row-top{display:flex;align-items:flex-start;gap:12px;padding:13px 14px;}
+.booking-src-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.booking-info{flex:1;min-width:0;}
+.booking-name{font-weight:800;font-size:13px;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.booking-apt{color:var(–accent);}
+.booking-meta{font-size:11px;color:var(–text3);margin-top:3px;}
+.booking-amount{font-weight:900;font-size:15px;color:var(–accent);white-space:nowrap;}
+.booking-actions{border-top:1px solid rgba(35,48,71,.5);padding:8px 14px;display:flex;gap:8px;justify-content:flex-end;}
+
+/* form */
+.form-group{margin-bottom:14px;}
+.form-label{font-size:11px;color:var(–text3);font-weight:700;margin-bottom:6px;display:block;letter-spacing:.5px;}
+.form-input{width:100%;background:var(–bg3);border:1px solid var(–border);border-radius:9px;padding:11px 14px;color:var(–text);font-size:14px;outline:none;transition:border-color .2s;}
+.form-input:focus{border-color:var(–accent);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.source-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.source-opt{padding:10px 4px;border-radius:10px;border:2px solid var(–border);text-align:center;cursor:pointer;font-size:11px;font-weight:700;color:var(–text3);transition:all .15s;}
+.source-opt.sel-airbnb{border-color:var(–airbnb);background:rgba(255,90,95,.1);color:var(–airbnb);}
+.source-opt.sel-gathern{border-color:var(–gathern);background:rgba(29,191,115,.1);color:var(–gathern);}
+.source-opt.sel-whatsapp{border-color:var(–whatsapp);background:rgba(37,211,102,.1);color:var(–whatsapp);}
+.source-opt.sel-manual{border-color:var(–manual);background:rgba(124,140,248,.1);color:var(–manual);}
+.exp-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.exp-type-opt{padding:9px 4px;border-radius:10px;border:2px solid var(–border);text-align:center;cursor:pointer;font-size:12px;font-weight:700;color:var(–text3);transition:all .15s;}
+.exp-type-opt.sel{border-color:var(–accent);background:rgba(200,169,110,.1);color:var(–accent);}
+.calc-box{background:rgba(200,169,110,.1);border:1px solid rgba(200,169,110,.25);border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:13px;color:var(–accent);font-weight:700;}
+
+/* calendar */
+.cal-card{background:var(–card);border:1px solid var(–border);border-radius:16px;margin-bottom:18px;overflow:hidden;}
+.cal-header{padding:13px 16px;background:var(–card2);border-bottom:1px solid var(–border);display:flex;align-items:center;justify-content:space-between;}
+.cal-apt-name{font-size:17px;font-weight:900;background:linear-gradient(135deg,var(–accent),var(–accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.cal-nav{padding:9px 16px;display:flex;align-items:center;justify-content:space-between;background:var(–bg3);border-bottom:1px solid var(–border);}
+.cal-nav-btn{background:var(–card);border:1px solid var(–border);color:var(–text2);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.cal-month{font-weight:700;font-size:13px;}
+.cal-days-header{display:grid;grid-template-columns:repeat(7,1fr);padding:8px 12px 4px;gap:2px;}
+.cal-day-label{text-align:center;font-size:9px;color:var(–text3);font-weight:700;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);padding:0 12px 14px;gap:2px;}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(–text2);border-radius:6px;cursor:default;position:relative;}
+.cal-day.today{color:var(–accent);font-weight:900;}
+.cal-day.today::after{content:’’;position:absolute;bottom:2px;width:4px;height:4px;border-radius:50%;background:var(–accent);}
+.cal-day.b-airbnb{background:rgba(255,90,95,.2);color:var(–airbnb);}
+.cal-day.b-gathern{background:rgba(29,191,115,.2);color:var(–gathern);}
+.cal-day.b-whatsapp{background:rgba(37,211,102,.2);color:var(–whatsapp);}
+.cal-day.b-manual{background:rgba(124,140,248,.2);color:var(–manual);}
+.cal-day.b-blocked{background:rgba(70,83,110,.2);color:var(–text3);}
+.cal-day.bs{border-radius:8px 0 0 8px;}
+.cal-day.be{border-radius:0 8px 8px 0;}
+.cal-day.bse{border-radius:8px;}
+.cal-day.b-tappable{cursor:pointer;}
+.cal-upcoming{border-top:1px solid var(–border);padding:10px 14px;}
+.cal-upcoming-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(35,48,71,.4);cursor:pointer;}
+.cal-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* sheet overlay */
+.sheet-overlay{display:none;position:fixed;inset:0;z-index:900;flex-direction:column;justify-content:flex-end;}
+.sheet-overlay.open{display:flex;}
+.sheet-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.sheet-box{position:relative;background:var(–bg2);border-radius:22px 22px 0 0;border:1px solid var(–border);border-bottom:none;max-height:92vh;display:flex;flex-direction:column;animation:slideUp .28s cubic-bezier(.32,.72,0,1);}
+.sheet-handle{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:36px;height:4px;border-radius:2px;background:var(–border);}
+.sheet-head{flex-shrink:0;padding:18px 20px 14px;border-bottom:1px solid var(–border);display:flex;align-items:center;justify-content:space-between;}
+.sheet-title{font-size:16px;font-weight:800;}
+.sheet-close{background:var(–card2);border:1px solid var(–border);color:var(–text3);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}
+.sheet-body{overflow-y:auto;padding:20px 20px 48px;-webkit-overflow-scrolling:touch;}
+
+/* toast */
+#toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(20px);background:var(–card2);border:1px solid rgba(200,169,110,.4);color:var(–accent);padding:10px 22px;border-radius:14px;font-size:13px;font-weight:700;z-index:9999;white-space:nowrap;opacity:0;transition:all .25s ease;pointer-events:none;max-width:90vw;text-align:center;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.error{border-color:rgba(248,113,113,.4);color:var(–red);}
+
+/* bar chart */
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:100px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.bar-val{font-size:8px;color:var(–accent);font-weight:700;}
+.bar-fill{width:100%;border-radius:5px 5px 0 0;transition:height .6s ease;}
+.bar-month{font-size:9px;color:var(–text3);}
+
+/* perf bar */
+.perf-row{margin-bottom:13px;}
+.perf-header{display:flex;justify-content:space-between;margin-bottom:5px;}
+.perf-name{font-size:14px;font-weight:900;color:var(–accent);}
+.perf-val{font-size:11px;color:var(–text2);}
+.perf-track{height:7px;background:var(–bg3);border-radius:4px;overflow:hidden;}
+.perf-fill{height:100%;background:linear-gradient(90deg,var(–accent),var(–accent2));border-radius:4px;transition:width .8s ease;}
+
+/* upcoming banner */
+.upcoming-banner{background:linear-gradient(135deg,rgba(200,169,110,.15),rgba(200,169,110,.06));border:1px solid rgba(200,169,110,.22);border-radius:14px;padding:14px;margin:0 16px 16px;}
+.upcoming-title{font-size:12px;color:var(–accent);font-weight:800;margin-bottom:10px;}
+.upcoming-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(200,169,110,.1);}
+
+/* filter bar */
+.filter-bar{display:grid;gap:8px;margin-bottom:14px;}
+.filter-bar.cols3{grid-template-columns:1fr 1fr 1fr;}
+.filter-bar.cols2{grid-template-columns:1fr 1fr;}
+.filter-select{background:var(–card);border:1px solid var(–border);border-radius:9px;padding:9px 10px;color:var(–text);font-size:12px;font-family:‘Cairo’,sans-serif;outline:none;width:100%;}
+
+/* price editor */
+.price-preview{background:rgba(200,169,110,.1);border:1px solid rgba(200,169,110,.25);border-radius:10px;padding:11px 14px;margin-bottom:14px;}
+</style>
+
+</head>
+<body>
+
+<div id="app">
+  <div id="content">
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page active">
+      <div style="padding:20px 16px 16px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(180deg,var(--bg2),transparent);">
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:1px;margin-bottom:2px;">إدارة العقارات</div>
+          <div style="font-size:24px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">كايا هوتيل</div>
+        </div>
+        <button class="btn btn-sync" onclick="syncAirbnb()" id="sync-btn-dash">
+          <span id="sync-icon-dash">🔄</span> سحب Airbnb
+        </button>
+      </div>
+      <div id="upcoming-banner" style="display:none;" class="upcoming-banner">
+        <div class="upcoming-title">📅 قادم قريباً</div>
+        <div id="upcoming-list"></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card gold"><div class="stat-icon">💰</div><div class="stat-label">إجمالي الإيرادات</div><div class="stat-value" id="s-revenue">0 ر.س</div></div>
+        <div class="stat-card green"><div class="stat-icon">📈</div><div class="stat-label">صافي الربح</div><div class="stat-value" id="s-net">0 ر.س</div></div>
+        <div class="stat-card blue"><div class="stat-icon">🏠</div><div class="stat-label">الحجوزات المؤكدة</div><div class="stat-value" id="s-count">0</div></div>
+        <div class="stat-card" style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;"><div class="stat-icon">📊</div><div class="stat-label">نسبة الإشغال</div><div class="stat-value" id="s-occ" style="color:var(--yellow);">0%</div></div>
+      </div>
+      <div style="padding:0 16px;margin-bottom:18px;">
+        <div class="section-title">أداء الشقق</div>
+        <div class="card card-pad" id="apt-perf"></div>
+      </div>
+      <div style="padding:0 16px;margin-bottom:100px;">
+        <div class="section-header">
+          <div class="section-title">آخر الحجوزات</div>
+          <button class="btn btn-ghost btn-sm" onclick="openSheet('booking')">+ حجز يدوي</button>
+        </div>
+        <div id="recent-list"></div>
+      </div>
+    </div>
+
+```
+<!-- CALENDARS -->
+<div id="page-calendars" class="page">
+  <div style="padding:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div style="font-size:16px;font-weight:900;">📅 التقويمات</div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-sync btn-sm" onclick="syncAirbnb()" id="sync-btn-cal"><span id="sync-icon-cal">🔄</span></button>
+      <button class="btn btn-primary btn-sm" onclick="openSheet('booking')">+ حجز</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:6px;padding:0 16px;margin-bottom:14px;flex-wrap:wrap;">
+    <span class="badge badge-airbnb">🏡 Airbnb</span>
+    <span class="badge badge-gathern">🏘 جاذر إن</span>
+    <span class="badge badge-whatsapp">💬 واتساب</span>
+    <span class="badge badge-manual">✍️ يدوي</span>
+  </div>
+  <div style="padding:0 16px 100px;" id="cals-container"></div>
+</div>
+
+<!-- BOOKINGS -->
+<div id="page-bookings" class="page">
+  <div style="padding:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div style="font-size:16px;font-weight:900;">🏠 الحجوزات <span id="book-count-label" style="font-size:13px;color:var(--text3);font-weight:500;"></span></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-sync btn-sm" onclick="syncAirbnb()" id="sync-btn-book"><span id="sync-icon-book">🔄</span></button>
+      <button class="btn btn-primary btn-sm" onclick="openSheet('booking')">+ حجز</button>
+    </div>
+  </div>
+  <div style="padding:0 16px;">
+    <div class="filter-bar cols3">
+      <select class="filter-select" id="f-apt" onchange="renderBookings()">
+        <option value="">كل الشقق</option>
+        <option>B18</option><option>410</option><option>411</option><option>412</option>
+      </select>
+      <select class="filter-select" id="f-src" onchange="renderBookings()">
+        <option value="">المصدر</option>
+        <option value="airbnb">Airbnb</option>
+        <option value="gathern">جاذر إن</option>
+        <option value="whatsapp">واتساب</option>
+        <option value="manual">يدوي</option>
+      </select>
+      <select class="filter-select" id="f-st" onchange="renderBookings()">
+        <option value="">الحالة</option>
+        <option value="confirmed">مؤكد</option>
+        <option value="pending">معلق</option>
+        <option value="cancelled">ملغي</option>
+      </select>
+    </div>
+    <div id="bookings-list" style="margin-bottom:100px;"></div>
+  </div>
+</div>
+
+<!-- REVENUE -->
+<div id="page-revenue" class="page">
+  <div style="padding:16px 16px 0;font-size:16px;font-weight:900;margin-bottom:16px;">💰 الإيرادات</div>
+  <div class="stat-grid">
+    <div class="stat-card gold"><div class="stat-icon">💰</div><div class="stat-label">إجمالي الإيرادات</div><div class="stat-value" id="r-total">0 ر.س</div></div>
+    <div class="stat-card green"><div class="stat-icon">📈</div><div class="stat-label">صافي الربح</div><div class="stat-value" id="r-net">0 ر.س</div></div>
+    <div class="stat-card red"><div class="stat-icon">📤</div><div class="stat-label">المصروفات</div><div class="stat-value" id="r-exp">0 ر.س</div></div>
+    <div class="stat-card blue"><div class="stat-icon">📋</div><div class="stat-label">عدد الحجوزات</div><div class="stat-value" id="r-count">0</div></div>
+  </div>
+  <div style="padding:0 16px;margin-bottom:14px;">
+    <div class="section-title">الإيرادات الشهرية</div>
+    <div class="card card-pad"><div class="bar-chart" id="monthly-chart"></div></div>
+  </div>
+  <div style="padding:0 16px;margin-bottom:100px;">
+    <div class="section-title">لكل شقة</div>
+    <div class="card card-pad" id="rev-by-apt"></div>
+  </div>
+</div>
+
+<!-- EXPENSES -->
+<div id="page-expenses" class="page">
+  <div style="padding:16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div style="font-size:16px;font-weight:900;">📤 المصروفات</div>
+    <button class="btn btn-primary btn-sm" onclick="openSheet('expense')">+ مصروف</button>
+  </div>
+  <div class="stat-grid">
+    <div class="stat-card red"><div class="stat-icon">📤</div><div class="stat-label">إجمالي المصروفات</div><div class="stat-value" id="e-total">0 ر.س</div></div>
+    <div class="stat-card green"><div class="stat-icon">📊</div><div class="stat-label">هامش الربح</div><div class="stat-value" id="e-margin">—</div></div>
+    <div class="stat-card gold"><div class="stat-icon">🔧</div><div class="stat-label">صيانة</div><div class="stat-value" id="e-maint">0 ر.س</div></div>
+    <div class="stat-card blue"><div class="stat-icon">🧹</div><div class="stat-label">تنظيف</div><div class="stat-value" id="e-clean">0 ر.س</div></div>
+  </div>
+  <div style="padding:0 16px;margin-bottom:100px;" id="expenses-list"></div>
+</div>
+```
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+
+  <div id="nav">
+    <button class="nav-item active" onclick="showPage('dashboard',this)">
+      <div class="nav-icon">📊</div><div class="nav-label">الرئيسية</div>
+    </button>
+    <button class="nav-item" onclick="showPage('calendars',this)">
+      <div class="nav-icon">📅</div><div class="nav-label">التقويم</div>
+    </button>
+    <button class="nav-item" onclick="showPage('bookings',this)">
+      <div class="nav-icon">🏠</div><div class="nav-label">حجوزات</div>
+      <span class="nav-badge" id="nav-badge" style="display:none;"></span>
+    </button>
+    <button class="nav-item" onclick="showPage('revenue',this)">
+      <div class="nav-icon">💰</div><div class="nav-label">إيرادات</div>
+    </button>
+    <button class="nav-item" onclick="showPage('expenses',this)">
+      <div class="nav-icon">📤</div><div class="nav-label">مصروفات</div>
+    </button>
+  </div>
+</div>
+
+<!-- SHEETS -->
+
+<div class="sheet-overlay" id="sheet-booking">
+  <div class="sheet-backdrop" onclick="closeSheet('booking')"></div>
+  <div class="sheet-box">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">📋 إضافة حجز</div>
+      <button class="sheet-close" onclick="closeSheet('booking')">✕</button>
+    </div>
+    <div class="sheet-body" id="booking-form-body"></div>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="sheet-expense">
+  <div class="sheet-backdrop" onclick="closeSheet('expense')"></div>
+  <div class="sheet-box">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">📤 إضافة مصروف</div>
+      <button class="sheet-close" onclick="closeSheet('expense')"></button>
+    </div>
+    <div class="sheet-body" id="expense-form-body"></div>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="sheet-detail">
+  <div class="sheet-backdrop" onclick="closeSheet('detail')"></div>
+  <div class="sheet-box">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">📋 تفاصيل الحجز</div>
+      <button class="sheet-close" onclick="closeSheet('detail')">✕</button>
+    </div>
+    <div class="sheet-body" id="detail-body"></div>
+  </div>
+</div>
+
+<div class="sheet-overlay" id="sheet-price">
+  <div class="sheet-backdrop" onclick="closeSheet('price')"></div>
+  <div class="sheet-box">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div class="sheet-title">💰 تحديد السعر</div>
+      <button class="sheet-close" onclick="closeSheet('price')">✕</button>
+    </div>
+    <div class="sheet-body" id="price-body"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const ICAL = {
+  B18:"https://www.airbnb.com/calendar/ical/1285461287411575293.ics?t=de226e070409411297ab9cfaf904586b",
+  410:"https://www.airbnb.com/calendar/ical/1406633781420810608.ics?t=b7e90b28ff3048b7805caa74026d1e3c",
+  411:"https://www.airbnb.com/calendar/ical/1604530963719117504.ics?t=bafe556cb83d43f19156808d4abeabe5",
+  412:"https://www.airbnb.com/calendar/ical/1419586141020094910.ics?t=2b39069591284aaeb1bc4d20f374f962",
+};
+const PROXIES = [
+  u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
+  u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u=>`https://thingproxy.freeboard.io/fetch/${u}`,
+];
+const APTS = ["B18","410","411","412"];
+const MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+const DAYS = ["أح","إث","ثل","أر","خم","جم","سب"];
+const SRC_INFO = {
+  airbnb:{icon:"🏡",label:"Airbnb",cls:"badge-airbnb",bg:"rgba(255,90,95,.15)",color:"#ff5a5f"},
+  gathern:{icon:"🏘",label:"جاذر إن",cls:"badge-gathern",bg:"rgba(29,191,115,.15)",color:"#1dbf73"},
+  whatsapp:{icon:"💬",label:"واتساب",cls:"badge-whatsapp",bg:"rgba(37,211,102,.15)",color:"#25d366"},
+  manual:{icon:"✍️",label:"يدوي",cls:"badge-manual",bg:"rgba(124,140,248,.15)",color:"#7c8cf8"},
+};
+const ST_INFO = {
+  confirmed:{label:"مؤكد",cls:"badge-confirmed"},
+  pending:{label:"معلق",cls:"badge-pending"},
+  cancelled:{label:"ملغي",cls:"badge-cancelled"},
+  blocked:{label:"موقوف",cls:"badge-blocked"},
+};
+const EXP_TYPES = [{t:"صيانة",i:"🔧"},{t:"تنظيف",i:"🧹"},{t:"كهرباء",i:"⚡"},{t:"ماء",i:"💧"},{t:"لوازم",i:"🛒"},{t:"أخرى",i:"📌"}];
+const EXP_ICONS = {صيانة:"🔧",تنظيف:"🧹",كهرباء:"⚡",ماء:"💧",لوازم:"🛒",أخرى:"📌"};
+
+let DB = loadDB();
+let calState = {};
+APTS.forEach(a=>{ calState[a] = DB.calState?.[a] || {y:new Date().getFullYear(),m:new Date().getMonth()}; });
+let syncing = false;
+let currentBookingForm = {source:"airbnb",apt:"B18",status:"confirmed"};
+let currentExpForm = {type:"صيانة",apt:"عام"};
+let priceBookingId = null;
+
+function loadDB(){
+  try{ const s=localStorage.getItem("kaya_v5"); if(s) return JSON.parse(s); }catch{}
+  return {bookings:[],expenses:[],lastSync:null,calState:{}};
+}
+function saveDB(){ try{ DB.calState=calState; localStorage.setItem("kaya_v5",JSON.stringify(DB)); }catch{} }
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+const today = () => new Date().toISOString().split("T")[0];
+const addDays = (d,n) => { const dt=new Date(d); dt.setDate(dt.getDate()+n); return dt.toISOString().split("T")[0]; };
+const nights = (a,b) => Math.max(0,Math.round((new Date(b)-new Date(a))/86400000));
+const fmtDate = s => !s?"—":new Date(s).toLocaleDateString("ar-SA",{day:"2-digit",month:"short"});
+const fmtMoney = n => (n||0).toLocaleString("ar-SA");
+
+function toast(msg, err=false){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.className=err?"error":"";
+  void t.offsetWidth; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),3500);
+}
+
+// ── iCAL ──────────────────────────────────────────────────────────────────────
+function parseICal(text, apt){
+  const results=[];
+  const content=text.replace(/\r\n[ \t]/g,"").replace(/\r\n/g,"\n");
+  const lines=content.split("\n");
+  let inE=false,cur={};
+  for(const line of lines){
+    const t=line.trim();
+    if(t==="BEGIN:VEVENT"){inE=true;cur={apt,source:"airbnb"};continue;}
+    if(t==="END:VEVENT"){
+      inE=false;
+      if(cur.checkin&&cur.checkout){
+        const sum=(cur.summary||"").toLowerCase();
+        const bl=sum.includes("not available")||sum.includes("blocked")||sum.includes("unavailable");
+        cur.guest=bl?"موقوف":cleanName(cur.summary);
+        cur.status=bl?"blocked":"confirmed";
+        cur.nights=nights(cur.checkin,cur.checkout);
+        cur.price=cur.price||0; cur.total=0;
+        cur.id=cur.uid||`${apt}-${cur.checkin}-${cur.guest}`;
+        results.push({...cur});
+      }
+      cur={};continue;
+    }
+    if(!inE) continue;
+    const ci=t.indexOf(":"); if(ci<0) continue;
+    const k=t.substring(0,ci),v=t.substring(ci+1);
+    if(k.startsWith("DTSTART")) cur.checkin=parseDt(v);
+    else if(k.startsWith("DTEND")) cur.checkout=parseDt(v);
+    else if(k.startsWith("SUMMARY")) cur.summary=v;
+    else if(k.startsWith("UID")) cur.uid=v;
+    else if(k.startsWith("DESCRIPTION")) cur.notes=v.replace(/\\n/g," ").substring(0,200);
+  }
+  return results;
+}
+function parseDt(s){ const c=s.trim().replace(/T.*/,""); return `${c.substring(0,4)}-${c.substring(4,6)}-${c.substring(6,8)}`; }
+function cleanName(s){ if(!s) return "ضيف"; return s.replace(/\(airbnb\)/gi,"").replace(/airbnb/gi,"").replace(/reserved/gi,"محجوز").trim()||"ضيف"; }
+
+async function fetchICal(url, apt){
+  for(const proxy of PROXIES){
+    try{
+      const r=await fetch(proxy(url),{signal:AbortSignal.timeout(12000),headers:{"Accept":"text/calendar,*/*"}});
+      if(!r.ok) continue;
+      const text=await r.text();
+      if(!text.includes("BEGIN:VCALENDAR")) continue;
+      return parseICal(text,apt);
+    }catch{ continue; }
+  }
+  throw new Error(apt);
+}
+
+async function syncAirbnb(){
+  if(syncing) return;
+  syncing=true;
+  setSyncUI(true);
+  toast("🔄 جاري سحب الحجوزات من Airbnb…");
+  const cutoff=addDays(today(),-10);
+  let all=[], errs=[];
+
+  await Promise.allSettled(APTS.map(async apt=>{
+    try{
+      const bks=await fetchICal(ICAL[apt],apt);
+      const filtered=bks.filter(b=>b.checkout>=cutoff);
+      all=all.concat(filtered);
+    }catch(e){ errs.push(apt); }
+  }));
+
+  if(all.length>0){
+    // احتفظ بالأسعار المحفوظة
+    const priceMap={};
+    DB.bookings.filter(b=>b.source==="airbnb"&&b.uid&&b.price).forEach(b=>{priceMap[b.uid]=b.price;});
+    // احتفظ بالحجوزات اليدوية
+    const manual=DB.bookings.filter(b=>b.source!=="airbnb");
+    // أضف الأسعار
+    const withPrices=all.map(b=>{
+      const p=b.uid?priceMap[b.uid]||0:0;
+      return {...b,price:p,total:b.nights*p};
+    });
+    // إزالة المكرر
+    const seen=new Set(),deduped=[];
+    for(const b of withPrices){ const k=b.uid||b.id; if(!seen.has(k)){seen.add(k);deduped.push(b);} }
+    DB.bookings=[...manual,...deduped];
+    DB.lastSync=new Date().toISOString();
+    saveDB();
+    const real=all.filter(b=>b.status!=="blocked").length;
+    toast(`✅ تم سحب ${real} حجز${errs.length?` (فشل: ${errs.join(",")})`:""}`);
+  } else {
+    toast(errs.length?`❌ فشل السحب: ${errs.join(", ")} — تحقق من الإنترنت`:"ℹ️ لا حجوزات في آخر 10 أيام",true);
+  }
+  syncing=false;
+  setSyncUI(false);
+  renderAll();
+}
+
+function setSyncUI(on){
+  ["dash","cal","book"].forEach(id=>{
+    const el=document.getElementById(`sync-icon-${id}`);
+    if(el) el.style.cssText=on?"display:inline-block;animation:spin 1s linear infinite":"";
+  });
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────────
+function showPage(id, btn){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  if(btn) btn.classList.add("active");
+  if(id==="calendars") renderCalendars();
+  if(id==="bookings") renderBookings();
+  if(id==="revenue") renderRevenue();
+  if(id==="expenses") renderExpenses();
+  if(id==="dashboard") renderDashboard();
+}
+
+// ── SHEETS ────────────────────────────────────────────────────────────────────
+function openSheet(id){
+  if(id==="booking") buildBookingForm();
+  if(id==="expense") buildExpenseForm();
+  document.getElementById("sheet-"+id).classList.add("open");
+}
+function closeSheet(id){ document.getElementById("sheet-"+id).classList.remove("open"); }
+
+// ── RENDER DASHBOARD ──────────────────────────────────────────────────────────
+function renderDashboard(){
+  const confirmed=DB.bookings.filter(b=>b.status==="confirmed");
+  const revenue=confirmed.reduce((s,b)=>s+b.total,0);
+  const expTotal=DB.expenses.reduce((s,e)=>s+e.amount,0);
+  const net=revenue-expTotal;
+  const now=new Date();
+  const days=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const totalN=APTS.reduce((s,a)=>s+confirmed.filter(b=>b.apt===a).reduce((ss,b)=>ss+b.nights,0),0);
+  const occ=Math.min(100,Math.round((totalN/(APTS.length*days))*100));
+
+  document.getElementById("s-revenue").textContent=fmtMoney(revenue)+" ر.س";
+  document.getElementById("s-net").textContent=fmtMoney(net)+" ر.س";
+  document.getElementById("s-count").textContent=confirmed.length;
+  document.getElementById("s-occ").textContent=occ+"%";
+
+  // upcoming
+  const upcoming=DB.bookings.filter(b=>b.status==="confirmed"&&b.checkin>=today()).sort((a,b)=>new Date(a.checkin)-new Date(b.checkin)).slice(0,3);
+  const banner=document.getElementById("upcoming-banner");
+  if(upcoming.length){
+    banner.style.display="block";
+    document.getElementById("upcoming-list").innerHTML=upcoming.map(b=>`
+      <div class="upcoming-row">
+        <div><span style="font-weight:700;font-size:13px;">${b.guest}</span> <span style="font-size:11px;color:var(--text3);">· ${b.apt}</span></div>
+        <div style="font-size:11px;color:var(--accent);font-weight:700;">${fmtDate(b.checkin)}</div>
+      </div>`).join("");
+  } else banner.style.display="none";
+
+  // perf bars
+  const maxR=Math.max(...APTS.map(a=>confirmed.filter(b=>b.apt===a).reduce((s,b)=>s+b.total,0)),1);
+  document.getElementById("apt-perf").innerHTML=APTS.map(apt=>{
+    const r=confirmed.filter(b=>b.apt===apt).reduce((s,b)=>s+b.total,0);
+    const n=confirmed.filter(b=>b.apt===apt).reduce((s,b)=>s+b.nights,0);
+    const pct=Math.round((r/maxR)*100);
+    return `<div class="perf-row">
+      <div class="perf-header"><span class="perf-name">${apt}</span><span class="perf-val">${n} ليلة · ${fmtMoney(r)} ر.س</span></div>
+      <div class="perf-track"><div class="perf-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join("");
+
+  // recent
+  const recent=[...DB.bookings].filter(b=>b.status!=="blocked").sort((a,b)=>new Date(b.checkin)-new Date(a.checkin)).slice(0,7);
+  const si=SRC_INFO;
+  document.getElementById("recent-list").innerHTML=recent.length?recent.map(b=>`
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
+      <div style="width:38px;height:38px;border-radius:9px;background:${si[b.source]?.bg||"var(--bg3)"};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${si[b.source]?.icon||"🏠"}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${b.guest} <span style="color:var(--accent);">· ${b.apt}</span></div>
+        <div style="font-size:11px;color:var(--text3);">${fmtDate(b.checkin)} ← ${fmtDate(b.checkout)} · ${b.nights} ليلة</div>
+      </div>
+      <div style="text-align:left;flex-shrink:0;">${b.total>0?`<div style="font-weight:900;font-size:13px;color:var(--accent);">${fmtMoney(b.total)} ر.س</div>`:`<span class="badge ${ST_INFO[b.status]?.cls||""}">${ST_INFO[b.status]?.label||""}</span>`}</div>
+    </div>`).join(""):
+    `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:36px;text-align:center;">
+      <div style="font-size:40px;margin-bottom:10px;">📭</div>
+      <div style="color:var(--text3);font-size:13px;margin-bottom:16px;">اضغط "سحب Airbnb" لجلب حجوزاتك</div>
+    </div>`;
+
+  // badge
+  updateBadge();
+}
+
+function updateBadge(){
+  const n=DB.bookings.filter(b=>b.status==="confirmed").length;
+  const badge=document.getElementById("nav-badge");
+  if(n>0){badge.textContent=n;badge.style.display="";}else badge.style.display="none";
+  const cl=document.getElementById("book-count-label");
+  if(cl) cl.textContent=`(${DB.bookings.filter(b=>b.status!=="blocked").length})`;
+}
+
+// ── RENDER CALENDARS ──────────────────────────────────────────────────────────
+function renderCalendars(){
+  document.getElementById("cals-container").innerHTML=APTS.map(apt=>buildCalHTML(apt)).join("");
+}
+
+function buildCalHTML(apt){
+  const {y,m}=calState[apt];
+  const firstDay=new Date(y,m,1).getDay();
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const now=new Date();
+  const todayStr=today();
+  const aptB=DB.bookings.filter(b=>b.apt===apt);
+
+  function getInfo(d){
+    const date=new Date(y,m,d);
+    for(const b of aptB){
+      const cin=new Date(b.checkin),cout=new Date(b.checkout);
+      if(date>=cin&&date<cout){
+        const isS=date.toDateString()===cin.toDateString();
+        const nx=new Date(date);nx.setDate(nx.getDate()+1);
+        return {b,isS,isE:nx>=cout};
+      }
+    }
+    return null;
+  }
+
+  let cells="";
+  for(let i=0;i<firstDay;i++) cells+="<div></div>";
+  for(let d=1;d<=daysInMonth;d++){
+    const info=getInfo(d);
+    const ds=`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const isToday=new Date(y,m,d).toDateString()===now.toDateString();
+    let cls="cal-day";
+    if(isToday) cls+=" today";
+    if(info){
+      cls+=` b-${info.b.source==="airbnb"?(info.b.status==="blocked"?"blocked":"airbnb"):info.b.source}`;
+      if(info.isS&&info.isE) cls+=" bse";
+      else if(info.isS) cls+=" bs";
+      else if(info.isE) cls+=" be";
+      if(info.b.status!=="blocked") cls+=" b-tappable";
+    }
+    const onclick=info&&info.b.status!=="blocked"?`onclick="openDetail('${info.b.id}')"` :"";
+    cells+=`<div class="${cls}" ${onclick}>${d}</div>`;
+  }
+
+  const upcoming=aptB.filter(b=>b.status!=="blocked"&&b.checkout>=todayStr).sort((a,b)=>new Date(a.checkin)-new Date(b.checkin)).slice(0,3);
+  const upHtml=upcoming.length?`<div class="cal-upcoming">${upcoming.map(b=>`
+    <div class="cal-upcoming-row" onclick="openDetail('${b.id}')">
+      <div class="cal-dot" style="background:${SRC_INFO[b.source]?.color||"#888"}"></div>
+      <div style="flex:1;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${b.guest}</div>
+      <div style="font-size:11px;color:var(--text3);white-space:nowrap;">${fmtDate(b.checkin)}←${fmtDate(b.checkout)}</div>
+    </div>`).join("")}</div>`:"";
+
+  return `<div class="cal-card">
+    <div class="cal-header">
+      <div class="cal-apt-name">شقة ${apt}</div>
+      <span class="badge badge-airbnb">🏡 Airbnb</span>
+    </div>
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calMove('${apt}',-1)">›</button>
+      <span class="cal-month">${MONTHS[m]} ${y}</span>
+      <button class="cal-nav-btn" onclick="calMove('${apt}',1)">‹</button>
+    </div>
+    <div class="cal-days-header">${DAYS.map(d=>`<div class="cal-day-label">${d}</div>`).join("")}</div>
+    <div class="cal-days">${cells}</div>
+    ${upHtml}
+  </div>`;
+}
+
+function calMove(apt,dir){
+  let {y,m}=calState[apt];
+  m+=dir; if(m<0){m=11;y--;} if(m>11){m=0;y++;}
+  calState[apt]={y,m}; saveDB(); renderCalendars();
+}
+
+// ── RENDER BOOKINGS ───────────────────────────────────────────────────────────
+function renderBookings(){
+  const fa=document.getElementById("f-apt")?.value||"";
+  const fs=document.getElementById("f-src")?.value||"";
+  const fst=document.getElementById("f-st")?.value||"";
+  let list=[...DB.bookings].filter(b=>b.status!=="blocked").sort((a,b)=>new Date(b.checkin)-new Date(a.checkin));
+  if(fa) list=list.filter(b=>b.apt===fa);
+  if(fs) list=list.filter(b=>b.source===fs);
+  if(fst) list=list.filter(b=>b.status===fst);
+
+  document.getElementById("bookings-list").innerHTML=list.length?list.map(b=>{
+    const si=SRC_INFO[b.source]||{};
+    return `<div class="booking-row">
+      <div class="booking-row-top">
+        <div class="booking-src-icon" style="background:${si.bg||"var(--bg3)"};">${si.icon||"🏠"}</div>
+        <div class="booking-info">
+          <div class="booking-name">${b.guest} <span class="booking-apt">· ${b.apt}</span></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0;">
+            <span class="badge ${si.cls||""}">${si.icon||""} ${si.label||b.source}</span>
+            <span class="badge ${ST_INFO[b.status]?.cls||""}">● ${ST_INFO[b.status]?.label||b.status}</span>
+          </div>
+          <div class="booking-meta">${fmtDate(b.checkin)} ← ${fmtDate(b.checkout)} · ${b.nights} ليلة</div>
+        </div>
+        <div style="text-align:left;flex-shrink:0;">
+          ${b.total>0?`<div class="booking-amount">${fmtMoney(b.total)}<span style="font-size:10px;color:var(--text3);"> ر.س</span></div>`
+          :`<button class="btn btn-sm" style="background:var(--accent)15;border:1px solid var(--accent)30;color:var(--accent);font-size:11px;padding:5px 10px;border-radius:8px;" onclick="openPriceSheet('${b.id}')">+ سعر</button>`}
+        </div>
+      </div>
+      <div class="booking-actions">
+        ${b.source==="airbnb"&&b.total===0?`<button class="btn btn-sm" style="background:var(--accent)15;border:1px solid var(--accent)30;color:var(--accent);font-size:11px;" onclick="openPriceSheet('${b.id}')">💰 أضف السعر</button>`:""}
+        <button class="btn btn-danger" onclick="openDetail('${b.id}')">👁 عرض</button>
+        <button class="btn btn-danger" onclick="deleteBooking('${b.id}')">🗑 حذف</button>
+      </div>
+    </div>`;
+  }).join(""):`<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:36px;text-align:center;"><div style="font-size:40px;margin-bottom:8px;">📭</div><div style="color:var(--text3);font-size:13px;">لا توجد حجوزات</div></div>`;
+  updateBadge();
+}
+
+// ── RENDER REVENUE ────────────────────────────────────────────────────────────
+function renderRevenue(){
+  const confirmed=DB.bookings.filter(b=>b.status==="confirmed");
+  const revenue=confirmed.reduce((s,b)=>s+b.total,0);
+  const expTotal=DB.expenses.reduce((s,e)=>s+e.amount,0);
+  document.getElementById("r-total").textContent=fmtMoney(revenue)+" ر.س";
+  document.getElementById("r-net").textContent=fmtMoney(revenue-expTotal)+" ر.س";
+  document.getElementById("r-exp").textContent=fmtMoney(expTotal)+" ر.س";
+  document.getElementById("r-count").textContent=confirmed.length;
+
+  const now=new Date();
+  const months=Array.from({length:6},(_,i)=>{
+    const d=new Date(now.getFullYear(),now.getMonth()-(5-i),1);
+    const r=confirmed.filter(b=>{const bd=new Date(b.checkin);return bd.getMonth()===d.getMonth()&&bd.getFullYear()===d.getFullYear();}).reduce((s,b)=>s+b.total,0);
+    return {label:MONTHS[d.getMonth()].slice(0,3),rev:r,cur:d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()};
+  });
+  const maxR=Math.max(...months.map(m=>m.rev),1);
+  document.getElementById("monthly-chart").innerHTML=months.map(m=>`
+    <div class="bar-col">
+      ${m.rev>0?`<div class="bar-val">${Math.round(m.rev/1000)}k</div>`:""}
+      <div class="bar-fill" style="height:${Math.max(6,Math.round((m.rev/maxR)*85))}px;background:${m.cur?"linear-gradient(180deg,var(--accent),rgba(200,169,110,.5))":"linear-gradient(180deg,rgba(200,169,110,.6),rgba(200,169,110,.25))"}"></div>
+      <div class="bar-month" style="color:${m.cur?"var(--accent)":"var(--text3)"};">${m.label}</div>
+    </div>`).join("");
+
+  const maxRev=Math.max(...APTS.map(a=>confirmed.filter(b=>b.apt===a).reduce((s,b)=>s+b.total,0)),1);
+  document.getElementById("rev-by-apt").innerHTML=APTS.map(apt=>{
+    const r=confirmed.filter(b=>b.apt===apt).reduce((s,b)=>s+b.total,0);
+    const n=confirmed.filter(b=>b.apt===apt).reduce((s,b)=>s+b.nights,0);
+    const cnt=confirmed.filter(b=>b.apt===apt).length;
+    return `<div class="perf-row">
+      <div class="perf-header">
+        <span class="perf-name">${apt}</span>
+        <span class="perf-val">${cnt} حجز · ${n} ليلة · <strong style="color:var(--text);">${fmtMoney(r)} ر.س</strong></span>
+      </div>
+      <div class="perf-track"><div class="perf-fill" style="width:${Math.round((r/maxRev)*100)}%"></div></div>
+    </div>`;
+  }).join("");
+}
+
+// ── RENDER EXPENSES ───────────────────────────────────────────────────────────
+function renderExpenses(){
+  const total=DB.expenses.reduce((s,e)=>s+e.amount,0);
+  const revenue=DB.bookings.filter(b=>b.status==="confirmed").reduce((s,b)=>s+b.total,0);
+  const maint=DB.expenses.filter(e=>e.type==="صيانة").reduce((s,e)=>s+e.amount,0);
+  const clean=DB.expenses.filter(e=>e.type==="تنظيف").reduce((s,e)=>s+e.amount,0);
+  document.getElementById("e-total").textContent=fmtMoney(total)+" ر.س";
+  document.getElementById("e-margin").textContent=revenue?Math.round(((revenue-total)/revenue)*100)+"%":"—";
+  document.getElementById("e-maint").textContent=fmtMoney(maint)+" ر.س";
+  document.getElementById("e-clean").textContent=fmtMoney(clean)+" ر.س";
+
+  const sorted=[...DB.expenses].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById("expenses-list").innerHTML=sorted.length?sorted.map(e=>`
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;">
+      <div style="width:42px;height:42px;border-radius:10px;background:rgba(200,169,110,.1);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${EXP_ICONS[e.type]||"📌"}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${e.desc||e.type} <span style="color:var(--accent);">· ${e.apt}</span></div>
+        <div style="font-size:11px;color:var(--text3);">${fmtDate(e.date)} · ${e.type}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+        <div style="font-weight:900;font-size:15px;color:var(--red);white-space:nowrap;">${fmtMoney(e.amount)} ر.س</div>
+        <button class="btn btn-danger" onclick="deleteExpense(${e.id})">🗑</button>
+      </div>
+    </div>`).join(""):`<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:36px;text-align:center;"><div style="font-size:40px;margin-bottom:8px;">📭</div><div style="color:var(--text3);font-size:13px;">لا توجد مصروفات</div></div>`;
+}
+
+// ── DETAIL SHEET ──────────────────────────────────────────────────────────────
+function openDetail(id){
+  const b=DB.bookings.find(x=>x.id==id); if(!b) return;
+  const si=SRC_INFO[b.source]||{};
+  document.getElementById("detail-body").innerHTML=`
+    <div style="display:flex;gap:14px;align-items:center;margin-bottom:20px;">
+      <div style="width:52px;height:52px;border-radius:14px;background:${si.bg||"var(--bg3)"};display:flex;align-items:center;justify-content:center;font-size:26px;">${si.icon||"🏠"}</div>
+      <div>
+        <div style="font-size:18px;font-weight:900;">${b.guest}</div>
+        <div style="display:flex;gap:6px;margin-top:4px;">
+          <span class="badge ${si.cls||""}">${si.icon} ${si.label||b.source}</span>
+          <span class="badge ${ST_INFO[b.status]?.cls||""}">● ${ST_INFO[b.status]?.label||b.status}</span>
+        </div>
+      </div>
+    </div>
+    ${[["الشقة",b.apt],["الدخول",fmtDate(b.checkin)],["الخروج",fmtDate(b.checkout)],["الليالي",b.nights+" ليلة"],["السعر/ليلة",b.price?fmtMoney(b.price)+" ر.س":"لم يُحدد"],["الإجمالي",b.total?fmtMoney(b.total)+" ر.س":"لم يُحدد"]].map(([k,v])=>`
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);">
+        <span style="color:var(--text3);font-size:13px;">${k}</span>
+        <span style="font-weight:700;font-size:13px;color:${k==="الإجمالي"?"var(--accent)":"var(--text)"};">${v}</span>
+      </div>`).join("")}
+    ${b.notes?`<div style="margin-top:14px;background:var(--bg3);border-radius:12px;padding:14px;font-size:13px;color:var(--text2);line-height:1.8;">${b.notes}</div>`:""}
+    ${b.total===0&&b.status!=="blocked"?`<button class="btn btn-primary btn-full" style="margin-top:16px;" onclick="closeSheet('detail');openPriceSheet('${b.id}')">💰 أضف السعر</button>`:""}
+  `;
+  document.getElementById("sheet-detail").classList.add("open");
+}
+
+// ── PRICE SHEET ───────────────────────────────────────────────────────────────
+function openPriceSheet(id){
+  priceBookingId=id;
+  const b=DB.bookings.find(x=>x.id==id); if(!b) return;
+  document.getElementById("price-body").innerHTML=`
+    <div style="background:var(--card);border-radius:12px;padding:14px;margin-bottom:16px;">
+      <div style="font-size:14px;font-weight:700;margin-bottom:4px;">${b.guest} · <span style="color:var(--accent);">${b.apt}</span></div>
+      <div style="font-size:12px;color:var(--text3);">${fmtDate(b.checkin)} ← ${fmtDate(b.checkout)} (${b.nights} ليلة)</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">السعر / ليلة (ر.س)</label>
+      <input type="number" id="price-input" class="form-input" placeholder="0" value="${b.price||""}" oninput="updatePriceCalc(${b.nights})">
+    </div>
+    <div id="price-calc" class="price-preview" style="display:none;"></div>
+    <button class="btn btn-primary btn-full" onclick="savePrice()">✅ حفظ السعر</button>
+  `;
+  document.getElementById("sheet-price").classList.add("open");
+}
+
+function updatePriceCalc(n){
+  const p=parseFloat(document.getElementById("price-input").value)||0;
+  const el=document.getElementById("price-calc");
+  if(p>0){el.style.display="block";el.innerHTML=`💰 ${n} ليلة × ${fmtMoney(p)} = <strong>${fmtMoney(n*p)} ر.س</strong>`;}
+  else el.style.display="none";
+}
+
+function savePrice(){
+  const p=parseFloat(document.getElementById("price-input").value)||0;
+  DB.bookings=DB.bookings.map(b=>b.id==priceBookingId?{...b,price:p,total:b.nights*p}:b);
+  saveDB(); closeSheet("price"); toast("✅ تم حفظ السعر"); renderAll();
+}
+
+// ── BOOKING FORM ──────────────────────────────────────────────────────────────
+function buildBookingForm(){
+  const f=currentBookingForm;
+  document.getElementById("booking-form-body").innerHTML=`
+    <div class="form-group">
+      <label class="form-label">المصدر</label>
+      <div class="source-grid">
+        ${Object.entries(SRC_INFO).map(([k,s])=>`
+          <div class="source-opt${f.source===k?" sel-"+k:""}" onclick="selSource('${k}')">
+            <div style="font-size:20px;margin-bottom:2px;">${s.icon}</div>${s.label}
+          </div>`).join("")}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">الشقة</label>
+        <select id="b-apt" class="form-input">${APTS.map(a=>`<option${a===f.apt?" selected":""}>${a}</option>`).join("")}</select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">الحالة</label>
+        <select id="b-status" class="form-input">
+          <option value="confirmed"${f.status==="confirmed"?" selected":""}>مؤكد</option>
+          <option value="pending"${f.status==="pending"?" selected":""}>معلق</option>
+          <option value="cancelled"${f.status==="cancelled"?" selected":""}>ملغي</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">اسم الضيف</label>
+      <input id="b-guest" class="form-input" placeholder="اسم الضيف">
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">تاريخ الدخول</label><input type="date" id="b-checkin" class="form-input" value="${today()}"></div>
+      <div class="form-group"><label class="form-label">تاريخ الخروج</label><input type="date" id="b-checkout" class="form-input" value="${addDays(today(),1)}"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">السعر / ليلة (ر.س)</label>
+      <input type="number" id="b-price" class="form-input" placeholder="0" oninput="updateBookingCalc()">
+    </div>
+    <div id="b-calc" class="calc-box" style="display:none;"></div>
+    <div class="form-group">
+      <label class="form-label">ملاحظات (اختياري)</label>
+      <input id="b-notes" class="form-input" placeholder="أي ملاحظات...">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveBooking()">💾 حفظ الحجز</button>
+  `;
+}
+
+function selSource(k){
+  currentBookingForm.source=k;
+  document.querySelectorAll(".source-opt").forEach(el=>{
+    el.className="source-opt"+(el.onclick.toString().includes(`'${k}'`)?" sel-"+k:"");
+  });
+  buildBookingForm();
+}
+
+function updateBookingCalc(){
+  const cin=document.getElementById("b-checkin")?.value;
+  const cout=document.getElementById("b-checkout")?.value;
+  const p=parseFloat(document.getElementById("b-price")?.value)||0;
+  const el=document.getElementById("b-calc"); if(!el) return;
+  if(cin&&cout&&cin<cout&&p>0){
+    const n=nights(cin,cout);
+    el.style.display="block";
+    el.innerHTML=`💰 ${n} ليلة × ${fmtMoney(p)} = <strong>${fmtMoney(n*p)} ر.س</strong>`;
+  } else el.style.display="none";
+}
+
+function saveBooking(){
+  const guest=document.getElementById("b-guest")?.value?.trim();
+  const cin=document.getElementById("b-checkin")?.value;
+  const cout=document.getElementById("b-checkout")?.value;
+  const price=parseFloat(document.getElementById("b-price")?.value)||0;
+  const apt=document.getElementById("b-apt")?.value;
+  const status=document.getElementById("b-status")?.value;
+  const notes=document.getElementById("b-notes")?.value;
+  if(!guest){toast("أدخل اسم الضيف",true);return;}
+  if(!cin||!cout||cin>=cout){toast("تحقق من التواريخ",true);return;}
+  const n=nights(cin,cout);
+  const b={id:Date.now()+Math.random(),apt,guest,source:currentBookingForm.source,checkin:cin,checkout:cout,price,nights:n,total:n*price,status,notes:notes||""};
+  DB.bookings.push(b); saveDB(); closeSheet("booking"); toast("✅ تم حفظ الحجز"); renderAll();
+}
+
+// ── EXPENSE FORM ──────────────────────────────────────────────────────────────
+function buildExpenseForm(){
+  const f=currentExpForm;
+  document.getElementById("expense-form-body").innerHTML=`
+    <div class="form-group">
+      <label class="form-label">النوع</label>
+      <div class="exp-type-grid">
+        ${EXP_TYPES.map(({t,i})=>`<div class="exp-type-opt${f.type===t?" sel":""}" onclick="selExpType('${t}')">${i} ${t}</div>`).join("")}
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">الشقة</label>
+        <select id="e-apt" class="form-input">
+          <option value="عام"${f.apt==="عام"?" selected":""}>عام</option>
+          ${APTS.map(a=>`<option${a===f.apt?" selected":""}>${a}</option>`).join("")}
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">التاريخ</label><input type="date" id="e-date" class="form-input" value="${today()}"></div>
+    </div>
+    <div class="form-group"><label class="form-label">الوصف</label><input id="e-desc" class="form-input" placeholder="وصف المصروف"></div>
+    <div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input type="number" id="e-amount" class="form-input" placeholder="0"></div>
+    <button class="btn btn-primary btn-full" onclick="saveExpense()">💾 حفظ المصروف</button>
+  `;
+}
+
+function selExpType(t){
+  currentExpForm.type=t;
+  document.querySelectorAll(".exp-type-opt").forEach(el=>{
+    el.classList.toggle("sel",el.textContent.includes(t));
+  });
+}
+
+function saveExpense(){
+  const amount=parseFloat(document.getElementById("e-amount")?.value)||0;
+  const e={id:Date.now(),type:currentExpForm.type,apt:document.getElementById("e-apt")?.value||"عام",date:document.getElementById("e-date")?.value||today(),desc:document.getElementById("e-desc")?.value||"",amount};
+  DB.expenses.push(e); saveDB(); closeSheet("expense"); toast("✅ تم حفظ المصروف"); renderExpenses();
+}
+
+// ── DELETE ────────────────────────────────────────────────────────────────────
+function deleteBooking(id){ if(!confirm("حذف هذا الحجز؟")) return; DB.bookings=DB.bookings.filter(b=>b.id!=id); saveDB(); toast("تم الحذف"); renderAll(); }
+function deleteExpense(id){ if(!confirm("حذف هذا المصروف؟")) return; DB.expenses=DB.expenses.filter(e=>e.id!=id); saveDB(); toast("تم الحذف"); renderExpenses(); }
+
+// ── RENDER ALL ────────────────────────────────────────────────────────────────
+function renderAll(){
+  renderDashboard();
+  const activePage=document.querySelector(".page.active")?.id?.replace("page-","");
+  if(activePage==="calendars") renderCalendars();
+  if(activePage==="bookings") renderBookings();
+  if(activePage==="revenue") renderRevenue();
+  if(activePage==="expenses") renderExpenses();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderDashboard();
+</script>
+
+</body>
+</html>
