@@ -350,8 +350,7 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
     <div id="page-dashboard" class="page active">
       <div class="topbar">
         <div>
-          <div style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;">KAYA</div>
-          <div class="page-title">الرئيسية</div>
+          <div style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;" class="biz-name-label">KAYA</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <div>
@@ -453,7 +452,22 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
         </div>
       </div>
       <div style="padding:0 16px;">
-                <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">التكاليف الشهرية</div><button class="btn btn-primary btn-sm" onclick="openSheet('monthly')">إضافة تكلفة</button></div><div id="monthly-list"></div></div>
+                <!-- اسم النشاط -->
+        <div style="margin-bottom:20px;">
+          <div class="sec-title">اسم النشاط</div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="flex:1;">
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:600;">اسم المنشأة / النشاط التجاري</div>
+                <input id="biz-name-input" class="fi" placeholder="مثال: كايا للشقق الفندقية" value="" oninput="previewBizName(this.value)">
+              </div>
+            </div>
+            <div id="biz-name-preview" style="display:none;margin-top:12px;padding:10px 14px;background:var(--gold);border:1px solid var(--goldb);border-radius:10px;font-size:13px;font-weight:700;color:var(--accent);text-align:center;"></div>
+            <button class="btn btn-primary btn-full" style="margin-top:14px;" onclick="saveBizName()">حفظ اسم النشاط</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">التكاليف الشهرية</div><button class="btn btn-primary btn-sm" onclick="openSheet('monthly')">إضافة تكلفة</button></div><div id="monthly-list"></div></div>
         <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">تكاليف التأسيس</div><button class="btn btn-primary btn-sm" onclick="openSheet('foundation')">إضافة تكلفة</button></div><div id="foundation-list"></div></div>
         <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">الموظفون</div><button class="btn btn-primary btn-sm" onclick="openSheet('employee')">إضافة موظف</button></div><div id="employees-list"></div></div>
         <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">الوحدات</div><button class="btn btn-primary btn-sm" onclick="openSheet('unit')">إضافة وحدة</button></div><div id="units-list"></div></div>
@@ -693,6 +707,7 @@ function showApp(){
   // Reset all nav items visibility
   document.querySelectorAll('.nav-item').forEach(function(n){n.style.display='';});
   applyPerms();
+  if(typeof applyBizName==='function') applyBizName();
   renderDashboard();
 }
 function logout(){
@@ -1605,7 +1620,10 @@ function saveMo(editId){
   if(!DB.monthly)DB.monthly=[];
   if(editId&&editId!=='null'){DB.monthly=DB.monthly.map(function(m){return m.id===editId?Object.assign({},m,{name:name,apt:apt,amount:amount}):m;});toast('تم التعديل','success');}
   else{DB.monthly.push({id:uid(),name:name,apt:apt,amount:amount});toast(' تم الحفظ','success');}
-  save();closeSheet('monthly');renderSettings();renderDashboard();
+  save();closeSheet('monthly');  if(typeof renderSettings==='function') renderSettings();
+  if(typeof loadBizName==='function') loadBizName();
+  var inp=document.getElementById('biz-name-input');
+  if(inp&&DB.settings&&DB.settings.bizName) inp.value=DB.settings.bizName;renderDashboard();
 }
 function delMo(id){DB.monthly=(DB.monthly||[]).filter(function(m){return m.id!==id;});save();toast('تم الحذف','info');renderSettings();renderDashboard();}
 
