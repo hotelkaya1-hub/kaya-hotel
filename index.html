@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>كايا هوتيل</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');</style>
 <style>
 :root{--bg:#f0f4f8;--bg2:#ffffff;--bg3:#e8eef6;--card:#ffffff;--card2:#f5f8fc;--border:#dde4ef;--border2:#b0bdd0;--text:#111827;--text2:#374151;--text3:#6b7280;--green:#059669;--yellow:#d97706;--red:#dc2626;--blue:#2563eb;--purple:#7c3aed;--accent:#b8943a;--accent2:#c9a84c;--gold:rgba(184,148,58,.12);--goldb:rgba(184,148,58,.35);}
 body.dark-mode{--bg:#070d1a;--bg2:#0b1220;--bg3:#0f1828;--card:#131f32;--card2:#182539;--border:#1e2f48;--border2:#253650;--text:#eef1f8;--text2:#8a97b4;--text3:#4a5872;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#7c8cf8;--purple:#a78bfa;--accent:#c8a96e;--accent2:#e8c98e;--gold:rgba(200,169,110,.12);--goldb:rgba(200,169,110,.25);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Cairo',sans-serif;direction:rtl;overflow:hidden;padding-top:env(safe-area-inset-top);box-sizing:border-box;}
-input,select,button,textarea{font-family:'Cairo',sans-serif;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;overflow:hidden;padding-top:env(safe-area-inset-top);box-sizing:border-box;-webkit-text-size-adjust:100%;}
+input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-serif;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -19,7 +19,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 
 /* APP LAYOUT */
 #app{height:calc(100dvh - env(safe-area-inset-top));display:flex;flex-direction:column;overflow:hidden;}
-#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
 #nav{flex-shrink:0;min-height:62px;height:calc(62px + env(safe-area-inset-bottom));background:var(--bg2);border-top:1px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);position:sticky;bottom:0;z-index:100;}
 
 /* PAGES */
