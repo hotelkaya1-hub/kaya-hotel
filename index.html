@@ -1,92 +1,35 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" style="scroll-behavior:smooth;">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="mobile-web-app-capable" content="yes">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#0b1220">
 <title>كايا هوتيل</title>
-<style>@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');</style>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f0f4f8;--bg2:#ffffff;--bg3:#e8eef6;--card:#ffffff;--card2:#f5f8fc;--border:#dde4ef;--border2:#b0bdd0;--text:#111827;--text2:#374151;--text3:#6b7280;--green:#059669;--yellow:#d97706;--red:#dc2626;--blue:#2563eb;--purple:#7c3aed;--accent:#b8943a;--accent2:#c9a84c;--gold:rgba(184,148,58,.12);--goldb:rgba(184,148,58,.35);}
 body.dark-mode{--bg:#070d1a;--bg2:#0b1220;--bg3:#0f1828;--card:#131f32;--card2:#182539;--border:#1e2f48;--border2:#253650;--text:#eef1f8;--text2:#8a97b4;--text3:#4a5872;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#7c8cf8;--purple:#a78bfa;--accent:#c8a96e;--accent2:#e8c98e;--gold:rgba(200,169,110,.12);--goldb:rgba(200,169,110,.25);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html{height:100%;height:-webkit-fill-available;}
-body{
-  min-height:100vh;
-  min-height:-webkit-fill-available;
-  background:var(--bg);color:var(--text);
-  font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-serif;
-  direction:rtl;
-  overflow:hidden;
-  -webkit-text-size-adjust:100%;
-}
-input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-serif;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Cairo',sans-serif;direction:rtl;overflow:hidden;}
+input,select,button,textarea{font-family:'Cairo',sans-serif;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 
 /* APP LAYOUT */
-#app{
-  display:flex;
-  flex-direction:column;
-  height:100vh;
-  height:-webkit-fill-available;
-  overflow:hidden;
-  padding-top:env(safe-area-inset-top);
-}
-#content{
-  flex:1;
-  overflow-y:auto;
-  overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;
-  overscroll-behavior-y:contain;
-}
-#nav{
-  flex-shrink:0;
-  background:var(--bg2);
-  border-top:1px solid var(--border);
-  display:flex;
-  padding-bottom:env(safe-area-inset-bottom);
-  padding-left:env(safe-area-inset-left);
-  padding-right:env(safe-area-inset-right);
-  position:relative;
-  z-index:100;
-  min-height:58px;
-}
+#app{height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+#nav{flex-shrink:0;height:62px;background:var(--bg2);border-top:1px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);}
 
 /* PAGES */
-.page{display:none;animation:fadeUp .3s ease;padding-bottom:calc(80px + env(safe-area-inset-bottom));}
+.page{display:none;animation:fadeUp .3s ease;padding-bottom:80px;}
 .page.active{display:block;}
 
 /* NAV */
-.nav-item{
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:3px;
-  cursor:pointer;
-  color:var(--text3);
-  border:none;
-  background:none;
-  position:relative;
-  padding:10px 0 8px;
-  min-height:58px;
-}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text3);border:none;background:none;position:relative;padding:8px 0;}
 .nav-item.active{color:var(--accent);}
-.nav-item.active::before{
-  content:'';
-  position:absolute;
-  top:0;left:20%;right:20%;
-  height:2px;
-  background:linear-gradient(90deg,var(--accent),var(--accent2));
-  border-radius:0 0 3px 3px;
-}
+.nav-item.active::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:0 0 3px 3px;}
 .nav-icon{font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;}
 .nav-label{font-size:9px;font-weight:700;}
 .nav-badge{position:absolute;top:6px;right:14%;background:var(--accent);color:var(--bg);font-size:9px;font-weight:900;min-width:15px;height:15px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
@@ -97,7 +40,7 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
 
 /* CARDS */
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;margin-bottom:16px;}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 15px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden;word-break:break-word;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 15px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
 .s-label{font-size:10px;color:var(--text3);font-weight:600;margin-bottom:4px;}
 .s-value{font-size:18px;font-weight:900;line-height:1.1;}
 .s-sub{font-size:9px;color:var(--text3);margin-top:3px;}
@@ -134,7 +77,7 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
 .b-cancelled{background:rgba(248,113,113,.15);color:var(--red);}
 
 /* FORMS */
-.fi{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-size:16px;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none;}
+.fi{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none;}
 .fi:focus{border-color:var(--accent);}
 .form-group{margin-bottom:14px;}
 .form-label{display:block;font-size:11px;color:var(--text3);font-weight:700;margin-bottom:6px;}
@@ -160,7 +103,7 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
 .sheet-overlay{display:none;position:fixed;inset:0;z-index:800;flex-direction:column;justify-content:flex-end;}
 .sheet-overlay.open{display:flex;}
 .sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);animation:fadeIn .2s ease;}
-.sheet-box{position:relative;background:var(--bg2);border-radius:22px 22px 0 0;border:1px solid var(--border);border-bottom:none;max-height:93dvh;display:flex;flex-direction:column;animation:slideUp .28s cubic-bezier(.32,.72,0,1);}
+.sheet-box{position:relative;background:var(--bg2);border-radius:22px 22px 0 0;border:1px solid var(--border);border-bottom:none;max-height:93vh;display:flex;flex-direction:column;animation:slideUp .28s cubic-bezier(.32,.72,0,1);}
 .sheet-handle{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:36px;height:4px;border-radius:2px;background:var(--border);}
 .sheet-head{flex-shrink:0;padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .sheet-title{font-size:16px;font-weight:900;}
@@ -190,7 +133,7 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
 .cal-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 
 /* BOOKINGS */
-.b-row{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);word-break:break-word;}
+.b-row{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);}
 .b-top{display:flex;align-items:flex-start;gap:12px;padding:13px 14px;}
 .b-ico{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;}
 .b-info{flex:1;min-width:0;}.b-name{font-weight:800;font-size:14px;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -224,7 +167,7 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
 .empty-text{color:var(--text3);font-size:13px;margin-bottom:14px;}
 
 /* TOAST */
-#toast{position:fixed;bottom:calc(76px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(14px);border-radius:14px;font-size:13px;font-weight:700;z-index:9999;white-space:nowrap;opacity:0;transition:all .25s;pointer-events:none;max-width:90vw;text-align:center;padding:10px 22px;}
+#toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(14px);border-radius:14px;font-size:13px;font-weight:700;z-index:9999;white-space:nowrap;opacity:0;transition:all .25s;pointer-events:none;max-width:90vw;text-align:center;padding:10px 22px;}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 #toast.t-success{background:var(--card2);border:1px solid rgba(52,211,153,.4);color:var(--green);}
 #toast.t-error{background:var(--card2);border:1px solid rgba(248,113,113,.4);color:var(--red);}
@@ -245,7 +188,7 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
 .perm-label{font-size:12px;font-weight:600;color:var(--text2);}
 
 /* LOGIN */
-#login-screen{position:fixed;inset:0;background:linear-gradient(160deg,var(--bg2) 0%,var(--bg) 70%);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:max(32px, env(safe-area-inset-top));overflow-y:auto;-webkit-overflow-scrolling:touch;padding:32px;}
+#login-screen{position:fixed;inset:0;background:linear-gradient(160deg,var(--bg2) 0%,var(--bg) 70%);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;}
 .login-card{background:rgba(19,31,50,.95);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:340px;}
 .login-err{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:14px;display:none;text-align:center;}
 
@@ -259,127 +202,6 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
 .user-greeting{font-size:10px;color:var(--text3);font-weight:500;line-height:1;}
 .user-name{font-size:13px;font-weight:800;color:var(--accent);line-height:1.3;}
 .btn-logout{display:flex;align-items:center;justify-content:center;background:rgba(220,38,38,.85);border:none;color:#fff;width:34px;height:34px;border-radius:10px;cursor:pointer;flex-shrink:0;}
-
-/* ══ DESKTOP AUTO LAYOUT ══ */
-@media (min-width: 1024px) and (pointer: fine) {
-  #app {
-    flex-direction: row !important;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-  #nav {
-    width: 200px;
-    min-width: 200px;
-    height: 100vh;
-    flex-direction: column !important;
-    border-top: none !important;
-    border-left: 1px solid var(--border);
-    padding: 24px 0 16px !important;
-    justify-content: flex-start !important;
-    gap: 4px;
-    order: -1;
-    position: sticky;
-    top: 0;
-    overflow-y: auto;
-  }
-  #nav::before {
-    content: 'KAYA';
-    display: block;
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 3px;
-    color: var(--accent);
-    padding: 0 16px 20px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 8px;
-    width: 100%;
-    box-sizing: border-box;
-    text-align: center;
-  }
-  .nav-btn {
-    flex-direction: row !important;
-    justify-content: flex-start !important;
-    padding: 11px 16px !important;
-    gap: 10px !important;
-    border-radius: 10px !important;
-    margin: 2px 8px !important;
-    width: calc(100% - 16px) !important;
-    height: auto !important;
-    min-height: 44px;
-  }
-  .nav-label {
-    font-size: 13px !important;
-    display: block !important;
-    font-weight: 700 !important;
-  }
-  .nav-btn.active {
-    background: var(--gold) !important;
-  }
-  .nav-btn.active .nav-icon {
-    color: var(--accent) !important;
-    stroke: var(--accent) !important;
-  }
-  .nav-btn.active .nav-label {
-    color: var(--accent) !important;
-  }
-  #content {
-    flex: 1;
-    padding: 0;
-  }
-  .stat-grid {
-    grid-template-columns: repeat(4, 1fr) !important;
-  }
-  .page-hd {
-    padding: 24px 20px 12px !important;
-  }
-  #login-screen {
-    max-width: 420px;
-    margin: 0 auto;
-  }
-}
-
-/* Pull to Refresh */
-#ptr-indicator{
-  position:sticky;
-  top:0;
-  left:0;right:0;
-  z-index:9999;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  height:0;
-  overflow:hidden;
-  background:var(--bg2);
-  border-bottom:1px solid var(--border);
-}
-#ptr-spinner{
-  width:22px;height:22px;
-  border:2.5px solid var(--goldb);
-  border-top-color:var(--accent);
-  border-radius:50%;
-  animation:spin .8s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg);}}
-
-/* Skeleton Loading */
-.skeleton{
-  background:linear-gradient(90deg,var(--bg3) 25%,var(--border) 50%,var(--bg3) 75%);
-  background-size:200% 100%;
-  animation:shimmer 1.2s infinite;
-  border-radius:8px;
-}
-@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
-
-/* Nav Badge */
-.nav-badge{
-  position:absolute;top:6px;right:calc(50% - 18px);
-  background:var(--red);color:#fff;
-  font-size:9px;font-weight:900;
-  width:16px;height:16px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  animation:badgePop .3s cubic-bezier(.34,1.56,.64,1);
-}
-@keyframes badgePop{0%{transform:scale(0);}100%{transform:scale(1);}}
 </style>
 </head>
 <body>
@@ -398,14 +220,13 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
     <div style="font-size:18px;font-weight:900;margin-bottom:6px;text-align:center;">تسجيل الدخول</div>
     <div style="font-size:12px;color:var(--text3);text-align:center;margin-bottom:24px;">أدخل بيانات حسابك</div>
     <div class="login-err" id="login-err">اسم المستخدم أو كلمة المرور غير صحيحة</div>
-    <div class="form-group"><label class="form-label">اسم المستخدم</label><input id="login-user" class="fi" placeholder="اسم المستخدم" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus();"></div>
-    <div class="form-group"><label class="form-label">كلمة المرور</label><input id="login-pass" class="fi" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin();"></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><input type="checkbox" id="remember-me" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;" onchange="toggleRemember(this.checked)"><label for="remember-me" style="font-size:13px;color:var(--text2);cursor:pointer;">تذكرني دائماً</label></div>
+    <div class="form-group"><label class="form-label">اسم المستخدم</label><input id="login-user" class="fi" placeholder="اسم المستخدم"></div>
+    <div class="form-group"><label class="form-label">كلمة المرور</label><input id="login-pass" class="fi" type="password" placeholder="••••••••"></div>
     <button class="btn btn-primary btn-full" style="margin-top:6px;" onclick="doLogin()">دخول</button>
   </div>
 </div>
 
 <!-- APP -->
-<div id="ptr-indicator"><div id="ptr-spinner"></div></div>
 <div id="app" style="display:none;">
   <div id="content">
 
@@ -413,7 +234,8 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
     <div id="page-dashboard" class="page active">
       <div class="topbar">
         <div>
-          <div style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;" class="biz-name-label">KAYA</div>
+          <div style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;">KAYA HOTEL</div>
+          <div class="page-title">الرئيسية</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <div>
@@ -433,7 +255,7 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
     <div id="page-calbooking" class="page">
       <div class="topbar">
         <div>
-          <div style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;">KAYA</div>
+          <div style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;">KAYA HOTEL</div>
           <div class="page-title" id="calbooking-title">التقويم</div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="openSheet('booking')">+ حجز</button>
@@ -456,7 +278,7 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
     <div id="page-revenue" class="page">
       <div class="topbar">
         <div>
-          <div style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;">KAYA</div>
+          <div style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;">KAYA HOTEL</div>
           <div class="page-title">الإيرادات</div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="openSheet('sale')">+ إيراد</button>
@@ -487,7 +309,7 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
     <div id="page-expenses" class="page">
       <div class="topbar">
         <div>
-          <div style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;">KAYA</div>
+          <div style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;">KAYA HOTEL</div>
           <div class="page-title">المصروفات</div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="openSheet('expense')">+ مصروف</button>
@@ -500,7 +322,7 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
     <div id="page-settings" class="page">
       <div class="topbar">
         <div>
-          <div style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;">KAYA</div>
+          <div style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;">KAYA HOTEL</div>
           <div class="page-title">الإعدادات</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
@@ -515,30 +337,32 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
         </div>
       </div>
       <div style="padding:0 16px;">
-                <!-- اسم النشاط -->
-        <div style="margin-bottom:20px;">
-          <div class="sec-title">اسم النشاط</div>
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <div style="flex:1;">
-                <div style="font-size:11px;color:var(--text3);margin-bottom:6px;font-weight:600;">اسم المنشأة / النشاط التجاري</div>
-                <input id="biz-name-input" class="fi" placeholder="مثال: كايا للشقق الفندقية" value="" oninput="previewBizName(this.value)">
-              </div>
-            </div>
-            <div id="biz-name-preview" style="display:none;margin-top:12px;padding:10px 14px;background:var(--gold);border:1px solid var(--goldb);border-radius:10px;font-size:13px;font-weight:700;color:var(--accent);text-align:center;"></div>
-            <button class="btn btn-primary btn-full" style="margin-top:14px;" onclick="saveBizName()">حفظ اسم النشاط</button>
-          </div>
-        </div>
-
         <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">التكاليف الشهرية</div><button class="btn btn-primary btn-sm" onclick="openSheet('monthly')">إضافة تكلفة</button></div><div id="monthly-list"></div></div>
         <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">تكاليف التأسيس</div><button class="btn btn-primary btn-sm" onclick="openSheet('foundation')">إضافة تكلفة</button></div><div id="foundation-list"></div></div>
         <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">الموظفون</div><button class="btn btn-primary btn-sm" onclick="openSheet('employee')">إضافة موظف</button></div><div id="employees-list"></div></div>
         <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">الوحدات</div><button class="btn btn-primary btn-sm" onclick="openSheet('unit')">إضافة وحدة</button></div><div id="units-list"></div></div>
         
-        
-        
-        
-<div id="users-section" style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">المستخدمون</div><button class="btn btn-primary btn-sm" onclick="openSheet('adduser')">إضافة مستخدم</button></div><div id="users-list"></div></div>
+        <div style="margin-bottom:20px;">
+          <div class="sec-hd"><div class="sec-title">مزامنة البيانات ☁️</div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <button class="btn btn-primary btn-full" onclick="syncToSupabase()" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              رفع للسحابة
+            </button>
+            <button class="btn btn-gold btn-full" onclick="loadFromSupabase()" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+              تحميل من السحابة
+            </button>
+          </div>
+        </div>
+        <div style="margin-bottom:20px;">
+          <div class="sec-hd"><div class="sec-title">تحديث الموقع</div></div>
+          <button id="deploy-btn" class="btn btn-primary btn-full" onclick="deployToGitHub()" style="display:flex;align-items:center;justify-content:center;gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+            تحديث الموقع على GitHub
+          </button>
+        </div>
+        <div id="users-section" style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">المستخدمون</div><button class="btn btn-primary btn-sm" onclick="openSheet('adduser')">إضافة مستخدم</button></div><div id="users-list"></div></div>
       </div>
     </div>
 
@@ -549,8 +373,7 @@ input,select,button,textarea{font-family:'Cairo','Segoe UI',Tahoma,Arial,sans-se
       <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="8" width="7" height="13" rx="1"/></svg></div>
       <div class="nav-label">الرئيسية</div>
     </button>
-    <button class="nav-item" onclick="showPage('calbooking',this)" style="position:relative;">
-      <span id="nav-badge-booking" style="display:none;" class="nav-badge"></span>
+    <button class="nav-item" onclick="showPage('calbooking',this)">
       <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
       <div class="nav-label">الحجوزات</div>
       <span class="nav-badge" id="nav-badge" style="display:none;"></span>
@@ -697,30 +520,7 @@ function loadTheme(){
     if(btn)btn.textContent='🌙';
   }
 }
-function toggleRemember(val){
-  localStorage.setItem('kaya_remember', val?'1':'0');
-}
-
 function initAuth(){
-  // Check remember me
-  var remember = localStorage.getItem('kaya_remember');
-  var session = localStorage.getItem('kaya_session');
-  if(remember==='1' && session){
-    try{
-      var u=JSON.parse(session);
-      if(u&&u.username){
-        currentUser=u;
-        document.getElementById('login-screen').style.display='none';
-        document.getElementById('app').style.display='flex';
-        renderAll();
-        return;
-      }
-    }catch(e){}
-  }
-  // Restore remember checkbox state
-  var cb = document.getElementById('remember-me');
-  if(cb) cb.checked = remember==='1';
-
   initIcons();
   if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;if(DB.adminPass&&DB.adminPass.username) ADMIN.username=DB.adminPass.username;
   if(!DB.appUsers) DB.appUsers=[];
@@ -770,7 +570,6 @@ function showApp(){
   // Reset all nav items visibility
   document.querySelectorAll('.nav-item').forEach(function(n){n.style.display='';});
   applyPerms();
-  if(typeof applyBizName==='function') applyBizName();
   renderDashboard();
 }
 function logout(){
@@ -851,12 +650,12 @@ function renderDashboard(){
     '<div class="stat-card c-gold"><div class="s-label">إجمالي الإيرادات</div><div class="s-value">'+fmtM(rev)+' ر.س</div></div>'
     +'<div class="stat-card '+(net>=0?'c-green':'c-red')+'"><div class="s-label">صافي الربح</div><div class="s-value">'+fmtM(net)+' ر.س</div></div>'
     +'<div class="stat-card c-blue"><div class="s-label">إجمالي الحجوزات</div><div class="s-value">'+DB.bookings.filter(function(b){return b.status!=="blocked";}).length+'</div></div>'
-    +'<div class="stat-card c-yellow"><div class="s-label">عدد الوحدات</div><div class="s-value">'+(DB.units||[]).length+'</div></div>';
+    +'<div class="stat-card c-yellow"><div class="s-label">عدد الوحدات</div><div class="s-value">'+(DB.units||[]).length+'</div><div class="s-sub">وحدة نشطة</div></div>';
   var up=DB.bookings.filter(function(b){return b.status==='confirmed'&&b.checkin>=toDay();}).sort(function(a,b){return new Date(a.checkin)-new Date(b.checkin);}).slice(0,3);
   var banner=document.getElementById('dash-upcoming');
   if(up.length){banner.style.display='block';document.getElementById('dash-up-list').innerHTML=up.map(function(b){
   var daysLeft=Math.ceil((new Date(b.checkin)-new Date())/86400000);
-  var tag=daysLeft<=0?'<span style="font-size:10px;background:var(--green);color:#fff;padding:2px 8px;border-radius:10px;">اليوم</span>':daysLeft===1?'<span style="font-size:10px;background:var(--yellow);color:#fff;padding:2px 8px;border-radius:10px;">غداً</span>':'<span style="font-size:10px;color:var(--text3);font-weight:600;">بعد '+daysLeft+' يوم</span>';
+  var tag=daysLeft<=0?'<span style="font-size:10px;background:var(--green);color:#fff;padding:2px 8px;border-radius:10px;">اليوم</span>':daysLeft===1?'<span style="font-size:10px;background:var(--yellow);color:#fff;padding:2px 8px;border-radius:10px;">غداً</span>':'<span style="font-size:10px;color:var(--text3);font-weight:600;">'+daysLeft+' يوم</span>';
   var nameColor=b.source==='airbnb'?'#ff5a5f':b.source==='gathern'?'#7028e4':b.source==='whatsapp'?'#25d366':'var(--accent)';
   var unitBadge='<span style="font-size:11px;font-weight:900;color:var(--accent);background:var(--gold);padding:2px 8px;border-radius:6px;flex-shrink:0;">'+b.apt+'</span>';
   var nameBadge='<span style="font-size:14px;font-weight:800;color:'+nameColor+';">'+b.guest+'</span>';
@@ -991,8 +790,8 @@ function buildCal(apt){
     }
     cells+='<div class="'+cls+'" '+(inf&&inf.b.status!=='blocked'?'onclick="openDetail(\''+inf.b.id+'\')"':'')+' style="position:relative;"><span style="font-size:11px;">'+d+'</span>'+extra+'</div>';
   }
-  var upB=aptB.filter(function(b){return b.status!=='blocked'&&b.checkout>=td;}).sort(function(a,b){return new Date(a.checkin)-new Date(b.checkin);}).slice(0,8);
-  var upH=upB.length?'<div class="cal-upcoming">'+upB.map(function(b){return'<div class="cal-up-row" onclick="openDetail(\''+b.id+'\')"><div class="cal-dot" style="background:'+(SRC[b.source]?.color||'#888')+'"></div><div style="flex:1;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+b.guest+'</div><div style="font-size:11px;color:var(--text3);white-space:nowrap;">'+fmtRange(b.checkin,b.checkout)+'</div></div>';}).join('')+'</div>':'';
+  var upB=aptB.filter(function(b){return b.status!=='blocked'&&b.checkout>=td;}).sort(function(a,b){return new Date(a.checkin)-new Date(b.checkin);}).slice(0,3);
+  var upH=upB.length?'<div class="cal-upcoming">'+upB.map(function(b){return'<div class="cal-up-row" onclick="openDetail(\''+b.id+'\')"><div class="cal-dot" style="background:'+(SRC[b.source]?.color||'#888')+'"></div><div style="flex:1;font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+b.guest+'</div><div style="font-size:11px;color:var(--text3);">'+fmtD(b.checkin)+'←'+fmtD(b.checkout)+'</div></div>';}).join('')+'</div>':'';
   var typTag=(DB.unitTypes&&DB.unitTypes[apt])?'<span style="font-size:10px;color:var(--text3);margin-right:6px;">'+DB.unitTypes[apt]+'</span>':'';
   return'<div class="cal-card"><div class="cal-head"><div><div class="cal-name">'+apt+'</div>'+(typTag?'<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+typTag+'</div>':'')+'</div></div>'
     +'<div class="cal-nav"><button class="cal-nav-btn" onclick="calMove(\''+apt+'\',-1)">›</button><span style="font-weight:700;font-size:13px;">'+MONTHS[m]+' '+y+'</span><button class="cal-nav-btn" onclick="calMove(\''+apt+'\',1)">‹</button></div>'
@@ -1074,29 +873,18 @@ function chkC(){
   var co=document.getElementById('b-co')?.value;
   var box=document.getElementById('cfb');
   if(!box)return;
-  // Validate dates first
-  if(!ci||!co||!apt){box.style.display='none';return;}
-  if(ci>=co){
+  if(apt&&ci&&co&&ci<co&&hasConflict(apt,ci,co,_eid)){
     box.style.display='block';
-    box.style.background='rgba(248,113,113,.1)';
-    box.style.border='1px solid rgba(248,113,113,.3)';
-    box.style.color='var(--red)';
-    box.innerHTML='⚠️ تاريخ الخروج يجب أن يكون بعد تاريخ الدخول';
-    return;
-  }
-  if(hasConflict(apt,ci,co,_eid)){
-    box.style.display='block';
-    box.style.background='rgba(248,113,113,.1)';
-    box.style.border='1px solid rgba(248,113,113,.3)';
-    box.style.color='var(--red)';
     box.innerHTML='⚠️ هذه الوحدة غير متوفرة في هذه الفترة';
-  } else {
+  } else if(apt&&ci&&co&&ci<co){
     box.style.display='block';
     box.style.background='rgba(52,211,153,.1)';
     box.style.border='1px solid rgba(52,211,153,.3)';
     box.style.color='var(--green)';
     box.innerHTML='✓ الوحدة متوفرة في هذه الفترة';
-    setTimeout(function(){if(box&&box.innerHTML.includes('متوفرة'))box.style.display='none';},2000);
+    setTimeout(function(){if(box.innerHTML.includes('متوفرة'))box.style.display='none';},2000);
+  } else {
+    box.style.display='none';
   }
 }
 function calcN(){var ci=document.getElementById('b-ci')?.value;var co=document.getElementById('b-co')?.value;var p=parseFloat(document.getElementById('b-p')?.value)||0;var el=document.getElementById('b-calc');if(!el)return;if(ci&&co&&ci<co&&p>0){var n=nts(ci,co);el.style.display='block';el.innerHTML=' '+n+' ليلة × '+fmtM(p)+' = <strong>'+fmtM(n*p)+' ر.س</strong>';}else el.style.display='none';}
@@ -1556,7 +1344,6 @@ function renderROI(){
     );
 }
 function renderSettings(){
-
   if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;if(DB.adminPass&&DB.adminPass.username) ADMIN.username=DB.adminPass.username;
   if(!DB.appUsers)DB.appUsers=[];
   var uSec=document.getElementById('users-section');if(uSec)uSec.style.display=isAdmin()?'block':'none';
@@ -1683,10 +1470,7 @@ function saveMo(editId){
   if(!DB.monthly)DB.monthly=[];
   if(editId&&editId!=='null'){DB.monthly=DB.monthly.map(function(m){return m.id===editId?Object.assign({},m,{name:name,apt:apt,amount:amount}):m;});toast('تم التعديل','success');}
   else{DB.monthly.push({id:uid(),name:name,apt:apt,amount:amount});toast(' تم الحفظ','success');}
-  save();closeSheet('monthly');  if(typeof renderSettings==='function') renderSettings();
-  if(typeof loadBizName==='function') loadBizName();
-  var inp=document.getElementById('biz-name-input');
-  if(inp&&DB.settings&&DB.settings.bizName) inp.value=DB.settings.bizName;renderDashboard();
+  save();closeSheet('monthly');renderSettings();renderDashboard();
 }
 function delMo(id){DB.monthly=(DB.monthly||[]).filter(function(m){return m.id!==id;});save();toast('تم الحذف','info');renderSettings();renderDashboard();}
 
@@ -2138,120 +1922,6 @@ async function deployToGitHub(){
     showToast('❌ '+err.message,'error');
   }
 }
-
-
-// ══ PULL TO REFRESH ══
-(function(){
-  var content=null;
-  var startY=0,startX=0,pulling=false,triggered=false;
-  var THRESHOLD=65;
-
-  function getContent(){return document.getElementById('content');}
-
-  function onTouchStart(e){
-    content=getContent();
-    if(!content||content.scrollTop>0)return;
-    startY=e.touches[0].clientY;
-    startX=e.touches[0].clientX;
-    pulling=false;triggered=false;
-  }
-
-  function onTouchMove(e){
-    if(!content)return;
-    var dy=e.touches[0].clientY-startY;
-    var dx=e.touches[0].clientX-startX;
-    // Only vertical pull
-    if(Math.abs(dx)>Math.abs(dy))return;
-    if(dy>8&&content.scrollTop===0){
-      pulling=true;
-      var ind=document.getElementById('ptr-indicator');
-      if(ind){
-        var h=Math.min(dy*0.5,52);
-        ind.style.height=h+'px';
-        ind.style.display='flex';
-        if(dy>THRESHOLD&&!triggered){
-          triggered=true;
-          ind.style.background='var(--gold)';
-          if(window.navigator&&window.navigator.vibrate) window.navigator.vibrate(10);
-        }
-      }
-    }
-  }
-
-  function onTouchEnd(){
-    if(!pulling){content=null;return;}
-    pulling=false;
-    var ind=document.getElementById('ptr-indicator');
-    if(triggered){
-      if(ind){ind.style.height='52px';ind.style.display='flex';}
-      renderAll();
-      toast('✓ تم التحديث','success');
-    }
-    if(ind){
-      ind.style.transition='height .3s';
-      ind.style.height='0';
-      setTimeout(function(){
-        if(ind){ind.style.display='none';ind.style.transition='';ind.style.background='';}
-      },300);
-    }
-    triggered=false;content=null;
-  }
-
-  document.addEventListener('touchstart',onTouchStart,{passive:true});
-  document.addEventListener('touchmove',onTouchMove,{passive:true});
-  document.addEventListener('touchend',onTouchEnd,{passive:true});
-})();
-
-// ══ SWIPE NAVIGATION ══
-var _swipeX=0, _swipeY=0, _swipePages=['dashboard','calbooking','revenue','expenses','settings'];
-document.addEventListener('touchstart',function(e){
-  _swipeX=e.touches[0].clientX;
-  _swipeY=e.touches[0].clientY;
-},{passive:true});
-document.addEventListener('touchend',function(e){
-  var dx=e.changedTouches[0].clientX-_swipeX;
-  var dy=e.changedTouches[0].clientY-_swipeY;
-  if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*2){
-    var idx=_swipePages.indexOf(_currentPage);
-    if(dx<0&&idx<_swipePages.length-1) showPage(_swipePages[idx+1]);
-    if(dx>0&&idx>0) showPage(_swipePages[idx-1]);
-  }
-},{passive:true});
-
-// ══ HAPTIC FEEDBACK ══
-function haptic(type){
-  try{
-    if(window.navigator&&window.navigator.vibrate){
-      window.navigator.vibrate(type==='light'?10:type==='medium'?20:50);
-    }
-  }catch(e){}
-}
-
-function updateNavBadge(){
-  var today=new Date().toISOString().slice(0,10);
-  var tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);
-  var tom=tomorrow.toISOString().slice(0,10);
-  var checkins=(DB.bookings||[]).filter(function(b){
-    return (b.checkin===today||b.checkin===tom)&&b.status==='confirmed';
-  }).length;
-  var badge=document.getElementById('nav-badge-booking');
-  if(badge){
-    badge.textContent=checkins;
-    badge.style.display=checkins>0?'flex':'none';
-  }
-}
-
-
-
-
-
-
-
-
-
-
-// Init biz name labels
-
 
 loadTheme();
 try{
