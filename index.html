@@ -2358,16 +2358,18 @@ async function autoSyncToSupabase(){
     }
   }catch(e){
     console.log('Auto sync error:',e.message);
+    showSyncStatus('❌ '+e.message, false, true);
   }
   _syncInProgress = false;
-  console.log('Sync complete');
+  showSyncStatus('✅ تم الحفظ', true);
 }
 
 // Load from Supabase on startup
 async function loadFromSupabaseAuto(){
+  showSyncStatus('جارٍ المزامنة...');
   try{
-    var bookings = await sbFetch('bookings','GET',null,'?select=*&order=checkin.desc');
-    var expenses = await sbFetch('expenses','GET',null,'?select=*');
+    var bookings = await sbFetch('bookings','GET',null,'?select=*&order=checkin.desc&limit=500');
+    var expenses = await sbFetch('expenses','GET',null,'?select=*&limit=500');
     var monthly = await sbFetch('monthly_costs','GET',null,'?select=*');
     var units = await sbFetch('units','GET',null,'?select=*');
     var sales = await sbFetch('sales','GET',null,'?select=*');
@@ -2375,7 +2377,7 @@ async function loadFromSupabaseAuto(){
     var changed = false;
     
     if(bookings&&bookings.length){
-      // Merge: keep local + add new from cloud
+      // Full replace from cloud
       var localIds=(DB.bookings||[]).map(function(b){return b.id;});
       var newOnes=bookings.filter(function(b){return !localIds.includes(b.id);});
       if(newOnes.length){
@@ -2384,25 +2386,49 @@ async function loadFromSupabaseAuto(){
       }
     }
     if(expenses&&expenses.length){
-      var localIds=(DB.expenses||[]).map(function(e){return e.id;});
-      var newOnes=expenses.filter(function(e){return !localIds.includes(e.id);});
-      if(newOnes.length){
-        DB.expenses=(DB.expenses||[]).concat(newOnes);
-        changed=true;
-      }
+      var localExpIds=(DB.expenses||[]).map(function(e){return e.id;});
+      var newExp=expenses.filter(function(e){return !localExpIds.includes(e.id);});
+      if(newExp.length){DB.expenses=(DB.expenses||[]).concat(newExp);changed=true;}
     }
-    if(units&&units.length&&(!DB.units||!DB.units.length)){
+    if(units&&units.length){
       DB.units=units.map(function(u){return u.name;});
       DB.unitTypes={};
       units.forEach(function(u){if(u.type)DB.unitTypes[u.name]=u.type;});
+      changed=true;
+    }
+    if(sales&&sales.length){
+      var localSalesIds=(DB.sales||[]).map(function(s){return s.id;});
+      var newSales=sales.filter(function(s){return !localSalesIds.includes(s.id);});
+      if(newSales.length){DB.sales=(DB.sales||[]).concat(newSales);changed=true;}
+    }
+    if(monthly&&monthly.length){
+      DB.monthly=monthly.map(function(m){return{id:m.id,name:m.name,amount:m.amount,apt:m.apt||''};});
       changed=true;
     }
     if(changed){
       try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
       renderAll();
     }
+    showSyncStatus('✅ متزامن', true);
   }catch(e){
     console.log('Auto load error:',e.message);
+    showSyncStatus('❌ خطأ في المزامنة', false, true);
+  }
+}
+
+function showSyncStatus(msg, success, error){
+  var el = document.getElementById('sync-status');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'sync-status';
+    el.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top) + 4px);left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:11px;font-weight:700;z-index:9998;color:var(--text3);white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.15);transition:opacity .3s;';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = '1';
+  el.style.color = success ? 'var(--green)' : error ? 'var(--red)' : 'var(--text3)';
+  if(success || error){
+    setTimeout(function(){ el.style.opacity = '0'; }, 2000);
   }
 }
 
