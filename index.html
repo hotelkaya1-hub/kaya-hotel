@@ -12,7 +12,7 @@
 :root{--bg:#f0f4f8;--bg2:#ffffff;--bg3:#e8eef6;--card:#ffffff;--card2:#f5f8fc;--border:#dde4ef;--border2:#b0bdd0;--text:#111827;--text2:#374151;--text3:#6b7280;--green:#059669;--yellow:#d97706;--red:#dc2626;--blue:#2563eb;--purple:#7c3aed;--accent:#b8943a;--accent2:#c9a84c;--gold:rgba(184,148,58,.12);--goldb:rgba(184,148,58,.35);}
 body.dark-mode{--bg:#070d1a;--bg2:#0b1220;--bg3:#0f1828;--card:#131f32;--card2:#182539;--border:#1e2f48;--border2:#253650;--text:#eef1f8;--text2:#8a97b4;--text3:#6b80a0;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#7c8cf8;--purple:#a78bfa;--accent:#c8a96e;--accent2:#e8c98e;--gold:rgba(200,169,110,.12);--goldb:rgba(200,169,110,.25);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,html, body {
+html, body {
   height: 100%;
   height: 100dvh;
   margin: 0;
@@ -496,7 +496,22 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 .s-value, .b-nights, .b-total, .perf-val, .stat-card,
 .cal-day, .dash-num { font-feature-settings: "tnum"; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+// Suppress cross-origin Script error BEFORE any external scripts load
+window.onerror = function(msg, src, line, col, err){
+  if(!msg || msg === 'Script error.' || msg === 'Script error') return true;
+  return false;
+};
+window.addEventListener('unhandledrejection', function(e){
+  if(e && e.reason){
+    var m = (e.reason && e.reason.message) ? e.reason.message : String(e.reason||'');
+    if(m.indexOf('Load failed')>=0 || m.indexOf('NetworkError')>=0 || m.indexOf('Script error')>=0) {
+      e.preventDefault();
+    }
+  }
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -562,6 +577,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
         <div>
           <div class="biz-label" class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
           <div class="page-title" id="calbooking-title">التقويم</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px;" id="book-sub"></div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="openSheet('booking')">+ حجز</button>
       </div>
@@ -678,15 +694,17 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 
         <!-- ── بطاقة المستخدم الحالي ── -->
         <div style="background:linear-gradient(135deg,var(--card2),var(--card));border:1px solid var(--goldb);border-radius:16px;padding:16px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px;">
-          <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#1a0f00;flex-shrink:0;" id="settings-avatar">A</div>
+          <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#1a0f00;flex-shrink:0;box-shadow:0 4px 12px rgba(200,169,110,.35);" id="settings-avatar">A</div>
           <div style="flex:1;min-width:0;">
             <div style="font-size:10px;color:var(--text3);font-weight:500;margin-bottom:2px;" id="gr-set">أهلاً</div>
-            <div style="font-size:16px;font-weight:900;color:var(--accent);" id="nm-set"></div>
-            <div style="font-size:10px;color:var(--text3);margin-top:1px;" id="role-set"></div>
+            <div style="font-size:17px;font-weight:900;color:var(--accent);" id="nm-set"></div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="role-set"></div>
+            <div id="settings-user-label" style="display:none;"></div>
+            <div id="user-label" style="display:none;"></div>
           </div>
-          <div style="text-align:left;">
-            <div id="rt-indicator" style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3);margin-bottom:4px;">
-              <span id="rt-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text3);display:inline-block;transition:background .5s;"></span>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <div id="rt-indicator" style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3);">
+              <span id="rt-dot" style="width:8px;height:8px;border-radius:50%;background:var(--text3);display:inline-block;transition:background .5s;"></span>
               <span id="rt-label">غير متصل</span>
             </div>
           </div>
@@ -760,6 +778,31 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
           <div id="employees-list"></div>
         </div>
 
+        <!-- ── التكاليف الشهرية ── -->
+        <div style="margin-bottom:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:30px;height:30px;border-radius:8px;background:rgba(220,38,38,.12);display:flex;align-items:center;justify-content:center;font-size:14px;">📅</div>
+              <div style="font-size:14px;font-weight:800;color:var(--text);">التكاليف الشهرية</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="buildMonthlyForm(null);openSheet('monthly')">+ إضافة</button>
+          </div>
+          <div id="monthly-list-settings"></div>
+        </div>
+
+        <!-- ── تكاليف التأسيس ── -->
+        <div style="margin-bottom:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:30px;height:30px;border-radius:8px;background:rgba(251,191,36,.12);display:flex;align-items:center;justify-content:center;font-size:14px;">🏗️</div>
+              <div style="font-size:14px;font-weight:800;color:var(--text);">تكاليف التأسيس</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="buildFoundationForm(null);openSheet('foundation')">+ إضافة</button>
+          </div>
+          <div id="foundation-list-settings"></div>
+        </div>
+
+        <!-- deploy btn hidden --><div id="deploy-btn" style="display:none;"></div>
         <!-- ── المستخدمون ── -->
         <div id="users-section" style="margin-bottom:20px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -772,6 +815,17 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
           <div id="users-list"></div>
         </div>
 
+        <!-- ── رفع التطبيق ── -->
+        <div style="margin-bottom:24px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <div style="width:30px;height:30px;border-radius:8px;background:rgba(37,99,235,.12);display:flex;align-items:center;justify-content:center;font-size:14px;">🚀</div>
+            <div style="font-size:14px;font-weight:800;color:var(--text);">تحديث التطبيق</div>
+          </div>
+          <button id="real-deploy-btn" class="btn btn-primary btn-full" onclick="deployToGitHub()" style="height:46px;font-size:14px;">
+            🚀 رفع التحديثات على GitHub
+          </button>
+        </div>
+
       </div>
     </div>
 
@@ -782,7 +836,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
       <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="8" width="7" height="13" rx="1"/></svg></div>
       <div class="nav-label">الرئيسية</div>
     </button>
-    <button class="nav-item" onclick="showPage('calbooking',this)" style="position:relative;">
+    <button class="nav-item" onclick="showPage('calbooking',this)" style="position:relative;"><div id="nav-badge" class="nav-badge" style="display:none;"></div>
       <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
       <div class="nav-label">الحجوزات</div>
     </button>
@@ -912,6 +966,8 @@ function hasConflict(apt,cin,cout,exId){
 // ══ TOAST ══
 var _tt;
 function toast(msg,type){type=type||'info';var el=document.getElementById('toast');el.textContent=msg;el.className='show t-'+type;clearTimeout(_tt);_tt=setTimeout(function(){el.className='';},3500);}
+// Alias for compatibility
+function showToast(msg,type){ toast(msg,type); }
 
 // ══ AUTH ══
 function toggleTheme(){
@@ -1001,28 +1057,34 @@ function showApp(){
   var uname=currentUser.fullname||currentUser.username||'';
   var h=new Date().getHours();
   var greetTxt=h<12?'صباح الخير':h<17?'مرحباً':'أهلاً';
-  // Update all page user cards
-  // Fill dashboard
   var ndash=document.getElementById('nm-dash');if(ndash)ndash.textContent=uname;
   var gdash=document.getElementById('gr-dash');if(gdash)gdash.textContent=greetTxt;
-  // Fill settings
   var nset=document.getElementById('nm-set');if(nset)nset.textContent=uname;
   var gset=document.getElementById('gr-set');if(gset)gset.textContent=greetTxt;
-  // Reset all nav items visibility
   document.querySelectorAll('.nav-item').forEach(function(n){n.style.display='';});
   applyPerms();
   renderDashboard();
-  // Load from Supabase on login - single call
+  // Load data from Supabase
   loadFromSupabaseAuto();
-  // Start realtime for instant cross-device updates
+  // Start realtime – guard inside initRealtime prevents duplicate clients
   initRealtime();
-  // Fallback polling every 30s (realtime handles instant updates)
+  // Polling fallback every 30s
   if(window._syncInterval) clearInterval(window._syncInterval);
   window._syncInterval = setInterval(function(){ loadFromSupabaseAuto(); }, 30000);
 }
 function logout(){
   localStorage.removeItem('kaya_session');
   currentUser=null;
+  // Stop polling
+  if(window._syncInterval){ clearInterval(window._syncInterval); window._syncInterval=null; }
+  // Unsubscribe realtime channel (keep the client alive – no new instance needed on next login)
+  if(_realtimeChannel){
+    try{ var c=_getSupabaseClient(); if(c) c.removeChannel(_realtimeChannel); }catch(e){}
+    _realtimeChannel=null;
+  }
+  _rtConnected=false;
+  _realtimeStarted=false;
+  _updateRtIndicator(false);
   // Reset nav and pages to default state
   document.querySelectorAll('.nav-item').forEach(function(n){n.style.display='';n.classList.remove('active');});
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
@@ -1196,7 +1258,7 @@ function renderDashboard(){
 function updateBadge(){
   var n=DB.bookings.filter(function(b){return b.status==='confirmed';}).length;
   var el=document.getElementById('nav-badge');
-  if(n>0){el.textContent=n;el.style.display='flex';}else el.style.display='none';
+  if(el){if(n>0){el.textContent=n;el.style.display='flex';}else el.style.display='none';}
   var sub=document.getElementById('book-sub');
   if(sub)sub.textContent='('+DB.bookings.filter(function(b){return b.status!=='blocked';}).length+' إجمالي)';
 }
@@ -1448,6 +1510,25 @@ function delB(id){
   );
 }
 function pCalc(n){var p=parseFloat(document.getElementById('pr')?.value)||0;var el=document.getElementById('pr-c');if(!el)return;if(p>0){el.style.display='block';el.innerHTML=' '+n+' × '+fmtM(p)+' = <strong>'+fmtM(n*p)+' ر.س</strong>';}else el.style.display='none';}
+var _pid=null;
+function openPE(id){
+  var b=DB.bookings.find(function(x){return x.id===id;});
+  if(!b)return;
+  _pid=id;
+  document.getElementById('bk-title').textContent='تحديد السعر';
+  document.getElementById('bk-body').innerHTML=
+    '<div style="margin-bottom:16px;background:var(--bg3);border-radius:12px;padding:14px;">'+
+    '<div style="font-size:13px;font-weight:700;margin-bottom:4px;">'+b.guest+'</div>'+
+    '<div style="font-size:11px;color:var(--text3);">'+b.apt+' · '+b.nights+' ليلة</div>'+
+    '</div>'+
+    '<div class="form-group">'+
+    '<label class="form-label">السعر لليلة (ر.س)</label>'+
+    '<input type="number" id="pr" class="fi" placeholder="0" oninput="pCalc('+b.nights+')" style="font-size:18px;font-weight:700;" autofocus>'+
+    '</div>'+
+    '<div class="calc-box" id="pr-c" style="display:none;"></div>'+
+    '<button class="btn btn-primary btn-full" onclick="savP()" style="height:48px;font-size:16px;margin-top:4px;">حفظ السعر</button>';
+  document.getElementById('sheet-booking').classList.add('open');
+}
 function savP(){var p=parseFloat(document.getElementById('pr')?.value)||0;DB.bookings=DB.bookings.map(function(b){return b.id===_pid?Object.assign({},b,{price:p,total:b.nights*p}):b;});save();closeSheet('booking');toast(' تم حفظ السعر','success');renderAll();}
 
 // ══ DETAIL ══
@@ -2185,6 +2266,42 @@ function renderSettings(){
   document.getElementById('employees-list').innerHTML=listRow(DB.employees||[],function(e){var hasAcc=(DB.appUsers||[]).find(function(u){return u.employeeId===e.id;});return row(rowHd('<div style="display:flex;align-items:center;gap:10px;"><div style="width:40px;height:40px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px;"></div><div><div style="font-weight:700;font-size:13px;">'+e.name+(hasAcc?'<span style="font-size:9px;background:rgba(52,211,153,.15);color:var(--green);padding:2px 6px;border-radius:8px;margin-right:6px;"> لديه حساب</span>':'')+'</div><div style="font-size:11px;color:var(--text3);">'+e.role+'</div></div></div>','<div style="font-weight:900;color:var(--accent);">'+fmtM(e.salary)+' ر.س</div>')+rowActs(editBtn('openEditEm',e.id)+delBtn('delEm',e.id)));}, 'لا يوجد موظفون');
   document.getElementById('units-list').innerHTML=(DB.units||[]).map(function(u){return row(rowHd('<div><div style="font-weight:700;font-size:14px;">'+u+'</div>'+(DB.unitTypes&&DB.unitTypes[u]?'<div style="font-size:11px;color:var(--text3);">'+DB.unitTypes[u]+'</div>':'')+'</div>','')+'<div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn btn-xs btn-success" onclick="openEditU(this.dataset.u)" data-u="'+u+'">تعديل</button><button class="btn btn-xs btn-danger" onclick="delU(this.dataset.u)" data-u="'+u+'">حذف</button></div>');}).join('')||'<div class="empty" style="padding:20px;"><div class="empty-text">لا توجد وحدات</div></div>';
   renderUsersList();
+  
+  // Render monthly costs in settings
+  var mlSet = document.getElementById('monthly-list-settings');
+  if(mlSet){
+    if((DB.monthly||[]).length){
+      mlSet.innerHTML = (DB.monthly||[]).map(function(m){
+        return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">'+
+          '<div><div style="font-weight:700;font-size:13px;">'+m.name+'</div><div style="font-size:11px;color:var(--text3);">'+(m.apt&&m.apt!=='عام'?m.apt:'جميع الوحدات')+'</div></div>'+
+          '<div style="display:flex;align-items:center;gap:10px;">'+
+          '<div style="font-weight:900;color:var(--accent);">'+fmtM(m.amount)+' ر.س</div>'+
+          '<button class="btn btn-xs btn-success" onclick="openEditMo(this.dataset.id)" data-id="'+m.id+'">تعديل</button>'+
+          '<button class="btn btn-xs btn-danger" onclick="delMo(this.dataset.id)" data-id="'+m.id+'">حذف</button>'+
+          '</div></div>';
+      }).join('');
+    } else {
+      mlSet.innerHTML = '<div class="empty" style="padding:18px;"><div class="empty-text">لا توجد تكاليف شهرية</div></div>';
+    }
+  }
+  
+  // Render foundation costs in settings
+  var flSet = document.getElementById('foundation-list-settings');
+  if(flSet){
+    if((DB.foundation||[]).length){
+      flSet.innerHTML = (DB.foundation||[]).map(function(f){
+        return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">'+
+          '<div><div style="font-weight:700;font-size:13px;">'+f.name+'</div><div style="font-size:11px;color:var(--text3);">'+(f.date||'')+'</div></div>'+
+          '<div style="display:flex;align-items:center;gap:10px;">'+
+          '<div style="font-weight:900;color:var(--yellow);">'+fmtM(f.amount)+' ر.س</div>'+
+          '<button class="btn btn-xs btn-success" onclick="openEditFo(this.dataset.id)" data-id="'+f.id+'">تعديل</button>'+
+          '<button class="btn btn-xs btn-danger" onclick="delFo(this.dataset.id)" data-id="'+f.id+'">حذف</button>'+
+          '</div></div>';
+      }).join('');
+    } else {
+      flSet.innerHTML = '<div class="empty" style="padding:18px;"><div class="empty-text">لا توجد تكاليف تأسيس</div></div>';
+    }
+  }
 }
 
 // ══ MONTHLY/FOUNDATION/EMPLOYEE/UNIT FORMS ══
@@ -2561,21 +2678,30 @@ async function sbFetch(table, method, body, query) {
     'Cache-Control': 'no-cache',
   };
   if(method !== 'DELETE') headers['Content-Type'] = 'application/json';
-  if(method==='POST' && query && query.includes('on_conflict')){
+  if(method === 'POST' && query && query.indexOf('on_conflict') >= 0){
     headers['Prefer'] = 'resolution=merge-duplicates,return=minimal';
-  } else if(method==='POST'){
+  } else if(method === 'POST'){
+    headers['Prefer'] = 'return=representation';
+  } else if(method === 'PATCH'){
     headers['Prefer'] = 'return=minimal';
-  } else if(method==='DELETE'){
+  } else if(method === 'DELETE'){
     headers['Prefer'] = 'return=minimal';
   }
   var opts = {method: method||'GET', headers: headers};
   if(body) opts.body = JSON.stringify(body);
-  var resp = await fetch(url, opts);
-  if(!resp.ok){
-    var err = await resp.text();
-    throw new Error('Supabase '+method+' '+table+': '+err.slice(0,100));
+  var resp;
+  try{
+    resp = await fetch(url, opts);
+  } catch(netErr){
+    throw new Error('Network error: ' + netErr.message);
   }
-  var text = await resp.text();
+  if(!resp.ok){
+    var errText = '';
+    try{ errText = await resp.text(); }catch(e){}
+    throw new Error('Supabase ' + method + ' ' + table + ' [' + resp.status + ']: ' + errText.slice(0,200));
+  }
+  var text = '';
+  try{ text = await resp.text(); }catch(e){}
   return text ? JSON.parse(text) : [];
 }
 
@@ -2583,9 +2709,11 @@ async function sbFetch(table, method, body, query) {
 async function syncToSupabase() {
   try {
     showToast('⏳ جارٍ المزامنة...', 'info');
+    var i, b, u, m, e;
     
     // Sync bookings
-    for(var b of (DB.bookings||[])) {
+    for(i=0; i<(DB.bookings||[]).length; i++) {
+      b = DB.bookings[i];
       await sbFetch('bookings', 'POST', {
         id: b.id, apt: b.apt, guest: b.guest, phone: b.phone||'',
         source: b.source, checkin: b.checkin, checkout: b.checkout,
@@ -2595,21 +2723,24 @@ async function syncToSupabase() {
     }
     
     // Sync units
-    for(var u of (DB.units||[])) {
+    for(i=0; i<(DB.units||[]).length; i++) {
+      u = DB.units[i];
       await sbFetch('units', 'POST', {
         id: u, name: u, type: (DB.unitTypes&&DB.unitTypes[u])||''
       }, '?on_conflict=id');
     }
     
     // Sync monthly costs
-    for(var m of (DB.monthly||[])) {
+    for(i=0; i<(DB.monthly||[]).length; i++) {
+      m = DB.monthly[i];
       await sbFetch('monthly_costs', 'POST', {
         id: m.id, name: m.name, amount: m.amount, apt: m.apt||''
       }, '?on_conflict=id');
     }
     
     // Sync expenses
-    for(var e of (DB.expenses||[])) {
+    for(i=0; i<(DB.expenses||[]).length; i++) {
+      e = DB.expenses[i];
       await sbFetch('expenses', 'POST', {
         id: e.id, type: e.type, amount: e.amount,
         date: e.date||new Date().toISOString().slice(0,10),
@@ -2658,7 +2789,7 @@ async function loadFromSupabase() {
 
 // ══ GITHUB DEPLOY ══
 async function deployToGitHub(){
-  var btn=document.getElementById('deploy-btn');
+  var btn=document.getElementById('real-deploy-btn');
   btn.textContent='⏳ جارٍ الرفع...';
   btn.disabled=true;
   try{
@@ -2958,16 +3089,7 @@ function showSyncStatus(msg, success, error){
 
 
 
-window.onerror = function(msg){ 
-  if(!msg||msg.indexOf('Script error')>=0) return true; 
-  return false; 
-};
-window.addEventListener('unhandledrejection',function(e){
-  if(e&&e.reason&&e.reason.message&&e.reason.message.indexOf('Load failed')>=0) e.preventDefault();
-});
-
-
-// ══ CONFIRM DIALOG ══
+// Error handlers defined earlier (before external scripts)
 var _confirmCallback = null;
 
 function showConfirm(title, msg, onConfirm, opts){
@@ -3005,48 +3127,68 @@ function _updateRtIndicator(connected){
 }
 
 // ══ SUPABASE REALTIME (Fixed - using Supabase JS Client only) ══
+// ── Single Supabase client instance – created ONCE, never recreated ──
 var _supabaseClient = null;
 var _realtimeChannel = null;
 var _rtConnected = false;
+var _realtimeStarted = false;   // guard: prevent double-subscribe
+
+function _getSupabaseClient(){
+  // Return existing client if already created
+  if(_supabaseClient) return _supabaseClient;
+  var lib = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
+  if(!lib || typeof lib.createClient !== 'function') return null;
+  // Create exactly once, no auth persistence needed (we handle auth ourselves)
+  _supabaseClient = lib.createClient(SB_URL, SB_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    realtime: { params: { eventsPerSecond: 10 } }
+  });
+  return _supabaseClient;
+}
 
 function initRealtime(){
+  // If already subscribed, do nothing
+  if(_realtimeStarted && _realtimeChannel) return;
+
+  var client = _getSupabaseClient();
+  if(!client){
+    // Library not loaded yet – retry
+    setTimeout(initRealtime, 800);
+    return;
+  }
+
   try{
-    // Wait for supabase JS library
-    if(typeof supabase === 'undefined'){
-      setTimeout(initRealtime, 1000);
-      return;
+    // Remove old channel if exists (without creating a new client)
+    if(_realtimeChannel){
+      try{ client.removeChannel(_realtimeChannel); }catch(e){}
+      _realtimeChannel = null;
     }
-    if(_supabaseClient){
-      try{ _supabaseClient.removeAllChannels(); }catch(e){}
-    }
-    
-    _supabaseClient = supabase.createClient(SB_URL, SB_KEY, {
-      realtime: { params: { eventsPerSecond: 10 } }
-    });
 
     var tables = ['bookings','expenses','monthly_costs','units','sales','foundation_costs','employees','app_config'];
-    _realtimeChannel = _supabaseClient.channel('kaya-all-changes');
-    
+    _realtimeChannel = client.channel('kaya-all-v2');
+
     tables.forEach(function(table){
       _realtimeChannel.on('postgres_changes', {event:'*', schema:'public', table:table}, function(payload){
         handleRealtimeChange(table, payload);
       });
     });
-    
-    _realtimeChannel.subscribe(function(status, err){
+
+    _realtimeChannel.subscribe(function(status){
       if(status === 'SUBSCRIBED'){
         _rtConnected = true;
+        _realtimeStarted = true;
         _updateRtIndicator(true);
       } else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'){
         _rtConnected = false;
+        _realtimeStarted = false;
         _updateRtIndicator(false);
-        // Retry after 5 seconds
-        setTimeout(initRealtime, 5000);
+        // Retry channel subscription only (no new client)
+        setTimeout(initRealtime, 6000);
       }
     });
   }catch(e){
-    // Silent - works offline too
-    setTimeout(initRealtime, 5000);
+    _realtimeStarted = false;
+    setTimeout(initRealtime, 6000);
   }
 }
 
@@ -3153,10 +3295,6 @@ function handleRealtimeChange(table, payload){
       }
       return; // No full renderAll needed for config
     }
-      // Reload units from Supabase on any change
-      loadFromSupabaseAuto().catch(function(){});
-      return;
-    }
     
     // Save locally and re-render
     try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
@@ -3165,13 +3303,6 @@ function handleRealtimeChange(table, payload){
 }
 
 
-window.onerror = function(msg){ 
-  if(!msg||msg.indexOf('Script error')>=0) return true; 
-  return false; 
-};
-window.addEventListener('unhandledrejection',function(e){
-  if(e&&e.reason&&e.reason.message&&e.reason.message.indexOf('Load failed')>=0) e.preventDefault();
-});
 
 loadTheme();
 try{
