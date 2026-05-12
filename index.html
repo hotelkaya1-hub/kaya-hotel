@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f0f4f8;--bg2:#ffffff;--bg3:#e8eef6;--card:#ffffff;--card2:#f5f8fc;--border:#dde4ef;--border2:#b0bdd0;--text:#111827;--text2:#374151;--text3:#6b7280;--green:#059669;--yellow:#d97706;--red:#dc2626;--blue:#2563eb;--purple:#7c3aed;--accent:#b8943a;--accent2:#c9a84c;--gold:rgba(184,148,58,.12);--goldb:rgba(184,148,58,.35);}
-body.dark-mode{--bg:#070d1a;--bg2:#0b1220;--bg3:#0f1828;--card:#131f32;--card2:#182539;--border:#1e2f48;--border2:#253650;--text:#eef1f8;--text2:#8a97b4;--text3:#4a5872;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#7c8cf8;--purple:#a78bfa;--accent:#c8a96e;--accent2:#e8c98e;--gold:rgba(200,169,110,.12);--goldb:rgba(200,169,110,.25);}
+body.dark-mode{--bg:#070d1a;--bg2:#0b1220;--bg3:#0f1828;--card:#131f32;--card2:#182539;--border:#1e2f48;--border2:#253650;--text:#eef1f8;--text2:#8a97b4;--text3:#6b80a0;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#7c8cf8;--purple:#a78bfa;--accent:#c8a96e;--accent2:#e8c98e;--gold:rgba(200,169,110,.12);--goldb:rgba(200,169,110,.25);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,html, body {
   height: 100%;
@@ -27,6 +27,13 @@ body{
   box-sizing:border-box;
   -webkit-text-size-adjust:100%;
   overscroll-behavior:none;
+  font-variant-numeric:lining-nums;
+}
+/* Force English numbers everywhere */
+.s-value, .s-sub, .b-total, .b-nights, .perf-stats,
+input[type="number"], input[type="date"], .stat-card {
+  font-variant-numeric: lining-nums;
+  unicode-bidi: embed;
 }
 input,select,button,textarea{font-family:'Cairo',sans-serif;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -118,7 +125,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 
 /* SECTIONS */
 .sec{padding:0 16px;margin-bottom:16px;}
-.sec-title{font-size:13px;font-weight:800;color:var(--accent);margin-bottom:10px;letter-spacing:.3px;}
+.sec-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:10px;letter-spacing:.3px;}
 .sec-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
 
 /* BADGES */
@@ -257,7 +264,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
   -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
 }
-.login-card{background:rgba(19,31,50,.95);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:340px;}
+.login-card{background:rgba(19,31,50,.95);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:28px 24px;width:100%;max-width:340px;color:#fff;}
 .login-err{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:14px;display:none;text-align:center;}
 
 /* TOOLTIP */
@@ -336,6 +343,22 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     overflow-y: auto !important;
     min-height: 0 !important;
   }
+  /* Desktop modal sheets */
+  .sheet-overlay {
+    align-items: center !important;
+    justify-content: center !important;
+    background: rgba(0,0,0,0.5) !important;
+    backdrop-filter: blur(4px) !important;
+  }
+  .sheet-box {
+    border-radius: 20px !important;
+    max-width: 480px !important;
+    width: 90% !important;
+    max-height: 85vh !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3) !important;
+  }
+  .sheet-handle { display: none !important; }
   .stat-grid {
     grid-template-columns: repeat(4, 1fr) !important;
   }
@@ -444,6 +467,29 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 #confirm-ok{flex:1;padding:13px;border-radius:12px;border:none;background:var(--red);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;}
 #confirm-ok:hover{opacity:.9;}
 #confirm-cancel:hover{background:var(--bg3);}
+
+/* Login card - force light text on dark background */
+.login-card,
+.login-card .form-label,
+.login-card label,
+.login-card div {
+  color: rgba(255,255,255,0.9) !important;
+}
+.login-card input.fi {
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.15) !important;
+  color: #fff !important;
+}
+.login-card input.fi::placeholder {
+  color: rgba(255,255,255,0.35) !important;
+}
+.login-card input.fi:focus {
+  border-color: var(--accent) !important;
+  background: rgba(255,255,255,0.12) !important;
+}
+#remember-me {
+  accent-color: var(--accent);
+}
 </style>
 </head>
 <body>
@@ -459,12 +505,12 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     <div style="font-size:10px;color:var(--text3);letter-spacing:5px;">HOTEL MANAGEMENT</div>
   </div>
   <div class="login-card">
-    <div style="font-size:18px;font-weight:900;margin-bottom:6px;text-align:center;">تسجيل الدخول</div>
-    <div style="font-size:12px;color:var(--text3);text-align:center;margin-bottom:24px;">أدخل بيانات حسابك</div>
+    <div style="font-size:22px;font-weight:900;margin-bottom:6px;text-align:center;color:var(--text);">تسجيل الدخول</div>
+    <div style="margin-bottom:24px;"></div>
     <div class="login-err" id="login-err">اسم المستخدم أو كلمة المرور غير صحيحة</div>
-    <div class="form-group"><label class="form-label">اسم المستخدم</label><input id="login-user" class="fi" placeholder="اسم المستخدم" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus();"></div>
-    <div class="form-group"><label class="form-label">كلمة المرور</label><input id="login-pass" class="fi" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin();"></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><input type="checkbox" id="remember-me" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;" onchange="toggleRemember(this.checked)"><label for="remember-me" style="font-size:13px;color:var(--text2);cursor:pointer;">تذكرني دائماً</label></div>
-    <button class="btn btn-primary btn-full" style="margin-top:6px;" onclick="doLogin()">دخول</button>
+    <div class="form-group"><label class="form-label" style="font-weight:700;font-size:13px;color:var(--text);">اسم المستخدم</label><input id="login-user" class="fi" placeholder="اسم المستخدم" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus();"></div>
+    <div class="form-group"><label class="form-label" style="font-weight:700;font-size:13px;color:var(--text);">كلمة المرور</label><input id="login-pass" class="fi" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin();"></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><input type="checkbox" id="remember-me" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;" onchange="toggleRemember(this.checked)"><label for="remember-me" style="font-size:13px;color:var(--text);font-weight:600;cursor:pointer;">تذكرني دائماً</label></div>
+    <button class="btn btn-primary btn-full" style="margin-top:6px;height:50px;font-size:16px;" onclick="doLogin()">تسجيل الدخول</button>
   </div>
 </div>
 
@@ -476,7 +522,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
   <div id="ptr-content">
     <div id="ptr-spinner"></div>
     <span id="ptr-text">اسحب للتحديث</span>
-    <span id="ptr-check">✓</span>
+    
   </div>
 </div>
 <div id="app" style="display:none;">
@@ -486,8 +532,8 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     <div id="page-dashboard" class="page active">
       <div class="topbar">
         <div>
-          <div class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;">KAYA</div>
-          <div class="page-title">الرئيسية</div>
+          <div class="biz-label" style="font-size:20px;font-weight:900;color:var(--accent);letter-spacing:1px;line-height:1.2;margin-bottom:2px;">KAYA</div>
+          <div style="font-size:11px;color:var(--text3);letter-spacing:2px;">HOTEL MANAGEMENT</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <div>
@@ -736,7 +782,7 @@ function fmtRange(ci,co){
     return day1+' '+m1+' ← '+day2+' '+m2;
   }
 }
-var fmtM=function(n){return(n||0).toLocaleString('en-US');};
+var fmtM=function(n){return(+(n||0)).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});};
 function getCalSt(apt){if(!DB.calState[apt]){var n=new Date();DB.calState[apt]={y:n.getFullYear(),m:n.getMonth()};}return DB.calState[apt];}
 function hasConflict(apt,cin,cout,exId){
   return DB.bookings.some(function(b){
@@ -1198,16 +1244,24 @@ function savB(){
 function openEB(id){var b=DB.bookings.find(function(x){return x.id===id;});if(!b)return;buildBookingForm(b);document.getElementById('sheet-booking').classList.add('open');}
 function delB(id){
   var bk=(DB.bookings||[]).find(function(x){return x.id===id;});
-  var name=bk?bk.guest:'هذا الحجز';
+  if(!bk){showToast('لم يتم العثور على الحجز','error');return;}
+  var name=bk.guest||'هذا الحجز';
   showConfirm(
     'حذف الحجز',
-    'سيتم حذف حجز "'+name+'" نهائياً ولا يمكن التراجع.',
+    'سيتم حذف حجز "'+name+'" نهائياً.',
     function(){
+      // Close sheets first
+      document.querySelectorAll('.sheet-overlay').forEach(function(s){s.classList.remove('open');});
+      // Delete from local DB
       DB.bookings=(DB.bookings||[]).filter(function(b){return b.id!==id;});
-      sbFetch('bookings','DELETE',null,'?id=eq.'+id).catch(function(){});
-      save();closeSheet('detail');renderAll();showToast('تم الحذف','success');
+      // Delete from Supabase
+      sbFetch('bookings','DELETE',null,'?id=eq.'+encodeURIComponent(id)).catch(function(e){console.warn('Delete failed:',e);});
+      // Save and refresh
+      try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+      renderAll();
+      showToast('تم حذف الحجز','success');
     },
-    {icon:'🗑️',okText:'حذف الحجز',okColor:'var(--red)'}
+    {icon:'🗑️',okText:'حذف',okColor:'#dc2626'}
   );
 }
 function pCalc(n){var p=parseFloat(document.getElementById('pr')?.value)||0;var el=document.getElementById('pr-c');if(!el)return;if(p>0){el.style.display='block';el.innerHTML=' '+n+' × '+fmtM(p)+' = <strong>'+fmtM(n*p)+' ر.س</strong>';}else el.style.display='none';}
@@ -2001,7 +2055,7 @@ function delUser(id){DB.appUsers=(DB.appUsers||[]).filter(function(u){return u.i
 function editAdminInfo(){
   document.getElementById('adduser-title').textContent='تعديل بيانات الأدمن';
   document.getElementById('adduser-body').innerHTML=
-    '<div class="form-group"><label class="form-label">اسم المستخدم</label>'
+    '<div class="form-group"><label class="form-label" style="font-weight:700;font-size:13px;color:var(--text);">اسم المستخدم</label>'
     +'<input id="adm-u" class="fi" value="'+ADMIN.username+'"></div>'
     +'<div class="form-group"><label class="form-label">كلمة المرور الجديدة (فارغ = لا تغيير)</label>'
     +'<input id="adm-p" class="fi" type="password" placeholder="••••••••"></div>'
@@ -2295,15 +2349,12 @@ document.addEventListener('touchmove', function(e){
   if(!ind) return;
   ind.style.height = pull + 'px';
   ind.classList.toggle('ptr-visible', pull > 10);
-  var txt = document.getElementById('ptr-text');
   var spinner = document.getElementById('ptr-spinner');
   if(pull >= 52 && !_ptrDone){
     _ptrDone = true;
-    if(txt) txt.textContent = 'أطلق للتحديث';
     if(spinner) spinner.style.borderTopColor = 'var(--accent)';
   } else if(pull < 52 && _ptrDone){
     _ptrDone = false;
-    if(txt) txt.textContent = 'اسحب للتحديث';
     if(spinner) spinner.style.borderTopColor = '';
   }
 },{passive:true});
@@ -2315,21 +2366,18 @@ document.addEventListener('touchend', function(){
   if(_ptrDone){
     var spinner = document.getElementById('ptr-spinner');
     var txt = document.getElementById('ptr-text');
-    var chk = document.getElementById('ptr-check');
     if(spinner) spinner.classList.add('spinning');
     if(txt) txt.textContent = 'جارٍ التحديث...';
     if(ind) ind.style.height = '50px';
     loadFromSupabaseAuto().finally(function(){
-      if(spinner){spinner.style.display='none';}
-      if(chk){chk.style.display='inline';}
-      if(txt) txt.textContent = 'تم التحديث';
+      if(spinner) spinner.classList.remove('spinning');
+      if(txt) txt.textContent = 'تم التحديث ✓';
       setTimeout(function(){
         if(ind){ind.style.height='0';ind.classList.remove('ptr-visible');}
-        if(spinner){spinner.style.display='';spinner.classList.remove('spinning');spinner.style.borderTopColor='';}
-        if(chk){chk.style.display='none';}
+        if(spinner) spinner.style.borderTopColor='';
         if(txt) txt.textContent = 'اسحب للتحديث';
         _ptrDone = false;
-      }, 700);
+      }, 800);
     });
   } else {
     if(ind){ind.style.height='0';ind.classList.remove('ptr-visible');}
@@ -2458,17 +2506,15 @@ async function autoSyncToSupabase(){
       },'?on_conflict=id');
     }
     
-    showSyncStatus('✅ تم الحفظ', true);
+
   }catch(e){
-    console.log('Auto sync error:',e.message);
-    showSyncStatus('❌ '+e.message, false, true);
+    // Silent fail
   }
   _syncInProgress = false;
 }
 
 // Load from Supabase on startup
 async function loadFromSupabaseAuto(){
-  showSyncStatus('جارٍ المزامنة...');
   try{
     var [bookings, expenses, monthly, foundation, employees, units, sales] = await Promise.all([
       sbFetch('bookings','GET',null,'?select=*&order=checkin.desc&limit=1000'),
@@ -2525,15 +2571,13 @@ async function loadFromSupabaseAuto(){
     }
     showSyncStatus('✅ متزامن', true);
   }catch(e){
-    console.log('Auto load error:',e.message);
-    showSyncStatus('❌ خطأ في المزامنة', false, true);
+    // Silent fail - app works offline too
   }
 }
 
 
 function showSyncStatus(msg, success, error){
-  // Silent sync - no UI indicator
-  if(error) console.warn('Sync:', msg);
+  // Completely silent
 }
 
 
