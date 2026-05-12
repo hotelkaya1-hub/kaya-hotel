@@ -1333,17 +1333,11 @@ function delB(id){
     'سيتم حذف حجز "'+name+'" نهائياً.',
     function(){
       document.querySelectorAll('.sheet-overlay').forEach(function(s){s.classList.remove('open');});
-      showToast('جارٍ الحذف...','info');
-      sbFetch('bookings','DELETE',null,'?id=eq.'+id)
-        .then(function(){
-          DB.bookings=DB.bookings.filter(function(b){return b.id!==id;});
-          try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-          renderAll();
-          showToast('تم الحذف','success');
-        })
-        .catch(function(){
-          showToast('فشل الحذف — حاول مجدداً','error');
-        });
+      DB.bookings=(DB.bookings||[]).filter(function(b){return b.id!==id;});
+      try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+      renderAll();
+      showToast('تم الحذف','success');
+      sbFetch('bookings','DELETE',null,'?id=eq.'+id).catch(function(){});
     },
     {okText:'حذف',okColor:'#dc2626'}
   );
@@ -1600,14 +1594,10 @@ function delE(id){
     var backup=DB.expenses.slice();
     DB.expenses=DB.expenses.filter(function(e){return e.id!==id;});
     try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-    showToast('جارٍ الحذف...','info');
-    sbFetch('expenses','DELETE',null,'?id=eq.'+id)
-      .then(function(){
-        DB.expenses=DB.expenses.filter(function(e){return e.id!==id;});
-        try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-        renderAll();showToast('تم الحذف','success');
-      })
-      .catch(function(){showToast('فشل الحذف — حاول مجدداً','error');});
+    DB.expenses=(DB.expenses||[]).filter(function(e){return e.id!==id;});
+    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    renderAll();showToast('تم الحذف','success');
+    sbFetch('expenses','DELETE',null,'?id=eq.'+id).catch(function(){});
   },{okText:'حذف',okColor:'#dc2626'});
 }
 function savExpEdit(){var type=document.getElementById('e-t')?.value||'أخرى';var apt=document.getElementById('e-a')?.value||'عام';var date=document.getElementById('e-d')?.value||toDay();var desc=document.getElementById('e-ds')?.value||type;var amount=parseFloat(document.getElementById('e-am')?.value)||0;if(!amount){toast('أدخل المبلغ','error');return;}DB.expenses=(DB.expenses||[]).map(function(e){return e.id===_expId?Object.assign({},e,{type:type,apt:apt,date:date,desc:desc,amount:amount}):e;});save();closeSheet('expense');_expId=null;toast('تم التعديل','success');renderExpenses();renderDashboard();}
