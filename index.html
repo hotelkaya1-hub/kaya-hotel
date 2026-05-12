@@ -470,17 +470,6 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 
 <!-- APP -->
 
-<!-- CONFIRM DIALOG -->
-<div id="confirm-overlay">
-  <div id="confirm-box">
-    <div id="confirm-icon">🗑️</div>
-    <div id="confirm-title">تأكيد الحذف</div>
-    <div id="confirm-msg">هل أنت متأكد؟ لا يمكن التراجع عن هذا الإجراء.</div>
-    <div id="confirm-btns">
-      <button id="confirm-cancel" onclick="closeConfirm()">إلغاء</button>
-      <button id="confirm-ok" onclick="doConfirm()">حذف</button>
-    </div>
-  </div>
 </div>
 
 <div id="ptr-indicator">
@@ -2287,116 +2276,65 @@ async function deployToGitHub(){
 
 
 // ══ PULL TO REFRESH ══
-var _ptr = {
-  startY: 0,
-  active: false,
-  triggered: false,
-  loading: false,
-  threshold: 72,
-  maxHeight: 64,
-};
-
-function _ptrEl(){ return document.getElementById('ptr-indicator'); }
-function _ptrSpinner(){ return document.getElementById('ptr-spinner'); }
-function _ptrText(){ return document.getElementById('ptr-text'); }
-function _ptrCheck(){ return document.getElementById('ptr-check'); }
+var _ptrY = 0, _ptrOn = false, _ptrDone = false;
 
 document.addEventListener('touchstart', function(e){
-  if(_ptr.loading) return;
   var c = document.getElementById('content');
-  if(c && c.scrollTop === 0 && e.touches.length === 1){
-    _ptr.startY = e.touches[0].clientY;
-    _ptr.active = true;
-    _ptr.triggered = false;
+  if(c && c.scrollTop === 0){
+    _ptrY = e.touches[0].clientY;
+    _ptrOn = true; _ptrDone = false;
   }
-}, {passive: true});
+},{passive:true});
 
 document.addEventListener('touchmove', function(e){
-  if(!_ptr.active || _ptr.loading) return;
-  var dy = e.touches[0].clientY - _ptr.startY;
-  if(dy <= 0){ _ptr.active = false; return; }
-
-  // Elastic resistance
-  var pull = Math.pow(dy, 0.75);
-  var height = Math.min(pull, _ptr.maxHeight);
-  var progress = Math.min(dy / _ptr.threshold, 1);
-
-  var ind = _ptrEl();
-  var spinner = _ptrSpinner();
-  var txt = _ptrText();
-
-  if(ind){
-    ind.style.height = height + 'px';
-    if(height > 20) ind.classList.add('ptr-visible');
-
-    // Rotate spinner based on pull
-    if(spinner && !_ptr.triggered){
-      spinner.style.transform = 'rotate(' + (progress * 360) + 'deg)';
-    }
-
-    if(dy >= _ptr.threshold && !_ptr.triggered){
-      _ptr.triggered = true;
-      if(txt) txt.textContent = 'أطلق للتحديث';
-      if(spinner){
-        spinner.style.borderTopColor = 'var(--accent)';
-        spinner.style.transform = 'rotate(360deg)';
-      }
-      // Haptic
-      if(navigator.vibrate) navigator.vibrate(10);
-    } else if(dy < _ptr.threshold && _ptr.triggered){
-      _ptr.triggered = false;
-      if(txt) txt.textContent = 'اسحب للتحديث';
-    }
+  if(!_ptrOn) return;
+  var dy = e.touches[0].clientY - _ptrY;
+  if(dy < 0){_ptrOn=false;return;}
+  var pull = Math.min(dy * 0.5, 56);
+  var ind = document.getElementById('ptr-indicator');
+  if(!ind) return;
+  ind.style.height = pull + 'px';
+  ind.classList.toggle('ptr-visible', pull > 10);
+  var txt = document.getElementById('ptr-text');
+  var spinner = document.getElementById('ptr-spinner');
+  if(pull >= 52 && !_ptrDone){
+    _ptrDone = true;
+    if(txt) txt.textContent = 'أطلق للتحديث';
+    if(spinner) spinner.style.borderTopColor = 'var(--accent)';
+  } else if(pull < 52 && _ptrDone){
+    _ptrDone = false;
+    if(txt) txt.textContent = 'اسحب للتحديث';
+    if(spinner) spinner.style.borderTopColor = '';
   }
-}, {passive: true});
+},{passive:true});
 
 document.addEventListener('touchend', function(){
-  if(!_ptr.active) return;
-  _ptr.active = false;
-
-  var ind = _ptrEl();
-  var spinner = _ptrSpinner();
-  var txt = _ptrText();
-  var check = _ptrCheck();
-
-  if(_ptr.triggered){
-    _ptr.loading = true;
-    // Show spinning state
-    if(ind) ind.style.height = '56px';
-    if(spinner){ spinner.classList.add('spinning'); spinner.style.transform = ''; }
+  if(!_ptrOn) return;
+  _ptrOn = false;
+  var ind = document.getElementById('ptr-indicator');
+  if(_ptrDone){
+    var spinner = document.getElementById('ptr-spinner');
+    var txt = document.getElementById('ptr-text');
+    var chk = document.getElementById('ptr-check');
+    if(spinner) spinner.classList.add('spinning');
     if(txt) txt.textContent = 'جارٍ التحديث...';
-
-    setTimeout(function(){
-      loadFromSupabaseAuto().then(function(){
-        // Success state
-        if(spinner){ spinner.style.display = 'none'; }
-        if(check){ check.style.display = 'inline'; }
-        if(txt) txt.textContent = 'تم التحديث';
-
-        setTimeout(function(){
-          if(ind){ ind.style.height = '0'; ind.classList.remove('ptr-visible'); }
-          if(spinner){ spinner.style.display = ''; spinner.classList.remove('spinning'); }
-          if(check){ check.style.display = 'none'; }
-          if(txt) txt.textContent = 'اسحب للتحديث';
-          _ptr.loading = false;
-          _ptr.triggered = false;
-        }, 600);
-      }).catch(function(){
-        // Even on error, hide gracefully
-        if(ind){ ind.style.height = '0'; ind.classList.remove('ptr-visible'); }
-        if(spinner) spinner.classList.remove('spinning');
+    if(ind) ind.style.height = '50px';
+    loadFromSupabaseAuto().finally(function(){
+      if(spinner){spinner.style.display='none';}
+      if(chk){chk.style.display='inline';}
+      if(txt) txt.textContent = 'تم التحديث';
+      setTimeout(function(){
+        if(ind){ind.style.height='0';ind.classList.remove('ptr-visible');}
+        if(spinner){spinner.style.display='';spinner.classList.remove('spinning');spinner.style.borderTopColor='';}
+        if(chk){chk.style.display='none';}
         if(txt) txt.textContent = 'اسحب للتحديث';
-        _ptr.loading = false;
-        _ptr.triggered = false;
-        renderAll();
-      });
-    }, 300);
+        _ptrDone = false;
+      }, 700);
+    });
   } else {
-    // Snap back
-    if(ind){ ind.style.height = '0'; ind.classList.remove('ptr-visible'); }
-    _ptr.triggered = false;
+    if(ind){ind.style.height='0';ind.classList.remove('ptr-visible');}
   }
-}, {passive: true});
+},{passive:true});
 
 // ══ SWIPE NAVIGATION ══
 var _swipeX=0, _swipeY=0, _swipePages=['dashboard','calbooking','revenue','expenses','settings'];
@@ -2647,5 +2585,16 @@ try{
 }
 
 </script>
+<!-- CONFIRM DIALOG -->
+<div id="confirm-overlay">
+  <div id="confirm-box">
+    <div id="confirm-icon">🗑️</div>
+    <div id="confirm-title">تأكيد الحذف</div>
+    <div id="confirm-msg">هل أنت متأكد؟ لا يمكن التراجع عن هذا الإجراء.</div>
+    <div id="confirm-btns">
+      <button id="confirm-cancel" onclick="closeConfirm()">إلغاء</button>
+      <button id="confirm-ok" onclick="doConfirm()">حذف</button>
+    </div>
+  </div>
 </body>
 </html>
