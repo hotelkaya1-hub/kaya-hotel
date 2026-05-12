@@ -610,17 +610,56 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
       </div>
     </div>
 
-    <!-- EXPENSES -->
+    <!-- EXPENSES / COSTS -->
     <div id="page-expenses" class="page">
       <div class="topbar">
         <div>
-          <div class="biz-label" class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
-          <div class="page-title">المصروفات</div>
+          <div class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
+          <div class="page-title">التكاليف</div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="openSheet('expense')">+ مصروف</button>
+        <div id="costs-add-btn">
+          <button class="btn btn-primary btn-sm" onclick="openSheet('expense')">+ مصروف</button>
+        </div>
       </div>
+      <!-- Stats -->
       <div class="stat-grid" id="exp-stats"></div>
-      <div style="padding:0 16px;" id="expenses-list"></div>
+      <!-- Tabs -->
+      <div class="tab-bar">
+        <button class="tab-btn active" id="cost-tab-1" onclick="showCostTab(1)">المصروفات الفعلية</button>
+        <button class="tab-btn" id="cost-tab-2" onclick="showCostTab(2)">التكاليف الثابتة</button>
+        <button class="tab-btn" id="cost-tab-3" onclick="showCostTab(3)">تحليل التكاليف</button>
+      </div>
+      <!-- Tab 1: Actual Expenses -->
+      <div id="cost-content-1" style="padding:0 16px;">
+        <div id="expenses-list"></div>
+      </div>
+      <!-- Tab 2: Fixed & Variable Costs (monthly + employees) -->
+      <div id="cost-content-2" style="display:none;padding:0 16px;">
+        <div style="margin-bottom:20px;">
+          <div class="sec-hd">
+            <div class="sec-title">التكاليف الشهرية الثابتة</div>
+            <button class="btn btn-primary btn-sm" onclick="openSheet('monthly')">إضافة تكلفة</button>
+          </div>
+          <div id="monthly-list-costs"></div>
+        </div>
+        <div style="margin-bottom:20px;">
+          <div class="sec-hd">
+            <div class="sec-title">الموظفون والرواتب</div>
+          </div>
+          <div id="employees-costs-list"></div>
+        </div>
+      </div>
+      <!-- Tab 3: Cost Analysis + Foundation -->
+      <div id="cost-content-3" style="display:none;padding:0 16px;">
+        <div style="margin-bottom:20px;">
+          <div class="sec-hd">
+            <div class="sec-title">تكاليف التأسيس</div>
+            <button class="btn btn-primary btn-sm" onclick="openSheet('foundation')">إضافة تكلفة</button>
+          </div>
+          <div id="foundation-list-costs"></div>
+        </div>
+        <div id="costs-analysis-card"></div>
+      </div>
     </div>
 
     <!-- SETTINGS -->
@@ -679,7 +718,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     <div style="margin-bottom:20px;">
       <div class="sec-hd"><div class="sec-title">اسم النشاط</div></div>
       <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;">
-        <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">الاسم الحالي: <span id="current-biz-name" style="color:var(--accent);font-weight:700;"></span></div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">الاسم الحالي: <span id="current-biz-name" style="color:var(--text2);font-weight:600;"></span></div>
         <input id="biz-name" class="fi" placeholder="أدخل اسم النشاط" onkeydown="if(event.key==='Enter')saveBusinessName();" style="margin-bottom:10px;">
         <div style="display:flex;gap:8px;">
           <button class="btn btn-primary" style="flex:1;" onclick="saveBusinessName()">حفظ</button>
@@ -688,9 +727,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
       </div>
     </div>
 
-    <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">التكاليف الشهرية</div><button class="btn btn-primary btn-sm" onclick="openSheet('monthly')">إضافة تكلفة</button></div><div id="monthly-list"></div></div>
-        <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">تكاليف التأسيس</div><button class="btn btn-primary btn-sm" onclick="openSheet('foundation')">إضافة تكلفة</button></div><div id="foundation-list"></div></div>
-        <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">الموظفون</div><button class="btn btn-primary btn-sm" onclick="openSheet('employee')">إضافة موظف</button></div><div id="employees-list"></div></div>
+    <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">الموظفون</div><button class="btn btn-primary btn-sm" onclick="openSheet('employee')">إضافة موظف</button></div><div id="employees-list"></div></div>
         <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">الوحدات</div><button class="btn btn-primary btn-sm" onclick="openSheet('unit')">إضافة وحدة</button></div><div id="units-list"></div></div>
         
         
@@ -719,7 +756,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     </button>
     <button class="nav-item" onclick="showPage('expenses',this)">
       <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 18l-9.5-9.5-5 5L1 6"/><polyline points="17 18 23 18 23 12"/></svg></div>
-      <div class="nav-label">مصروفات</div>
+      <div class="nav-label">التكاليف</div>
     </button>
     <button class="nav-item" onclick="showPage('settings',this)">
       <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
@@ -1598,20 +1635,35 @@ function saveSale(){
 function delSale(id){
   sbFetch('sales','DELETE',null,'?id=eq.'+id).catch(function(){});if(!DB.sales)return;DB.sales=DB.sales.filter(function(s){return s.id!==id;});save();toast('تم الحذف','info');renderRevenue();renderDashboard();}
 
-// ══ EXPENSES ══
-function renderExpenses(){
-  var total=(DB.expenses||[]).reduce(function(s,e){return s+e.amount;},0);
-  var moT=(DB.monthly||[]).reduce(function(s,m){return s+m.amount;},0);
-  var foT=(DB.foundation||[]).reduce(function(s,f){return s+f.amount;},0);
-  var rev=DB.bookings.filter(function(b){return b.status==='confirmed';}).reduce(function(s,b){return s+b.total;},0)+((DB.sales||[]).reduce(function(s,x){return s+x.amount;},0));
-  var margin=rev?Math.round(((rev-total-moT)/rev)*100):0;
-  document.getElementById('exp-stats').innerHTML=
-    '<div class="stat-card c-red"><div class="s-label">مصروفات</div><div class="s-value">'+fmtM(total)+' ر.س</div></div>'
-    +'<div class="stat-card c-yellow"><div class="s-label">تكاليف شهرية</div><div class="s-value">'+fmtM(moT)+' ر.س</div></div>'
-    +'<div class="stat-card c-purple"><div class="s-label">تكاليف التأسيس</div><div class="s-value">'+fmtM(foT)+' ر.س</div></div>'
-    +'<div class="stat-card c-green"><div class="s-label">هامش الربح</div><div class="s-value">'+margin+'%</div></div>';
+// ══ COST TABS ══
+var _currentCostTab = 1;
+function showCostTab(n){
+  _currentCostTab = n;
+  [1,2,3].forEach(function(i){
+    var c = document.getElementById('cost-content-'+i);
+    var b = document.getElementById('cost-tab-'+i);
+    if(c) c.style.display = i===n ? 'block' : 'none';
+    if(b){
+      if(i===n){b.style.background='var(--accent)';b.style.color='var(--bg)';}
+      else{b.style.background='transparent';b.style.color='var(--text3)';}
+    }
+  });
+  // Show/hide add button contextually
+  var addBtn = document.getElementById('costs-add-btn');
+  if(addBtn){
+    if(n===1) addBtn.innerHTML='<button class="btn btn-primary btn-sm" onclick="openSheet(\'expense\')">+ مصروف</button>';
+    else if(n===2) addBtn.innerHTML='<button class="btn btn-primary btn-sm" onclick="openSheet(\'monthly\')">+ تكلفة شهرية</button>';
+    else addBtn.innerHTML='<button class="btn btn-primary btn-sm" onclick="openSheet(\'foundation\')">+ تكلفة تأسيس</button>';
+  }
+  if(n===1) renderExpensesList();
+  if(n===2) renderFixedCosts();
+  if(n===3) renderCostAnalysis();
+}
+
+function renderExpensesList(){
   var sorted=[].concat(DB.expenses||[]).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
-  document.getElementById('expenses-list').innerHTML=sorted.length?sorted.map(function(e){
+  var el=document.getElementById('expenses-list');if(!el)return;
+  el.innerHTML=sorted.length?sorted.map(function(e){
     return'<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">'
       +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">'
         +'<div style="width:42px;height:42px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">'+(EI[e.type]||'📌')+'</div>'
@@ -1622,7 +1674,132 @@ function renderExpenses(){
         +'<button class="btn btn-xs btn-success" onclick="openEditExp(this.dataset.id)" data-id="'+e.id+'">تعديل</button>'
         +'<button class="btn btn-xs btn-danger" onclick="delE(this.dataset.id)" data-id="'+e.id+'">حذف</button>'
       +'</div></div>';
-  }).join(''):'<div class="empty"><div class="empty-icon"></div><div class="empty-text">لا توجد مصروفات</div></div>';
+  }).join(''):'<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">لا توجد مصروفات فعلية</div></div>';
+}
+
+function renderFixedCosts(){
+  function row(html){return'<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;">'+html+'</div>';}
+  function rowHd(left,right){return'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'+left+right+'</div>';}
+  function rowActs(html){return'<div style="display:flex;gap:8px;justify-content:flex-end;">'+html+'</div>';}
+  function editBtn(fn,id){return'<button class="btn btn-xs btn-success" onclick="'+fn+'(\''+id+'\')" >تعديل</button>';}
+  function delBtn(fn,id){return'<button class="btn btn-xs btn-danger" onclick="'+fn+'(\''+id+'\')" >حذف</button>';}
+
+  var mcEl=document.getElementById('monthly-list-costs');
+  if(mcEl){
+    mcEl.innerHTML=(DB.monthly||[]).length?(DB.monthly||[]).map(function(m){
+      return row(rowHd('<div><div style="font-weight:700;font-size:13px;">'+m.name+'</div><div style="font-size:11px;color:var(--text3);">'+(m.apt||'عام')+' · شهري</div></div>','<div style="font-weight:900;color:var(--yellow);">'+fmtM(m.amount)+' ر.س</div>')+rowActs(editBtn('openEditMo',m.id)+delBtn('delMo',m.id)));
+    }).join(''):'<div class="empty" style="padding:20px;"><div class="empty-text">لا توجد تكاليف شهرية — اضغط "+ تكلفة شهرية"</div></div>';
+  }
+  var emEl=document.getElementById('employees-costs-list');
+  if(emEl){
+    emEl.innerHTML=(DB.employees||[]).length?(DB.employees||[]).map(function(e){
+      return row(rowHd('<div style="display:flex;align-items:center;gap:10px;"><div style="width:40px;height:40px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div><div><div style="font-weight:700;font-size:13px;">'+e.name+'</div><div style="font-size:11px;color:var(--text3);">'+e.role+'</div></div></div>','<div style="font-weight:900;color:var(--accent);">'+fmtM(e.salary)+' ر.س/شهر</div>'));
+    }).join(''):'<div class="empty" style="padding:20px;"><div class="empty-text">لا يوجد موظفون</div></div>';
+  }
+}
+
+function renderCostAnalysis(){
+  var expT=(DB.expenses||[]).reduce(function(s,e){return s+e.amount;},0);
+  var moT=(DB.monthly||[]).reduce(function(s,m){return s+m.amount;},0);
+  var foT=(DB.foundation||[]).reduce(function(s,f){return s+f.amount;},0);
+  var empT=(DB.employees||[]).reduce(function(s,e){return s+e.salary;},0);
+  var rev=DB.bookings.filter(function(b){return b.status==='confirmed';}).reduce(function(s,b){return s+b.total;},0)+((DB.sales||[]).reduce(function(s,x){return s+x.amount;},0));
+  var totalFixed=moT+empT;
+  var totalCosts=expT+totalFixed;
+  var netProfit=rev-totalCosts;
+  var margin=rev>0?Math.round((netProfit/rev)*100):0;
+
+  function card(color,label,value,sub){
+    return'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 12px;">'
+      +'<div style="font-size:10px;color:var(--text3);margin-bottom:3px;">'+label+'</div>'
+      +'<div style="font-size:15px;font-weight:900;color:'+color+';">'+value+'</div>'
+      +(sub?'<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+sub+'</div>':'')
+    +'</div>';
+  }
+  function row2(label,value,color){
+    return'<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">'
+      +'<span style="font-size:12px;color:var(--text2);">'+label+'</span>'
+      +'<span style="font-size:13px;font-weight:700;color:'+(color||'var(--text)')+';">'+value+'</span>'
+    +'</div>';
+  }
+  function section(title,content){
+    return'<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px;">'
+      +'<div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px;">'+title+'</div>'
+      +content+'</div>';
+  }
+
+  // Foundation list
+  function editBtn(fn,id){return'<button class="btn btn-xs btn-success" onclick="'+fn+'(\''+id+'\')" >تعديل</button>';}
+  function delBtn(fn,id){return'<button class="btn btn-xs btn-danger" onclick="'+fn+'(\''+id+'\')" >حذف</button>';}
+  var foEl=document.getElementById('foundation-list-costs');
+  if(foEl){
+    foEl.innerHTML=(DB.foundation||[]).length?(DB.foundation||[]).map(function(f){
+      return'<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+          +'<div><div style="font-weight:700;font-size:13px;">'+f.name+'</div><div style="font-size:11px;color:var(--text3);">'+fmtD(f.date)+'</div></div>'
+          +'<div style="font-weight:900;color:var(--purple);">'+fmtM(f.amount)+' ر.س</div>'
+        +'</div>'
+        +'<div style="display:flex;gap:8px;justify-content:flex-end;">'+editBtn('openEditFo',f.id)+delBtn('delFo',f.id)+'</div>'
+      +'</div>';
+    }).join(''):'<div class="empty" style="padding:20px;"><div class="empty-text">لا توجد تكاليف تأسيسية — اضغط "+ تكلفة تأسيس"</div></div>';
+  }
+
+  var analysisEl=document.getElementById('costs-analysis-card');
+  if(!analysisEl)return;
+
+  // Breakdown by expense type
+  var byType={};
+  (DB.expenses||[]).forEach(function(e){byType[e.type]=(byType[e.type]||0)+e.amount;});
+  var expBreakdown=Object.keys(byType).length?Object.keys(byType).sort(function(a,b){return byType[b]-byType[a];}).map(function(t){
+    var pct=expT>0?Math.round((byType[t]/expT)*100):0;
+    return'<div style="margin-bottom:10px;">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'
+        +'<span style="font-size:12px;font-weight:600;">'+(EI[t]||'📌')+' '+t+'</span>'
+        +'<span style="font-size:12px;font-weight:700;color:var(--red);">'+fmtM(byType[t])+' ر.س <span style="color:var(--text3);font-size:10px;">('+pct+'%)</span></span>'
+      +'</div>'
+      +'<div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;">'
+        +'<div style="width:'+pct+'%;height:100%;background:var(--red);opacity:.75;border-radius:3px;"></div>'
+      +'</div></div>';
+  }).join(''):'<div style="text-align:center;color:var(--text3);font-size:12px;padding:12px;">لا توجد مصروفات مسجلة</div>';
+
+  analysisEl.innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">'
+      +card('var(--red)','تكاليف ثابتة شهرية',fmtM(totalFixed)+' ر.س','إيجار + رواتب')
+      +card('var(--yellow)','مصروفات متغيرة',fmtM(expT)+' ر.س','فعلية')
+      +card('var(--purple)','رأس المال التأسيسي',fmtM(foT)+' ر.س','إجمالي')
+      +card(netProfit>=0?'var(--green)':'var(--red)','صافي الربح',fmtM(netProfit)+' ر.س',margin+'% هامش')
+    +'</div>'
+    +section('📊 ملخص التكاليف',
+      row2('إجمالي الإيرادات',fmtM(rev)+' ر.س','var(--accent)')
+      +row2('التكاليف الثابتة الشهرية',fmtM(totalFixed)+' ر.س','var(--red)')
+      +row2('المصروفات المتغيرة الفعلية',fmtM(expT)+' ر.س','var(--yellow)')
+      +row2('إجمالي التكاليف',fmtM(totalCosts)+' ر.س','var(--red)')
+      +'<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">'
+        +'<span style="font-size:13px;font-weight:800;">صافي الربح</span>'
+        +'<span style="font-size:15px;font-weight:900;color:'+(netProfit>=0?'var(--green)':'var(--red)')+';">'+(netProfit>=0?'+ ':'')+fmtM(netProfit)+' ر.س</span>'
+      +'</div>'
+    )
+    +section('🔍 توزيع المصروفات المتغيرة', expBreakdown);
+}
+
+// ══ EXPENSES ══
+function renderExpenses(){
+  var total=(DB.expenses||[]).reduce(function(s,e){return s+e.amount;},0);
+  var moT=(DB.monthly||[]).reduce(function(s,m){return s+m.amount;},0);
+  var foT=(DB.foundation||[]).reduce(function(s,f){return s+f.amount;},0);
+  var empT=(DB.employees||[]).reduce(function(s,e){return s+e.salary;},0);
+  var rev=DB.bookings.filter(function(b){return b.status==='confirmed';}).reduce(function(s,b){return s+b.total;},0)+((DB.sales||[]).reduce(function(s,x){return s+x.amount;},0));
+  var margin=rev?Math.round(((rev-total-moT-empT)/rev)*100):0;
+  var el=document.getElementById('exp-stats');
+  if(el) el.innerHTML=
+    '<div class="stat-card c-red"><div class="s-label">مصروفات فعلية</div><div class="s-value">'+fmtM(total)+' ر.س</div></div>'
+    +'<div class="stat-card c-yellow"><div class="s-label">تكاليف ثابتة شهرية</div><div class="s-value">'+fmtM(moT+empT)+' ر.س</div></div>'
+    +'<div class="stat-card c-purple"><div class="s-label">تكاليف التأسيس</div><div class="s-value">'+fmtM(foT)+' ر.س</div></div>'
+    +'<div class="stat-card c-green"><div class="s-label">هامش الربح</div><div class="s-value">'+margin+'%</div></div>';
+  // Render active tab
+  if(_currentCostTab===1) renderExpensesList();
+  else if(_currentCostTab===2) renderFixedCosts();
+  else renderCostAnalysis();
 }
 function delE(id){
   var ex=(DB.expenses||[]).find(function(x){return x.id===id;});
@@ -1638,6 +1815,21 @@ function delE(id){
     renderAll();showToast('تم الحذف','success');
     sbFetch('expenses','DELETE',null,'?id=eq.'+id).catch(function(){});
   },{okText:'حذف',okColor:'#dc2626'});
+}
+var _expId=null;
+function openEditExp(id){
+  var e=(DB.expenses||[]).find(function(x){return x.id===id;});
+  if(!e)return;
+  _expId=id;
+  _et=e.type||'صيانة';
+  document.getElementById('sheet-expense').querySelector('.sheet-title').textContent='تعديل مصروف';
+  document.getElementById('exp-body').innerHTML=
+    '<div class="form-group"><label class="form-label">النوع</label><div class="exp-grid">'+EXP_TYPES.map(function(x,i){return'<div class="exp-opt'+(x.t===e.type?' sel':'')+'" onclick="sExp('+i+',this)">'+x.i+' '+x.t+'</div>';}).join('')+'</div><input type="hidden" id="e-t" value="'+(e.type||'صيانة')+'"></div>'
+    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام"'+(e.apt==='عام'?' selected':'')+'>عام</option>'+(DB.units||[]).map(function(u){return'<option'+(u===e.apt?' selected':'')+'>'+u+'</option>';}).join('')+'</select></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" id="e-d" class="fi" value="'+(e.date||toDay())+'"></div></div>'
+    +'<div class="form-group"><label class="form-label">الوصف</label><input id="e-ds" class="fi" value="'+(e.desc||'')+'"></div>'
+    +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input type="number" id="e-am" class="fi" value="'+(e.amount||'')+'"></div>'
+    +'<button class="btn btn-primary btn-full" onclick="savExpEdit()">حفظ التعديل</button>';
+  document.getElementById('sheet-expense').classList.add('open');
 }
 function savExpEdit(){var type=document.getElementById('e-t')?.value||'أخرى';var apt=document.getElementById('e-a')?.value||'عام';var date=document.getElementById('e-d')?.value||toDay();var desc=document.getElementById('e-ds')?.value||type;var amount=parseFloat(document.getElementById('e-am')?.value)||0;if(!amount){toast('أدخل المبلغ','error');return;}DB.expenses=(DB.expenses||[]).map(function(e){return e.id===_expId?Object.assign({},e,{type:type,apt:apt,date:date,desc:desc,amount:amount}):e;});save();closeSheet('expense');_expId=null;toast('تم التعديل','success');renderExpenses();renderDashboard();}
 
@@ -1946,8 +2138,6 @@ function renderSettings(){
   function editBtn(fn,id){return'<button class="btn btn-xs btn-success" onclick="'+fn+'(this.dataset.id)" data-id="'+id+'">تعديل</button>';}
   function delBtn(fn,id){return'<button class="btn btn-xs btn-danger" onclick="'+fn+'(this.dataset.id)" data-id="'+id+'">حذف</button>';}
 
-  document.getElementById('monthly-list').innerHTML=listRow(DB.monthly||[],function(m){return row(rowHd('<div><div style="font-weight:700;font-size:13px;">'+m.name+'</div><div style="font-size:11px;color:var(--text3);">'+(m.apt||'عام')+' · شهري</div></div>','<div style="font-weight:900;color:var(--yellow);">'+fmtM(m.amount)+' ر.س</div>')+rowActs(editBtn('openEditMo',m.id)+delBtn('delMo',m.id)));}, 'لا توجد تكاليف شهرية');
-  document.getElementById('foundation-list').innerHTML=listRow(DB.foundation||[],function(f){return row(rowHd('<div><div style="font-weight:700;font-size:13px;">'+f.name+'</div><div style="font-size:11px;color:var(--text3);">'+fmtD(f.date)+'</div></div>','<div style="font-weight:900;color:var(--purple);">'+fmtM(f.amount)+' ر.س</div>')+rowActs(editBtn('openEditFo',f.id)+delBtn('delFo',f.id)));}, 'لا توجد تكاليف تأسيس');
   document.getElementById('employees-list').innerHTML=listRow(DB.employees||[],function(e){var hasAcc=(DB.appUsers||[]).find(function(u){return u.employeeId===e.id;});return row(rowHd('<div style="display:flex;align-items:center;gap:10px;"><div style="width:40px;height:40px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px;"></div><div><div style="font-weight:700;font-size:13px;">'+e.name+(hasAcc?'<span style="font-size:9px;background:rgba(52,211,153,.15);color:var(--green);padding:2px 6px;border-radius:8px;margin-right:6px;"> لديه حساب</span>':'')+'</div><div style="font-size:11px;color:var(--text3);">'+e.role+'</div></div></div>','<div style="font-weight:900;color:var(--accent);">'+fmtM(e.salary)+' ر.س</div>')+rowActs(editBtn('openEditEm',e.id)+delBtn('delEm',e.id)));}, 'لا يوجد موظفون');
   document.getElementById('units-list').innerHTML=(DB.units||[]).map(function(u){return row(rowHd('<div><div style="font-weight:700;font-size:14px;">'+u+'</div>'+(DB.unitTypes&&DB.unitTypes[u]?'<div style="font-size:11px;color:var(--text3);">'+DB.unitTypes[u]+'</div>':'')+'</div>','')+'<div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn btn-xs btn-success" onclick="openEditU(this.dataset.u)" data-u="'+u+'">تعديل</button><button class="btn btn-xs btn-danger" onclick="delU(this.dataset.u)" data-u="'+u+'">حذف</button></div>');}).join('')||'<div class="empty" style="padding:20px;"><div class="empty-text">لا توجد وحدات</div></div>';
   renderUsersList();
@@ -2760,84 +2950,150 @@ function doConfirm(){
   if(cb) cb();
 }
 
-// ══ SUPABASE REALTIME ══
-var _realtimeChannel = null;
-
-function startRealtime(){
-  try{
-    // Connect to Supabase Realtime WebSocket
-    var wsUrl = SB_URL.replace('https://','wss://') + '/realtime/v1/websocket?apikey=' + SB_KEY + '&vsn=1.0.0';
-    var ws = new WebSocket(wsUrl);
-    
-    ws.onopen = function(){
-      // Join bookings channel
-      ws.send(JSON.stringify({
-        topic: 'realtime:public:bookings',
-        event: 'phx_join',
-        payload: {},
-        ref: '1'
-      }));
-      ws.send(JSON.stringify({
-        topic: 'realtime:public:expenses',
-        event: 'phx_join',
-        payload: {},
-        ref: '2'
-      }));
-    };
-    
-    ws.onmessage = function(e){
-      try{
-        var msg = JSON.parse(e.data);
-        if(msg.event === 'INSERT' || msg.event === 'UPDATE' || msg.event === 'DELETE'){
-          // Data changed - sync immediately
-          loadFromSupabaseAuto();
-        }
-      }catch(err){}
-    };
-    
-    ws.onclose = function(){
-      // Reconnect after 3 seconds
-      setTimeout(startRealtime, 3000);
-    };
-    
-    ws.onerror = function(){
-      ws.close();
-    };
-    
-    _realtimeChannel = ws;
-  }catch(e){}
-}
-
-// ══ SUPABASE REALTIME ══
+// ══ SUPABASE REALTIME (Fixed - using Supabase JS Client only) ══
 var _supabaseClient = null;
+var _realtimeChannel = null;
+var _rtConnected = false;
 
 function initRealtime(){
   try{
-    if(typeof supabase === 'undefined'){ console.log('Supabase JS not loaded'); return; }
-    if(_supabaseClient) try{ _supabaseClient.removeAllChannels(); }catch(e){}
+    // Wait for supabase JS library
+    if(typeof supabase === 'undefined'){
+      setTimeout(initRealtime, 1000);
+      return;
+    }
+    if(_supabaseClient){
+      try{ _supabaseClient.removeAllChannels(); }catch(e){}
+    }
     
-    _supabaseClient = supabase.createClient(
-      'https://uoysyclcycnttnidllxc.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVveXN5Y2xjeWNudHRuaWRsbHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjI0MjEsImV4cCI6MjA5MzgzODQyMX0.0GJbr8bQpcZ3G__p6CIW3t8dvEZAjjQL5FXLXmQ9Jmg'
-    );
+    _supabaseClient = supabase.createClient(SB_URL, SB_KEY, {
+      realtime: { params: { eventsPerSecond: 10 } }
+    });
 
     var tables = ['bookings','expenses','monthly_costs','units','sales','foundation_costs','employees'];
-    var channel = _supabaseClient.channel('kaya-realtime');
+    _realtimeChannel = _supabaseClient.channel('kaya-all-changes');
     
     tables.forEach(function(table){
-      channel.on('postgres_changes', {event:'*', schema:'public', table:table}, function(payload){
+      _realtimeChannel.on('postgres_changes', {event:'*', schema:'public', table:table}, function(payload){
         handleRealtimeChange(table, payload);
       });
     });
     
-    channel.subscribe(function(status){
+    _realtimeChannel.subscribe(function(status, err){
       if(status === 'SUBSCRIBED'){
-        console.log('✅ Realtime connected');
+        _rtConnected = true;
+      } else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'){
+        _rtConnected = false;
+        // Retry after 5 seconds
+        setTimeout(initRealtime, 5000);
       }
     });
   }catch(e){
-    console.log('Realtime failed:', e.message);
+    // Silent - works offline too
+    setTimeout(initRealtime, 5000);
   }
+}
+
+function handleRealtimeChange(table, payload){
+  try{
+    var evt = payload.event; // INSERT, UPDATE, DELETE
+    var rec = payload.new || payload.old;
+    var deleted = DB._deleted || {};
+    
+    if(table === 'bookings'){
+      if(evt === 'DELETE'){
+        var delId = (payload.old||{}).id;
+        if(delId) DB.bookings = (DB.bookings||[]).filter(function(b){return b.id!==delId;});
+      } else if(evt === 'INSERT'){
+        if(rec && rec.id && !deleted['booking_'+rec.id]){
+          var exists = (DB.bookings||[]).find(function(b){return b.id===rec.id;});
+          if(!exists) DB.bookings = (DB.bookings||[]).concat([rec]);
+        }
+      } else if(evt === 'UPDATE'){
+        if(rec && rec.id){
+          DB.bookings = (DB.bookings||[]).map(function(b){return b.id===rec.id?Object.assign({},b,rec):b;});
+        }
+      }
+    } else if(table === 'expenses'){
+      if(evt === 'DELETE'){
+        var delId = (payload.old||{}).id;
+        if(delId) DB.expenses = (DB.expenses||[]).filter(function(e){return e.id!==delId;});
+      } else if(evt === 'INSERT'){
+        if(rec && rec.id && !deleted['expense_'+rec.id]){
+          var exists = (DB.expenses||[]).find(function(e){return e.id===rec.id;});
+          if(!exists) DB.expenses = (DB.expenses||[]).concat([rec]);
+        }
+      } else if(evt === 'UPDATE'){
+        if(rec && rec.id){
+          DB.expenses = (DB.expenses||[]).map(function(e){return e.id===rec.id?Object.assign({},e,rec):e;});
+        }
+      }
+    } else if(table === 'monthly_costs'){
+      if(evt === 'DELETE'){
+        var delId = (payload.old||{}).id;
+        if(delId) DB.monthly = (DB.monthly||[]).filter(function(m){return m.id!==delId;});
+      } else if(evt === 'INSERT'){
+        if(rec && rec.id){
+          var exists = (DB.monthly||[]).find(function(m){return m.id===rec.id;});
+          if(!exists) DB.monthly = (DB.monthly||[]).concat([{id:rec.id,name:rec.name,amount:rec.amount,apt:rec.apt||''}]);
+        }
+      } else if(evt === 'UPDATE'){
+        if(rec && rec.id){
+          DB.monthly = (DB.monthly||[]).map(function(m){return m.id===rec.id?Object.assign({},m,{name:rec.name,amount:rec.amount,apt:rec.apt||''}):m;});
+        }
+      }
+    } else if(table === 'foundation_costs'){
+      if(evt === 'DELETE'){
+        var delId = (payload.old||{}).id;
+        if(delId) DB.foundation = (DB.foundation||[]).filter(function(f){return f.id!==delId;});
+      } else if(evt === 'INSERT'){
+        if(rec && rec.id){
+          var exists = (DB.foundation||[]).find(function(f){return f.id===rec.id;});
+          if(!exists) DB.foundation = (DB.foundation||[]).concat([{id:rec.id,name:rec.name,amount:rec.amount,date:rec.date||''}]);
+        }
+      } else if(evt === 'UPDATE'){
+        if(rec && rec.id){
+          DB.foundation = (DB.foundation||[]).map(function(f){return f.id===rec.id?Object.assign({},f,{name:rec.name,amount:rec.amount,date:rec.date||''}):f;});
+        }
+      }
+    } else if(table === 'sales'){
+      if(evt === 'DELETE'){
+        var delId = (payload.old||{}).id;
+        if(delId) DB.sales = (DB.sales||[]).filter(function(s){return s.id!==delId;});
+      } else if(evt === 'INSERT'){
+        if(rec && rec.id){
+          var exists = (DB.sales||[]).find(function(s){return s.id===rec.id;});
+          if(!exists) DB.sales = (DB.sales||[]).concat([rec]);
+        }
+      } else if(evt === 'UPDATE'){
+        if(rec && rec.id){
+          DB.sales = (DB.sales||[]).map(function(s){return s.id===rec.id?Object.assign({},s,rec):s;});
+        }
+      }
+    } else if(table === 'employees'){
+      if(evt === 'DELETE'){
+        var delId = (payload.old||{}).id;
+        if(delId) DB.employees = (DB.employees||[]).filter(function(e){return e.id!==delId;});
+      } else if(evt === 'INSERT'){
+        if(rec && rec.id){
+          var exists = (DB.employees||[]).find(function(e){return e.id===rec.id;});
+          if(!exists) DB.employees = (DB.employees||[]).concat([rec]);
+        }
+      } else if(evt === 'UPDATE'){
+        if(rec && rec.id){
+          DB.employees = (DB.employees||[]).map(function(e){return e.id===rec.id?Object.assign({},e,rec):e;});
+        }
+      }
+    } else if(table === 'units'){
+      // Reload units from Supabase on any change
+      loadFromSupabaseAuto().catch(function(){});
+      return;
+    }
+    
+    // Save locally and re-render
+    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    renderAll();
+  }catch(err){}
 }
 
 
