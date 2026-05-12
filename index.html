@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>كايا هوتيل</title>
+<title>Bodo Management</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f0f4f8;--bg2:#ffffff;--bg3:#e8eef6;--card:#ffffff;--card2:#f5f8fc;--border:#dde4ef;--border2:#b0bdd0;--text:#111827;--text2:#374151;--text3:#6b7280;--green:#059669;--yellow:#d97706;--red:#dc2626;--blue:#2563eb;--purple:#7c3aed;--accent:#b8943a;--accent2:#c9a84c;--gold:rgba(184,148,58,.12);--goldb:rgba(184,148,58,.35);}
@@ -309,7 +309,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     padding-bottom: 20px !important;
   }
   #nav::before {
-    content: 'KAYA HOTEL';
+    content: 'BODO';
     display: block;
     font-size: 10px;
     font-weight: 900;
@@ -506,9 +506,9 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 <!-- LOGIN -->
 <div id="login-screen">
   <div style="margin-bottom:32px;text-align:center;">
-    <div style="font-family:Georgia,serif;font-size:56px;font-weight:900;letter-spacing:10px;background:linear-gradient(135deg,#c8a96e,#e8c98e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:10px;">KAYA</div>
+    <div style="font-family:Georgia,serif;font-size:56px;font-weight:900;letter-spacing:10px;background:linear-gradient(135deg,#c8a96e,#e8c98e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:10px;">BODO</div>
     <div style="width:50px;height:1px;background:var(--goldb);margin:0 auto 10px;"></div>
-    <div style="font-size:10px;color:var(--text3);letter-spacing:5px;">HOTEL MANAGEMENT</div>
+    <div style="font-size:12px;color:var(--text3);letter-spacing:3px;font-weight:600;">Management Systems</div>
   </div>
   <div class="login-card">
     <div style="font-size:22px;font-weight:900;margin-bottom:6px;text-align:center;color:var(--text);">تسجيل الدخول</div>
@@ -538,8 +538,9 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     <div id="page-dashboard" class="page active">
       <div class="topbar">
         <div>
-          <div class="biz-label" style="font-size:20px;font-weight:900;color:var(--accent);letter-spacing:1px;line-height:1.2;margin-bottom:2px;">KAYA</div>
-          <div style="font-size:11px;color:var(--text3);letter-spacing:2px;">HOTEL MANAGEMENT</div>
+          <div style="font-size:22px;font-weight:900;color:var(--accent);letter-spacing:2px;line-height:1;">BODO</div>
+          <div style="font-size:10px;color:var(--text3);letter-spacing:2px;margin-bottom:2px;">Management Systems</div>
+          <div class="biz-label" style="font-size:13px;font-weight:800;color:var(--text2);"></div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <div>
@@ -559,7 +560,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     <div id="page-calbooking" class="page">
       <div class="topbar">
         <div>
-          <div class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;">KAYA</div>
+          <div class="biz-label" class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
           <div class="page-title" id="calbooking-title">التقويم</div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="openSheet('booking')">+ حجز</button>
@@ -582,7 +583,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     <div id="page-revenue" class="page">
       <div class="topbar">
         <div>
-          <div class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;">KAYA</div>
+          <div class="biz-label" class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
           <div class="page-title">الإيرادات</div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="openSheet('sale')">+ إيراد</button>
@@ -613,7 +614,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     <div id="page-expenses" class="page">
       <div class="topbar">
         <div>
-          <div class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;">KAYA</div>
+          <div class="biz-label" class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
           <div class="page-title">المصروفات</div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="openSheet('expense')">+ مصروف</button>
@@ -626,7 +627,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     <div id="page-settings" class="page">
       <div class="topbar">
         <div>
-          <div class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;">KAYA</div>
+          <div class="biz-label" class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
           <div class="page-title">الإعدادات</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
@@ -642,6 +643,39 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
       </div>
       <div style="padding:0 16px;">
                 <!-- اسم النشاط -->
+    <!-- بيانات النشاط -->
+    <div style="margin-bottom:20px;">
+      <div class="sec-hd"><div class="sec-title">بيانات النشاط</div></div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;">
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">اسم النشاط</div>
+          <div style="display:flex;gap:8px;">
+            <input id="biz-name" class="fi" placeholder="مثال: كايا هوتيل" onkeydown="if(event.key==='Enter')saveBusinessName();" style="flex:1;">
+            <button class="btn btn-primary" onclick="saveBusinessName()">حفظ</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">نوع النشاط</div>
+          <select id="biz-type" class="fi" onchange="saveBizInfo()">
+            <option value="">اختر النوع</option>
+            <option value="hotel">فندق</option>
+            <option value="apartments">شقق مفروشة</option>
+            <option value="chalets">شاليهات</option>
+            <option value="villas">فيلل</option>
+            <option value="mixed">متنوع</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">رقم التواصل</div>
+          <input id="biz-phone" class="fi" placeholder="05xxxxxxxx" onchange="saveBizInfo()">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">الموقع</div>
+          <input id="biz-location" class="fi" placeholder="المدينة، الحي" onchange="saveBizInfo()">
+        </div>
+      </div>
+    </div>
+
     <div style="margin-bottom:20px;">
       <div class="sec-hd"><div class="sec-title">اسم النشاط</div></div>
       <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;">
@@ -1067,10 +1101,7 @@ function renderDashboard(){
     +'<div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;">نزلاء الآن</div>'
     +'<div style="font-size:28px;font-weight:900;color:var(--accent);">'+stayingNow+'</div>'
     +'</div>'
-    +'<div style="background:var(--bg3);border-radius:12px;padding:14px;">'
-    +'<div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;">قادم خلال 7 أيام</div>'
-    +'<div style="font-size:28px;font-weight:900;color:var(--blue);">'+upcoming7+'</div>'
-    +'</div>'
+
     +'<div style="background:var(--bg3);border-radius:12px;padding:14px;grid-column:1/-1;">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
     +'<div style="font-size:11px;color:var(--text2);font-weight:600;">إيرادات هذا الشهر</div>'
@@ -1134,7 +1165,7 @@ function renderBookingsList(){
     var si=SRC[b.source]||{};
     return'<div class="b-row"><div class="b-top">'
       +'<div class="b-ico" style="background:'+(si.bg||'var(--bg3)')+';">'+srcIcon(b.source)+'</div>'
-      +'<div class="b-info"><div class="b-name">'+b.guest+' <span style="color:var(--accent);">· '+b.apt+'</span></div>'
+      +'<div class="b-info"><div class="b-name">'+b.guest+' <span style="color:var(--accent);">· '+b.apt+'</span></div>'+(b.addedBy?'<div style="font-size:10px;color:var(--text3);margin-top:1px;">تمت الإضافة بواسطة: '+b.addedBy+'</div>':'')
       +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin:4px 0;"><span class="badge '+(si.cls||'')+'">'+srcIcon(b.source,12)+' '+(si.label||b.source)+'</span><span class="badge '+(ST[b.status]?.cls||'')+'">● '+(ST[b.status]?.label||b.status)+'</span></div>'
       +'<div style="margin-top:4px;"><div style="font-size:12px;font-weight:600;color:var(--text2);">'+fmtRange(b.checkin,b.checkout)+'</div><div style="font-size:11px;color:var(--text3);">'+b.nights+' ليلة'+(b.phone?' · '+b.phone:'')+'</div></div></div>'
       +'<div style="flex-shrink:0;text-align:left;">'+(b.total>0?'<div style="font-weight:900;font-size:15px;color:var(--accent);">'+fmtM(b.total)+'<span style="font-size:10px;color:var(--text3);"> ر.س</span></div>':'<button class="btn btn-xs btn-gold" onclick="openPE(this.dataset.id)" data-id="'+b.id+'">+ سعر</button>')+'</div>'
@@ -1224,7 +1255,7 @@ function renderBookings(){
     var si=SRC[b.source]||{};
     return'<div class="b-row"><div class="b-top">'
       +'<div class="b-ico" style="background:'+(si.bg||'var(--bg3)')+';">'+srcIcon(b.source)+'</div>'
-      +'<div class="b-info"><div class="b-name">'+b.guest+' <span style="color:var(--accent);">· '+b.apt+'</span></div>'
+      +'<div class="b-info"><div class="b-name">'+b.guest+' <span style="color:var(--accent);">· '+b.apt+'</span></div>'+(b.addedBy?'<div style="font-size:10px;color:var(--text3);margin-top:1px;">تمت الإضافة بواسطة: '+b.addedBy+'</div>':'')
       +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin:4px 0;"><span class="badge '+(si.cls||'')+'">'+srcIcon(b.source,12)+' '+(si.label||b.source)+'</span><span class="badge '+(ST[b.status]?.cls||'')+'">● '+(ST[b.status]?.label||b.status)+'</span></div>'
       +'<div style="margin-top:4px;"><div style="font-size:12px;font-weight:600;color:var(--text2);">'+fmtRange(b.checkin,b.checkout)+'</div><div style="font-size:11px;color:var(--text3);">'+b.nights+' ليلة'+(b.phone?' · '+b.phone:'')+'</div></div></div>'
       +'<div style="flex-shrink:0;text-align:left;">'+(b.total>0?'<div style="font-weight:900;font-size:15px;color:var(--accent);">'+fmtM(b.total)+'<span style="font-size:10px;color:var(--text3);"> ر.س</span></div>':'<button class="btn btn-xs btn-gold" onclick="openPE(\''+b.id+'\')">+ سعر</button>')+'</div>'
@@ -1319,7 +1350,7 @@ function savB(){
   if(hasConflict(apt,ci,co,_eid)){toast('️ الوحدة محجوزة!','error');return;}
   var n=nts(ci,co);
   var phone=document.getElementById('b-ph')?.value||'';
-  var b={id:_eid||uid(),apt:apt,guest:guest,phone:phone,source:_cs,checkin:ci,checkout:co,price:price,nights:n,total:n*price,status:status,notes:notes};
+  var b={id:_eid||uid(),apt:apt,guest:guest,phone:phone,source:_cs,checkin:ci,checkout:co,price:price,nights:n,total:n*price,status:status,notes:notes,addedBy:_eid?undefined:(currentUser?currentUser.username:''),addedAt:_eid?undefined:new Date().toISOString().slice(0,10)};
   if(_eid)DB.bookings=DB.bookings.map(function(x){return x.id===_eid?b:x;});else DB.bookings.push(b);
   save();closeSheet('booking');toast(_eid?' تم تعديل الحجز':' تم حفظ الحجز','success');renderAll();
 }
@@ -1783,6 +1814,9 @@ function updateBizLabels(){
   var name=(DB&&DB.bizName)||'';
   var els=document.getElementsByClassName('biz-label');
   for(var i=0;i<els.length;i++) els[i].textContent=name;
+  // Update dash biz name specifically
+  var dash=document.querySelector('.biz-label');
+  if(dash) dash.textContent=name;
 }
 
 function clearBizName(){
@@ -1800,6 +1834,16 @@ function clearBizName(){
   }catch(err){}
 }
 
+
+function saveBizInfo(){
+  var type=document.getElementById('biz-type');
+  var phone=document.getElementById('biz-phone');
+  var loc=document.getElementById('biz-location');
+  if(type) DB.bizType=type.value;
+  if(phone) DB.bizPhone=phone.value;
+  if(loc) DB.bizLocation=loc.value;
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+}
 function saveBusinessName(){
   try{
     var el=document.getElementById('biz-name');
