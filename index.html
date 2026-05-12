@@ -496,6 +496,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 .s-value, .b-nights, .b-total, .perf-val, .stat-card,
 .cal-day, .dash-num { font-feature-settings: "tnum"; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
@@ -906,9 +907,11 @@ function showApp(){
   renderDashboard();
   // Load from Supabase on login
   loadFromSupabaseAuto();
-  // Periodic sync every 30 seconds
+  // Realtime WebSocket + fallback polling
+  if(window._realtimeChannel) try{window._realtimeChannel.close();}catch(e){}
+  startRealtime();
   if(window._syncInterval) clearInterval(window._syncInterval);
-  window._syncInterval = setInterval(function(){ loadFromSupabaseAuto(); }, 10000);
+  window._syncInterval = setInterval(function(){ loadFromSupabaseAuto(); }, 15000);
 }
 function logout(){
   localStorage.removeItem('kaya_session');
@@ -2695,6 +2698,126 @@ function doConfirm(){
   var cb = _confirmCallback;
   closeConfirm();
   if(cb) cb();
+}
+
+// ══ SUPABASE REALTIME ══
+var _realtimeChannel = null;
+
+function startRealtime(){
+  try{
+    // Connect to Supabase Realtime WebSocket
+    var wsUrl = SB_URL.replace('https://','wss://') + '/realtime/v1/websocket?apikey=' + SB_KEY + '&vsn=1.0.0';
+    var ws = new WebSocket(wsUrl);
+    
+    ws.onopen = function(){
+      // Join bookings channel
+      ws.send(JSON.stringify({
+        topic: 'realtime:public:bookings',
+        event: 'phx_join',
+        payload: {},
+        ref: '1'
+      }));
+      ws.send(JSON.stringify({
+        topic: 'realtime:public:expenses',
+        event: 'phx_join',
+        payload: {},
+        ref: '2'
+      }));
+    };
+    
+    ws.onmessage = function(e){
+      try{
+        var msg = JSON.parse(e.data);
+        if(msg.event === 'INSERT' || msg.event === 'UPDATE' || msg.event === 'DELETE'){
+          // Data changed - sync immediately
+          loadFromSupabaseAuto();
+        }
+      }catch(err){}
+    };
+    
+    ws.onclose = function(){
+      // Reconnect after 3 seconds
+      setTimeout(startRealtime, 3000);
+    };
+    
+    ws.onerror = function(){
+      ws.close();
+    };
+    
+    _realtimeChannel = ws;
+  }catch(e){}
+}
+
+// ══ SUPABASE REALTIME ══
+var _supabaseClient = null;
+
+function initRealtime(){
+  try{
+    if(typeof supabase === 'undefined') return;
+    _supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+    
+    // Subscribe to ALL changes in bookings
+    _supabaseClient
+      .channel('db-changes')
+      .on('postgres_changes', 
+        {event: '*', schema: 'public', table: 'bookings'},
+        function(payload){
+          handleRealtimeChange('bookings', payload);
+        }
+      )
+      .on('postgres_changes',
+        {event: '*', schema: 'public', table: 'expenses'},
+        function(payload){
+          handleRealtimeChange('expenses', payload);
+        }
+      )
+      .on('postgres_changes',
+        {event: '*', schema: 'public', table: 'monthly_costs'},
+        function(payload){
+          handleRealtimeChange('monthly_costs', payload);
+        }
+      )
+      .subscribe(function(status){
+        console.log('Realtime:', status);
+      });
+  }catch(e){
+    console.log('Realtime init failed:', e.message);
+  }
+}
+
+function handleRealtimeChange(table, payload){
+  var event = payload.eventType; // INSERT, UPDATE, DELETE
+  var record = payload.new || payload.old;
+  
+  if(table === 'bookings'){
+    if(event === 'INSERT' || event === 'UPDATE'){
+      var exists = (DB.bookings||[]).findIndex(function(b){return b.id===record.id;});
+      if(exists >= 0) DB.bookings[exists] = record;
+      else DB.bookings = (DB.bookings||[]).concat([record]);
+    } else if(event === 'DELETE'){
+      DB.bookings = (DB.bookings||[]).filter(function(b){return b.id!==record.id;});
+    }
+  } else if(table === 'expenses'){
+    if(event === 'INSERT' || event === 'UPDATE'){
+      var exists = (DB.expenses||[]).findIndex(function(e){return e.id===record.id;});
+      if(exists >= 0) DB.expenses[exists] = record;
+      else DB.expenses = (DB.expenses||[]).concat([record]);
+    } else if(event === 'DELETE'){
+      DB.expenses = (DB.expenses||[]).filter(function(e){return e.id!==record.id;});
+    }
+  } else if(table === 'monthly_costs'){
+    if(event === 'INSERT' || event === 'UPDATE'){
+      var exists = (DB.monthly||[]).findIndex(function(m){return m.id===record.id;});
+      if(exists >= 0) DB.monthly[exists] = record;
+      else DB.monthly = (DB.monthly||[]).concat([record]);
+    } else if(event === 'DELETE'){
+      DB.monthly = (DB.monthly||[]).filter(function(m){return m.id!==record.id;});
+    }
+  }
+  
+  // Save locally and re-render
+  try{localStorage.setItem('kaya_v9', JSON.stringify(DB));}catch(e){}
+  renderAll();
 }
 
 loadTheme();
