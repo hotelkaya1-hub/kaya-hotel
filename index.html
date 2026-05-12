@@ -1333,10 +1333,16 @@ function delB(id){
     'سيتم حذف حجز "'+name+'" نهائياً.',
     function(){
       document.querySelectorAll('.sheet-overlay').forEach(function(s){s.classList.remove('open');});
+      // Delete locally immediately
       DB.bookings=(DB.bookings||[]).filter(function(b){return b.id!==id;});
+      try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+      // Mark as deleted to prevent sync from restoring it
+      if(!DB._deleted) DB._deleted={};
+      DB._deleted['booking_'+id]=true;
       try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
       renderAll();
       showToast('تم الحذف','success');
+      // Delete from Supabase
       sbFetch('bookings','DELETE',null,'?id=eq.'+id).catch(function(){});
     },
     {okText:'حذف',okColor:'#dc2626'}
@@ -1595,6 +1601,8 @@ function delE(id){
     DB.expenses=DB.expenses.filter(function(e){return e.id!==id;});
     try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
     DB.expenses=(DB.expenses||[]).filter(function(e){return e.id!==id;});
+    if(!DB._deleted)DB._deleted={};
+    DB._deleted['expense_'+id]=true;
     try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
     renderAll();showToast('تم الحذف','success');
     sbFetch('expenses','DELETE',null,'?id=eq.'+id).catch(function(){});
@@ -2613,12 +2621,15 @@ async function loadFromSupabaseAuto(){
     var changed = false;
     
     if(bookings&&Array.isArray(bookings)){
-      // Full replace from cloud (source of truth)
-      DB.bookings = bookings;
+      // Filter out locally deleted items
+      var deleted = DB._deleted||{};
+      var filtered = bookings.filter(function(b){return !deleted['booking_'+b.id];});
+      DB.bookings = filtered;
       changed = true;
     }
     if(expenses&&Array.isArray(expenses)){
-      DB.expenses = expenses;
+      var deleted = DB._deleted||{};
+      DB.expenses = expenses.filter(function(e){return !deleted['expense_'+e.id];});
       changed = true;
     }
     if(monthly&&monthly.length){
