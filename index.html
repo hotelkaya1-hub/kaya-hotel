@@ -57,8 +57,8 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  /* Space for fixed nav */
-  padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  /* Enough space for nav bar + safe area */
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 16px));
 }
 #nav{
   position: fixed;
@@ -76,8 +76,8 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 }
 
 /* PAGES */
-.page{display:none;animation:fadeUp .3s ease;padding-bottom:24px;}
-.page.active{display:block;}
+.page{display:none;animation:fadeUp .3s ease;}
+.page.active{display:block;padding-bottom:calc(90px + env(safe-area-inset-bottom, 0px));}
 
 /* NAV */
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;cursor:pointer;padding:0;transition:.2s;color:var(--text3);position:relative;height:58px;}
@@ -666,74 +666,112 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     <div id="page-settings" class="page">
       <div class="topbar">
         <div>
-          <div class="biz-label" class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
+          <div class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
           <div class="page-title">الإعدادات</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           <button onclick="toggleTheme()" id="theme-btn" style="background:var(--card2);border:1px solid var(--border);color:var(--text2);font-size:16px;width:34px;height:34px;border-radius:10px;cursor:pointer;">🌙</button>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div>
-              <div style="font-size:10px;color:var(--text3);font-weight:500;line-height:1;margin-bottom:3px;" id="gr-set">أهلاً</div>
-              <div style="font-size:14px;font-weight:800;color:var(--accent);line-height:1.2;" id="nm-set"></div>
-            </div>
-            <button class="btn-logout" onclick="logout()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
-          </div>
+          <button class="btn-logout" onclick="logout()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
         </div>
       </div>
       <div style="padding:0 16px;">
-                <!-- اسم النشاط -->
-    <!-- بيانات النشاط -->
-    <div style="margin-bottom:20px;">
-      <div class="sec-hd"><div class="sec-title">بيانات النشاط</div></div>
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;">
-        <div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">اسم النشاط</div>
-          <div style="display:flex;gap:8px;">
-            <input id="biz-name" class="fi" placeholder="مثال: كايا هوتيل" onkeydown="if(event.key==='Enter')saveBusinessName();" style="flex:1;">
-            <button class="btn btn-primary" onclick="saveBusinessName()">حفظ</button>
+
+        <!-- ── بطاقة المستخدم الحالي ── -->
+        <div style="background:linear-gradient(135deg,var(--card2),var(--card));border:1px solid var(--goldb);border-radius:16px;padding:16px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px;">
+          <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#1a0f00;flex-shrink:0;" id="settings-avatar">A</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:10px;color:var(--text3);font-weight:500;margin-bottom:2px;" id="gr-set">أهلاً</div>
+            <div style="font-size:16px;font-weight:900;color:var(--accent);" id="nm-set"></div>
+            <div style="font-size:10px;color:var(--text3);margin-top:1px;" id="role-set"></div>
+          </div>
+          <div style="text-align:left;">
+            <div id="rt-indicator" style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3);margin-bottom:4px;">
+              <span id="rt-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text3);display:inline-block;transition:background .5s;"></span>
+              <span id="rt-label">غير متصل</span>
+            </div>
           </div>
         </div>
-        <div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">نوع النشاط</div>
-          <select id="biz-type" class="fi" onchange="saveBizInfo()">
-            <option value="">اختر النوع</option>
-            <option value="hotel">فندق</option>
-            <option value="apartments">شقق مفروشة</option>
-            <option value="chalets">شاليهات</option>
-            <option value="villas">فيلل</option>
-            <option value="mixed">متنوع</option>
-          </select>
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">رقم التواصل</div>
-          <input id="biz-phone" class="fi" placeholder="05xxxxxxxx" onchange="saveBizInfo()">
-        </div>
-        <div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">الموقع</div>
-          <input id="biz-location" class="fi" placeholder="المدينة، الحي" onchange="saveBizInfo()">
-        </div>
-      </div>
-    </div>
 
-    <div style="margin-bottom:20px;">
-      <div class="sec-hd"><div class="sec-title">اسم النشاط</div></div>
-      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;">
-        <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">الاسم الحالي: <span id="current-biz-name" style="color:var(--text2);font-weight:600;"></span></div>
-        <input id="biz-name" class="fi" placeholder="أدخل اسم النشاط" onkeydown="if(event.key==='Enter')saveBusinessName();" style="margin-bottom:10px;">
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-primary" style="flex:1;" onclick="saveBusinessName()">حفظ</button>
-          <button class="btn btn-ghost btn-sm" onclick="clearBizName()">مسح</button>
+        <!-- ── هوية النشاط ── -->
+        <div style="margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <div style="width:30px;height:30px;border-radius:8px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:14px;">🏢</div>
+            <div style="font-size:14px;font-weight:800;color:var(--text);">هوية النشاط</div>
+          </div>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+            <!-- اسم النشاط - بارز في الأعلى -->
+            <div style="padding:16px 16px 0;">
+              <div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:6px;letter-spacing:.5px;">اسم النشاط / المنصة ⚡ يُحدَّث فوراً لجميع الأجهزة</div>
+              <div style="display:flex;gap:8px;margin-bottom:4px;">
+                <input id="biz-name" class="fi" placeholder="مثال: كايا للشقق الفندقية" onkeydown="if(event.key==='Enter')saveBusinessName();" style="flex:1;font-size:15px;font-weight:700;">
+                <button class="btn btn-primary" onclick="saveBusinessName()" style="padding:11px 18px;white-space:nowrap;">حفظ</button>
+              </div>
+              <div style="font-size:11px;color:var(--text3);margin-bottom:14px;">الاسم الحالي: <span id="current-biz-name" style="color:var(--text2);font-weight:600;"></span></div>
+            </div>
+            <div style="height:1px;background:var(--border);"></div>
+            <!-- باقي بيانات النشاط -->
+            <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                  <div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:5px;">نوع النشاط</div>
+                  <select id="biz-type" class="fi" onchange="saveBizInfo()" style="font-size:13px;">
+                    <option value="">اختر النوع</option>
+                    <option value="hotel">🏨 فندق</option>
+                    <option value="apartments">🏠 شقق مفروشة</option>
+                    <option value="chalets">🌴 شاليهات</option>
+                    <option value="villas">🏡 فيلل</option>
+                    <option value="mixed">🏢 متنوع</option>
+                  </select>
+                </div>
+                <div>
+                  <div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:5px;">الموقع</div>
+                  <input id="biz-location" class="fi" placeholder="المدينة، الحي" onchange="saveBizInfo()" style="font-size:13px;">
+                </div>
+              </div>
+              <div>
+                <div style="font-size:10px;color:var(--text3);font-weight:600;margin-bottom:5px;">رقم التواصل</div>
+                <input id="biz-phone" class="fi" type="tel" placeholder="05xxxxxxxx" onchange="saveBizInfo()" style="font-size:13px;">
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">الموظفون</div><button class="btn btn-primary btn-sm" onclick="openSheet('employee')">إضافة موظف</button></div><div id="employees-list"></div></div>
-        <div style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">الوحدات</div><button class="btn btn-primary btn-sm" onclick="openSheet('unit')">إضافة وحدة</button></div><div id="units-list"></div></div>
-        
-        
-        
-        
-<div id="users-section" style="margin-bottom:20px;"><div class="sec-hd"><div class="sec-title">المستخدمون</div><button class="btn btn-primary btn-sm" onclick="openSheet('adduser')">إضافة مستخدم</button></div><div id="users-list"></div></div>
+        <!-- ── الوحدات ── -->
+        <div style="margin-bottom:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:30px;height:30px;border-radius:8px;background:rgba(37,99,235,.12);display:flex;align-items:center;justify-content:center;font-size:14px;">🏠</div>
+              <div style="font-size:14px;font-weight:800;color:var(--text);">الوحدات</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openSheet('unit')">+ إضافة</button>
+          </div>
+          <div id="units-list"></div>
+        </div>
+
+        <!-- ── الموظفون ── -->
+        <div style="margin-bottom:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:30px;height:30px;border-radius:8px;background:rgba(124,58,237,.12);display:flex;align-items:center;justify-content:center;font-size:14px;">👥</div>
+              <div style="font-size:14px;font-weight:800;color:var(--text);">الموظفون</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openSheet('employee')">+ إضافة</button>
+          </div>
+          <div id="employees-list"></div>
+        </div>
+
+        <!-- ── المستخدمون ── -->
+        <div id="users-section" style="margin-bottom:20px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:30px;height:30px;border-radius:8px;background:rgba(5,150,105,.12);display:flex;align-items:center;justify-content:center;font-size:14px;">🔐</div>
+              <div style="font-size:14px;font-weight:800;color:var(--text);">المستخدمون</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openSheet('adduser')">+ إضافة</button>
+          </div>
+          <div id="users-list"></div>
+        </div>
+
       </div>
     </div>
 
@@ -745,10 +783,8 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
       <div class="nav-label">الرئيسية</div>
     </button>
     <button class="nav-item" onclick="showPage('calbooking',this)" style="position:relative;">
-      <span id="nav-badge-booking" style="display:none;" class="nav-badge"></span>
       <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
       <div class="nav-label">الحجوزات</div>
-      <span class="nav-badge" id="nav-badge" style="display:none;"></span>
     </button>
     <button class="nav-item" onclick="showPage('revenue',this)">
       <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
@@ -837,11 +873,8 @@ function save(){
   if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;
   if(DB.adminPass&&DB.adminPass.username) ADMIN.username=DB.adminPass.username;
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-  // Instant sync to Supabase
-  if(window._saveTimer) clearTimeout(window._saveTimer);
-  window._saveTimer = setTimeout(function(){
-    autoSyncToSupabase().catch(function(){});
-  }, 300);
+  // Instant sync to Supabase - no delay
+  autoSyncToSupabase().catch(function(){});
 }
 
 
@@ -979,15 +1012,13 @@ function showApp(){
   document.querySelectorAll('.nav-item').forEach(function(n){n.style.display='';});
   applyPerms();
   renderDashboard();
-  // Load from Supabase on login
+  // Load from Supabase on login - single call
   loadFromSupabaseAuto();
-  // Load data immediately
-  loadFromSupabaseAuto();
-  // Start realtime
+  // Start realtime for instant cross-device updates
   initRealtime();
-  // Fallback polling every 10 seconds
+  // Fallback polling every 30s (realtime handles instant updates)
   if(window._syncInterval) clearInterval(window._syncInterval);
-  window._syncInterval = setInterval(function(){ loadFromSupabaseAuto(); }, 10000);
+  window._syncInterval = setInterval(function(){ loadFromSupabaseAuto(); }, 30000);
 }
 function logout(){
   localStorage.removeItem('kaya_session');
@@ -2045,14 +2076,12 @@ function saveBusinessName(){
     if(!DB) DB={};
     DB.bizName=name;
     try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-    try{updateBizLabels();}catch(e){}
-    try{
-      var cn=document.getElementById('current-biz-name');
-      if(cn) cn.textContent=name;
-      var bi=document.getElementById('biz-name');
-      if(bi) bi.value='';
-    }catch(e){}
-    showToast('✅ '+name,'success');
+    updateBizLabels();
+    var cn=document.getElementById('current-biz-name');
+    if(cn) cn.textContent=name;
+    // Sync instantly to Supabase so ALL devices update immediately
+    sbFetch('app_config','POST',{key:'biz_name',value:name},'?on_conflict=key').catch(function(){});
+    showToast('✅ '+name+' — تم التحديث لجميع الأجهزة','success');
   }catch(err){
     showToast('تم','success');
   }
@@ -2061,10 +2090,25 @@ function saveBusinessName(){
 function renderSettings(){
   try{
     var bi=document.getElementById('biz-name');
-    if(bi) bi.value='';
+    if(bi && document.activeElement!==bi) bi.value='';
     var cn=document.getElementById('current-biz-name');
-    if(cn) cn.textContent=(DB&&DB.bizName)||'';
+    if(cn) cn.textContent=(DB&&DB.bizName)||'—';
     updateBizLabels();
+    // Populate biz info fields
+    var bt=document.getElementById('biz-type');if(bt&&DB.bizType)bt.value=DB.bizType;
+    var bp=document.getElementById('biz-phone');if(bp&&DB.bizPhone)bp.value=DB.bizPhone;
+    var blo=document.getElementById('biz-location');if(blo&&DB.bizLocation)blo.value=DB.bizLocation;
+    // User card
+    var uname=currentUser?currentUser.fullname||currentUser.username||'':'';
+    var av=document.getElementById('settings-avatar');
+    if(av) av.textContent=(uname||'U').charAt(0).toUpperCase();
+    var nmSet=document.getElementById('nm-set');if(nmSet)nmSet.textContent=uname;
+    var grSet=document.getElementById('gr-set');
+    var h=new Date().getHours();
+    if(grSet)grSet.textContent=h<12?'صباح الخير':h<17?'مرحباً':'أهلاً';
+    var roleEl=document.getElementById('role-set');
+    if(roleEl)roleEl.textContent=currentUser&&currentUser.role==='admin'?'🔑 مدير النظام':'موظف';
+    _updateRtIndicator(_rtConnected);
   }catch(e2){}
 
   if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;if(DB.adminPass&&DB.adminPass.username) ADMIN.username=DB.adminPass.username;
@@ -2735,17 +2779,7 @@ function haptic(type){
 }
 
 function updateNavBadge(){
-  var today=new Date().toISOString().slice(0,10);
-  var tomorrow=new Date();tomorrow.setDate(tomorrow.getDate()+1);
-  var tom=tomorrow.toISOString().slice(0,10);
-  var checkins=(DB.bookings||[]).filter(function(b){
-    return (b.checkin===today||b.checkin===tom)&&b.status==='confirmed';
-  }).length;
-  var badge=document.getElementById('nav-badge-booking');
-  if(badge){
-    badge.textContent=checkins;
-    badge.style.display=checkins>0?'flex':'none';
-  }
+  // Badge removed - no-op
 }
 
 
@@ -2842,20 +2876,20 @@ async function autoSyncToSupabase(){
 async function loadFromSupabaseAuto(){
   try{
     // Parallel fetch - fastest possible
-    var [bookings, expenses, monthly, foundation, employees, units, sales] = await Promise.all([
+    var [bookings, expenses, monthly, foundation, employees, units, sales, appCfg] = await Promise.all([
       sbFetch('bookings','GET',null,'?select=id,apt,guest,phone,source,checkin,checkout,nights,price,total,status,notes,code&order=checkin.desc'),
-      sbFetch('expenses','GET',null,'?select=id,type,amount,date,notes,apt'),
+      sbFetch('expenses','GET',null,'?select=id,type,amount,date,notes,apt,desc'),
       sbFetch('monthly_costs','GET',null,'?select=id,name,amount,apt'),
-      sbFetch('foundation_costs','GET',null,'?select=id,name,amount'),
+      sbFetch('foundation_costs','GET',null,'?select=id,name,amount,date'),
       sbFetch('employees','GET',null,'?select=id,name,role,salary'),
       sbFetch('units','GET',null,'?select=id,name,type'),
-      sbFetch('sales','GET',null,'?select=id,description,amount,date,apt'),
+      sbFetch('sales','GET',null,'?select=id,desc,description,amount,date,apt,notes'),
+      sbFetch('app_config','GET',null,'?select=key,value').catch(function(){return[];}),
     ]);
     
     var changed = false;
     
     if(bookings&&Array.isArray(bookings)){
-      // Filter out locally deleted items
       var deleted = DB._deleted||{};
       var filtered = bookings.filter(function(b){return !deleted['booking_'+b.id];});
       DB.bookings = filtered;
@@ -2863,7 +2897,9 @@ async function loadFromSupabaseAuto(){
     }
     if(expenses&&Array.isArray(expenses)){
       var deleted = DB._deleted||{};
-      DB.expenses = expenses.filter(function(e){return !deleted['expense_'+e.id];});
+      DB.expenses = expenses.filter(function(e){return !deleted['expense_'+e.id];}).map(function(e){
+        return{id:e.id,type:e.type,amount:e.amount,date:e.date,desc:e.desc||e.notes||e.type,apt:e.apt||'عام'};
+      });
       changed = true;
     }
     if(monthly&&monthly.length){
@@ -2871,7 +2907,7 @@ async function loadFromSupabaseAuto(){
       changed=true;
     }
     if(foundation&&foundation.length){
-      DB.foundation=foundation.map(function(f){return{id:f.id,name:f.name,amount:f.amount};});
+      DB.foundation=foundation.map(function(f){return{id:f.id,name:f.name,amount:f.amount,date:f.date||''};});
       changed=true;
     }
     if(employees&&employees.length){
@@ -2888,8 +2924,19 @@ async function loadFromSupabaseAuto(){
       changed=true;
     }
     if(sales&&Array.isArray(sales)){
-      DB.sales = sales;
+      DB.sales = sales.map(function(s){return{id:s.id,desc:s.desc||s.description||'',amount:s.amount,date:s.date,apt:s.apt||'عام',notes:s.notes||''};});
       changed = true;
+    }
+    // Sync biz name from cloud
+    if(appCfg&&Array.isArray(appCfg)){
+      var bn=appCfg.find(function(c){return c.key==='biz_name';});
+      if(bn&&bn.value&&bn.value!==DB.bizName){
+        DB.bizName=bn.value;
+        updateBizLabels();
+        var cn=document.getElementById('current-biz-name');
+        if(cn) cn.textContent=bn.value;
+        changed=true;
+      }
     }
     
     if(changed){
@@ -2950,6 +2997,13 @@ function doConfirm(){
   if(cb) cb();
 }
 
+function _updateRtIndicator(connected){
+  var dot=document.getElementById('rt-dot');
+  var lbl=document.getElementById('rt-label');
+  if(dot) dot.style.background=connected?'var(--green)':'var(--text3)';
+  if(lbl) lbl.textContent=connected?'متصل مباشر':'جارٍ الاتصال...';
+}
+
 // ══ SUPABASE REALTIME (Fixed - using Supabase JS Client only) ══
 var _supabaseClient = null;
 var _realtimeChannel = null;
@@ -2970,7 +3024,7 @@ function initRealtime(){
       realtime: { params: { eventsPerSecond: 10 } }
     });
 
-    var tables = ['bookings','expenses','monthly_costs','units','sales','foundation_costs','employees'];
+    var tables = ['bookings','expenses','monthly_costs','units','sales','foundation_costs','employees','app_config'];
     _realtimeChannel = _supabaseClient.channel('kaya-all-changes');
     
     tables.forEach(function(table){
@@ -2982,8 +3036,10 @@ function initRealtime(){
     _realtimeChannel.subscribe(function(status, err){
       if(status === 'SUBSCRIBED'){
         _rtConnected = true;
+        _updateRtIndicator(true);
       } else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'){
         _rtConnected = false;
+        _updateRtIndicator(false);
         // Retry after 5 seconds
         setTimeout(initRealtime, 5000);
       }
@@ -3084,7 +3140,19 @@ function handleRealtimeChange(table, payload){
           DB.employees = (DB.employees||[]).map(function(e){return e.id===rec.id?Object.assign({},e,rec):e;});
         }
       }
-    } else if(table === 'units'){
+    } else if(table === 'app_config'){
+      // Live business name sync across all devices
+      if(rec && rec.key === 'biz_name' && rec.value){
+        DB.bizName = rec.value;
+        try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+        updateBizLabels();
+        var cn=document.getElementById('current-biz-name');
+        if(cn) cn.textContent=rec.value;
+        var bi=document.getElementById('biz-name');
+        if(bi && document.activeElement!==bi) bi.value='';
+      }
+      return; // No full renderAll needed for config
+    }
       // Reload units from Supabase on any change
       loadFromSupabaseAuto().catch(function(){});
       return;
