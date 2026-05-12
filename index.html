@@ -719,6 +719,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 
 <script>
 
+
 // ══ CONSTANTS ══
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const DAYS=['أح','إث','ثل','أر','خم','جم','سب'];
@@ -765,9 +766,11 @@ function save(){
   if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;
   if(DB.adminPass&&DB.adminPass.username) ADMIN.username=DB.adminPass.username;
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-  // Auto sync to Supabase (debounced)
-  if(window._autoSyncTimer) clearTimeout(window._autoSyncTimer);
-  autoSyncToSupabase().catch(function(){});
+  // Instant sync to Supabase
+  if(window._saveTimer) clearTimeout(window._saveTimer);
+  window._saveTimer = setTimeout(function(){
+    autoSyncToSupabase().catch(function(){});
+  }, 300);
 }
 
 
@@ -907,11 +910,13 @@ function showApp(){
   renderDashboard();
   // Load from Supabase on login
   loadFromSupabaseAuto();
-  // Realtime WebSocket + fallback polling
-  if(window._realtimeChannel) try{window._realtimeChannel.close();}catch(e){}
-  startRealtime();
+  // Load data immediately
+  loadFromSupabaseAuto();
+  // Start realtime
+  initRealtime();
+  // Fallback polling every 10 seconds
   if(window._syncInterval) clearInterval(window._syncInterval);
-  window._syncInterval = setInterval(function(){ loadFromSupabaseAuto(); }, 15000);
+  window._syncInterval = setInterval(function(){ loadFromSupabaseAuto(); }, 10000);
 }
 function logout(){
   localStorage.removeItem('kaya_session');
@@ -1321,22 +1326,24 @@ function savB(){
 function openEB(id){var b=DB.bookings.find(function(x){return x.id===id;});if(!b)return;buildBookingForm(b);document.getElementById('sheet-booking').classList.add('open');}
 function delB(id){
   var bk=(DB.bookings||[]).find(function(x){return x.id===id;});
-  if(!bk){showToast('لم يتم العثور على الحجز','error');return;}
+  if(!bk){showToast('الحجز غير موجود','error');return;}
   var name=bk.guest||'هذا الحجز';
   showConfirm(
     'حذف الحجز',
     'سيتم حذف حجز "'+name+'" نهائياً.',
     function(){
-      // Close sheets first
       document.querySelectorAll('.sheet-overlay').forEach(function(s){s.classList.remove('open');});
-      // Delete from local DB
-      DB.bookings=(DB.bookings||[]).filter(function(b){return b.id!==id;});
-      // Delete from Supabase
-      sbFetch('bookings','DELETE',null,'?id=eq.'+encodeURIComponent(id)).catch(function(e){console.warn('Delete failed:',e);});
-      // Save and refresh
-      try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-      renderAll();
-      showToast('تم حذف الحجز','success');
+      showToast('جارٍ الحذف...','info');
+      sbFetch('bookings','DELETE',null,'?id=eq.'+id)
+        .then(function(){
+          DB.bookings=DB.bookings.filter(function(b){return b.id!==id;});
+          try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+          renderAll();
+          showToast('تم الحذف','success');
+        })
+        .catch(function(){
+          showToast('فشل الحذف — حاول مجدداً','error');
+        });
     },
     {okText:'حذف',okColor:'#dc2626'}
   );
@@ -1588,11 +1595,19 @@ function renderExpenses(){
 }
 function delE(id){
   var ex=(DB.expenses||[]).find(function(x){return x.id===id;});
-  var name=ex?ex.type+' - '+ex.amount+' ر.س':'هذا المصروف';
+  var name=ex?(ex.type+' - '+fmtM(ex.amount)+' ر.س'):'هذا المصروف';
   showConfirm('حذف المصروف','سيتم حذف "'+name+'" نهائياً.',function(){
-    DB.expenses=(DB.expenses||[]).filter(function(e){return e.id!==id;});
-    sbFetch('expenses','DELETE',null,'?id=eq.'+id).catch(function(){});
-    save();renderAll();showToast('تم الحذف','success');
+    var backup=DB.expenses.slice();
+    DB.expenses=DB.expenses.filter(function(e){return e.id!==id;});
+    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    showToast('جارٍ الحذف...','info');
+    sbFetch('expenses','DELETE',null,'?id=eq.'+id)
+      .then(function(){
+        DB.expenses=DB.expenses.filter(function(e){return e.id!==id;});
+        try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+        renderAll();showToast('تم الحذف','success');
+      })
+      .catch(function(){showToast('فشل الحذف — حاول مجدداً','error');});
   },{okText:'حذف',okColor:'#dc2626'});
 }
 function savExpEdit(){var type=document.getElementById('e-t')?.value||'أخرى';var apt=document.getElementById('e-a')?.value||'عام';var date=document.getElementById('e-d')?.value||toDay();var desc=document.getElementById('e-ds')?.value||type;var amount=parseFloat(document.getElementById('e-am')?.value)||0;if(!amount){toast('أدخل المبلغ','error');return;}DB.expenses=(DB.expenses||[]).map(function(e){return e.id===_expId?Object.assign({},e,{type:type,apt:apt,date:date,desc:desc,amount:amount}):e;});save();closeSheet('expense');_expId=null;toast('تم التعديل','success');renderExpenses();renderDashboard();}
@@ -2607,15 +2622,14 @@ async function loadFromSupabaseAuto(){
     
     var changed = false;
     
-    if(bookings&&bookings.length){
-      var localIds=(DB.bookings||[]).map(function(b){return b.id;});
-      var newOnes=bookings.filter(function(b){return !localIds.includes(b.id);});
-      if(newOnes.length){DB.bookings=(DB.bookings||[]).concat(newOnes);changed=true;}
+    if(bookings&&Array.isArray(bookings)){
+      // Full replace from cloud (source of truth)
+      DB.bookings = bookings;
+      changed = true;
     }
-    if(expenses&&expenses.length){
-      var localExpIds=(DB.expenses||[]).map(function(e){return e.id;});
-      var newExp=expenses.filter(function(e){return !localExpIds.includes(e.id);});
-      if(newExp.length){DB.expenses=(DB.expenses||[]).concat(newExp);changed=true;}
+    if(expenses&&Array.isArray(expenses)){
+      DB.expenses = expenses;
+      changed = true;
     }
     if(monthly&&monthly.length){
       DB.monthly=monthly.map(function(m){return{id:m.id,name:m.name,amount:m.amount,apt:m.apt||''};});
@@ -2638,10 +2652,9 @@ async function loadFromSupabaseAuto(){
       DB.units=existingUnits;
       changed=true;
     }
-    if(sales&&sales.length){
-      var localSaleIds=(DB.sales||[]).map(function(s){return s.id;});
-      var newSales=sales.filter(function(s){return !localSaleIds.includes(s.id);});
-      if(newSales.length){DB.sales=(DB.sales||[]).concat(newSales);changed=true;}
+    if(sales&&Array.isArray(sales)){
+      DB.sales = sales;
+      changed = true;
     }
     
     if(changed){
@@ -2663,11 +2676,13 @@ function showSyncStatus(msg, success, error){
 
 
 
-// Suppress cross-origin script errors (Claude iframe)
-window.onerror = function(msg, src, line, col, err){
-  if(msg === 'Script error.' || msg === 'Uncaught Error: Script error.') return true;
-  return false;
+window.onerror = function(msg){ 
+  if(!msg||msg.indexOf('Script error')>=0) return true; 
+  return false; 
 };
+window.addEventListener('unhandledrejection',function(e){
+  if(e&&e.reason&&e.reason.message&&e.reason.message.indexOf('Load failed')>=0) e.preventDefault();
+});
 
 
 // ══ CONFIRM DIALOG ══
@@ -2753,72 +2768,41 @@ var _supabaseClient = null;
 
 function initRealtime(){
   try{
-    if(typeof supabase === 'undefined') return;
-    _supabaseClient = supabase.createClient(SB_URL, SB_KEY);
+    if(typeof supabase === 'undefined'){ console.log('Supabase JS not loaded'); return; }
+    if(_supabaseClient) try{ _supabaseClient.removeAllChannels(); }catch(e){}
     
-    // Subscribe to ALL changes in bookings
-    _supabaseClient
-      .channel('db-changes')
-      .on('postgres_changes', 
-        {event: '*', schema: 'public', table: 'bookings'},
-        function(payload){
-          handleRealtimeChange('bookings', payload);
-        }
-      )
-      .on('postgres_changes',
-        {event: '*', schema: 'public', table: 'expenses'},
-        function(payload){
-          handleRealtimeChange('expenses', payload);
-        }
-      )
-      .on('postgres_changes',
-        {event: '*', schema: 'public', table: 'monthly_costs'},
-        function(payload){
-          handleRealtimeChange('monthly_costs', payload);
-        }
-      )
-      .subscribe(function(status){
-        console.log('Realtime:', status);
+    _supabaseClient = supabase.createClient(
+      'https://uoysyclcycnttnidllxc.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVveXN5Y2xjeWNudHRuaWRsbHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjI0MjEsImV4cCI6MjA5MzgzODQyMX0.0GJbr8bQpcZ3G__p6CIW3t8dvEZAjjQL5FXLXmQ9Jmg'
+    );
+
+    var tables = ['bookings','expenses','monthly_costs','units','sales','foundation_costs','employees'];
+    var channel = _supabaseClient.channel('kaya-realtime');
+    
+    tables.forEach(function(table){
+      channel.on('postgres_changes', {event:'*', schema:'public', table:table}, function(payload){
+        handleRealtimeChange(table, payload);
       });
+    });
+    
+    channel.subscribe(function(status){
+      if(status === 'SUBSCRIBED'){
+        console.log('✅ Realtime connected');
+      }
+    });
   }catch(e){
-    console.log('Realtime init failed:', e.message);
+    console.log('Realtime failed:', e.message);
   }
 }
 
-function handleRealtimeChange(table, payload){
-  var event = payload.eventType; // INSERT, UPDATE, DELETE
-  var record = payload.new || payload.old;
-  
-  if(table === 'bookings'){
-    if(event === 'INSERT' || event === 'UPDATE'){
-      var exists = (DB.bookings||[]).findIndex(function(b){return b.id===record.id;});
-      if(exists >= 0) DB.bookings[exists] = record;
-      else DB.bookings = (DB.bookings||[]).concat([record]);
-    } else if(event === 'DELETE'){
-      DB.bookings = (DB.bookings||[]).filter(function(b){return b.id!==record.id;});
-    }
-  } else if(table === 'expenses'){
-    if(event === 'INSERT' || event === 'UPDATE'){
-      var exists = (DB.expenses||[]).findIndex(function(e){return e.id===record.id;});
-      if(exists >= 0) DB.expenses[exists] = record;
-      else DB.expenses = (DB.expenses||[]).concat([record]);
-    } else if(event === 'DELETE'){
-      DB.expenses = (DB.expenses||[]).filter(function(e){return e.id!==record.id;});
-    }
-  } else if(table === 'monthly_costs'){
-    if(event === 'INSERT' || event === 'UPDATE'){
-      var exists = (DB.monthly||[]).findIndex(function(m){return m.id===record.id;});
-      if(exists >= 0) DB.monthly[exists] = record;
-      else DB.monthly = (DB.monthly||[]).concat([record]);
-    } else if(event === 'DELETE'){
-      DB.monthly = (DB.monthly||[]).filter(function(m){return m.id!==record.id;});
-    }
-  }
-  
-  // Save locally and re-render
-  try{localStorage.setItem('kaya_v9', JSON.stringify(DB));}catch(e){}
-  renderAll();
-}
+
+window.onerror = function(msg){ 
+  if(!msg||msg.indexOf('Script error')>=0) return true; 
+  return false; 
+};
+window.addEventListener('unhandledrejection',function(e){
+  if(e&&e.reason&&e.reason.message&&e.reason.message.indexOf('Load failed')>=0) e.preventDefault();
+});
 
 loadTheme();
 try{
@@ -2828,6 +2812,7 @@ try{
 }
 
 </script>
+
 <!-- CONFIRM DIALOG -->
 <div id="confirm-overlay">
   <div id="confirm-box">
