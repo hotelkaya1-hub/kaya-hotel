@@ -437,16 +437,16 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 
 /* ══ CONFIRM DIALOG ══ */
 #confirm-overlay{
-  position:fixed;inset:0;z-index:10000;
-  background:rgba(0,0,0,.6);
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  z-index:10000;
+  background:rgba(0,0,0,.65);
   display:none;
   align-items:center;
   justify-content:center;
   padding:20px;
-  backdrop-filter:blur(4px);
-  animation:fadeIn .15s ease;
+  -webkit-backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px);
 }
-#confirm-overlay.show{display:flex;}
 #confirm-box{
   background:var(--card);
   border:1px solid var(--border);
@@ -490,6 +490,11 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 #remember-me {
   accent-color: var(--accent);
 }
+
+/* Force English numerals */
+* { font-variant-numeric: lining-nums; }
+.s-value, .b-nights, .b-total, .perf-val, .stat-card,
+.cal-day, .dash-num { font-feature-settings: "tnum"; }
 </style>
 </head>
 <body>
@@ -545,7 +550,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
       </div>
       <div id="dash-upcoming" style="display:none;" class="up-banner"><div class="up-title">قادم قريباً</div><div id="dash-up-list"></div></div>
       <div class="stat-grid" id="dash-stats"></div>
-      <div class="sec"><div class="sec-title">أداء الوحدات</div><div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;" id="dash-perf"></div></div>
+      <div class="sec"><div class="sec-title">لمحة سريعة</div><div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;" id="dash-perf"></div></div>
       <div class="sec"><div class="sec-hd"><div class="sec-title">آخر الحجوزات</div><button class="btn btn-gold btn-sm" onclick="showPage('calbooking');showCBTab(2);">عرض الكل</button></div><div id="dash-recent"></div></div>
     </div>
 
@@ -761,7 +766,7 @@ function save(){
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   // Auto sync to Supabase (debounced)
   if(window._autoSyncTimer) clearTimeout(window._autoSyncTimer);
-  window._autoSyncTimer = setTimeout(function(){ autoSyncToSupabase().catch(function(){}); }, 2000);
+  autoSyncToSupabase().catch(function(){});
 }
 
 
@@ -770,7 +775,12 @@ var uid=function(){return Date.now().toString(36)+Math.random().toString(36).sli
 var toDay=function(){return new Date().toISOString().split('T')[0];};
 var addD=function(d,n){var dt=new Date(d);dt.setDate(dt.getDate()+n);return dt.toISOString().split('T')[0];};
 var nts=function(a,b){return Math.max(0,Math.round((new Date(b)-new Date(a))/86400000));};
-var fmtD=function(s){if(!s)return'—';return new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short'});};
+var fmtD=function(s){
+  if(!s)return'—';
+  var d=new Date(s+'T12:00:00');
+  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d.getDate()+' '+months[d.getMonth()];
+};
 function fmtRange(ci,co){
   if(!ci||!co)return'—';
   var d1=new Date(ci),d2=new Date(co);
@@ -895,10 +905,10 @@ function showApp(){
   applyPerms();
   renderDashboard();
   // Load from Supabase on login
-  setTimeout(function(){ loadFromSupabaseAuto(); }, 500);
+  loadFromSupabaseAuto();
   // Periodic sync every 30 seconds
   if(window._syncInterval) clearInterval(window._syncInterval);
-  window._syncInterval = setInterval(function(){ loadFromSupabaseAuto(); }, 30000);
+  window._syncInterval = setInterval(function(){ loadFromSupabaseAuto(); }, 10000);
 }
 function logout(){
   localStorage.removeItem('kaya_session');
@@ -995,11 +1005,75 @@ function renderDashboard(){
 }).join('');}
   else banner.style.display='none';
   var maxR=Math.max.apply(null,(DB.units||[]).map(function(a){return conf.filter(function(b){return b.apt===a;}).reduce(function(s,b){return s+b.total;},0);}).concat([1]));
-  document.getElementById('dash-perf').innerHTML=(DB.units||[]).map(function(apt){
-    var r=conf.filter(function(b){return b.apt===apt;}).reduce(function(s,b){return s+b.total;},0);
-    var n=conf.filter(function(b){return b.apt===apt;}).reduce(function(s,b){return s+b.nights;},0);
-    return'<div class="perf-row"><div class="perf-hd"><span class="perf-name">'+apt+(DB.unitTypes&&DB.unitTypes[apt]?'<span style="font-size:10px;font-weight:500;color:var(--text3);margin-right:5px;"> '+DB.unitTypes[apt]+'</span>':'')+'</span><span class="perf-val">'+n+' ليلة · '+fmtM(r)+' ر.س</span></div><div class="perf-track"><div class="perf-fill" style="width:'+Math.round((r/maxR)*100)+'%"></div></div></div>';
-  }).join('');
+  // ── SMART KPIs ──
+  var today = toDay();
+  var thisMonth = today.slice(0,7);
+  var now = new Date();
+
+  // Checkins today
+  var checkinsToday = (DB.bookings||[]).filter(function(b){
+    return b.checkin===today && b.status==='confirmed';
+  }).length;
+
+  // Checkouts today
+  var checkoutsToday = (DB.bookings||[]).filter(function(b){
+    return b.checkout===today && b.status==='confirmed';
+  }).length;
+
+  // Currently staying
+  var stayingNow = (DB.bookings||[]).filter(function(b){
+    return b.checkin<=today && b.checkout>today && b.status==='confirmed';
+  }).length;
+
+  // This month revenue
+  var monthRev = conf.filter(function(b){
+    return b.checkin && b.checkin.startsWith(thisMonth);
+  }).reduce(function(s,b){return s+b.total;},0);
+
+  // Upcoming 7 days bookings
+  var d7 = new Date(now); d7.setDate(d7.getDate()+7);
+  var d7str = d7.toISOString().slice(0,10);
+  var upcoming7 = (DB.bookings||[]).filter(function(b){
+    return b.checkin>today && b.checkin<=d7str && b.status==='confirmed';
+  }).length;
+
+  // Occupancy this month
+  var daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  var units = Math.max(1,(DB.units||[]).length);
+  var monthNights = conf.filter(function(b){
+    return b.checkin && b.checkin.startsWith(thisMonth);
+  }).reduce(function(s,b){return s+b.nights;},0);
+  var occupancy = Math.min(100, Math.round((monthNights/(daysInMonth*units))*100));
+
+  document.getElementById('dash-perf').innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+    +'<div style="background:var(--bg3);border-radius:12px;padding:14px;">'
+    +'<div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;">دخول اليوم</div>'
+    +'<div style="font-size:28px;font-weight:900;color:var(--green);">'+checkinsToday+'</div>'
+    +'</div>'
+    +'<div style="background:var(--bg3);border-radius:12px;padding:14px;">'
+    +'<div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;">خروج اليوم</div>'
+    +'<div style="font-size:28px;font-weight:900;color:var(--red);">'+checkoutsToday+'</div>'
+    +'</div>'
+    +'<div style="background:var(--bg3);border-radius:12px;padding:14px;">'
+    +'<div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;">نزلاء الآن</div>'
+    +'<div style="font-size:28px;font-weight:900;color:var(--accent);">'+stayingNow+'</div>'
+    +'</div>'
+    +'<div style="background:var(--bg3);border-radius:12px;padding:14px;">'
+    +'<div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;">قادم خلال 7 أيام</div>'
+    +'<div style="font-size:28px;font-weight:900;color:var(--blue);">'+upcoming7+'</div>'
+    +'</div>'
+    +'<div style="background:var(--bg3);border-radius:12px;padding:14px;grid-column:1/-1;">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+    +'<div style="font-size:11px;color:var(--text2);font-weight:600;">إيرادات هذا الشهر</div>'
+    +'<div style="font-size:11px;color:var(--text3);">إشغال '+occupancy+'%</div>'
+    +'</div>'
+    +'<div style="font-size:22px;font-weight:900;color:var(--accent);margin-bottom:8px;">'+fmtM(monthRev)+' ر.س</div>'
+    +'<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">'
+    +'<div style="height:100%;width:'+occupancy+'%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .5s;"></div>'
+    +'</div>'
+    +'</div>'
+    +'</div>';
   var recent=[].concat(DB.bookings).filter(function(b){return b.status!=='blocked';}).sort(function(a,b){return new Date(b.checkin)-new Date(a.checkin);}).slice(0,6);
   document.getElementById('dash-recent').innerHTML=recent.length?recent.map(function(b){
     var si=SRC[b.source]||{};
@@ -1261,7 +1335,7 @@ function delB(id){
       renderAll();
       showToast('تم حذف الحجز','success');
     },
-    {icon:'🗑️',okText:'حذف',okColor:'#dc2626'}
+    {okText:'حذف',okColor:'#dc2626'}
   );
 }
 function pCalc(n){var p=parseFloat(document.getElementById('pr')?.value)||0;var el=document.getElementById('pr-c');if(!el)return;if(p>0){el.style.display='block';el.innerHTML=' '+n+' × '+fmtM(p)+' = <strong>'+fmtM(n*p)+' ر.س</strong>';}else el.style.display='none';}
@@ -1516,7 +1590,7 @@ function delE(id){
     DB.expenses=(DB.expenses||[]).filter(function(e){return e.id!==id;});
     sbFetch('expenses','DELETE',null,'?id=eq.'+id).catch(function(){});
     save();renderAll();showToast('تم الحذف','success');
-  },{icon:'🗑️',okText:'حذف',okColor:'var(--red)'});
+  },{okText:'حذف',okColor:'#dc2626'});
 }
 function savExpEdit(){var type=document.getElementById('e-t')?.value||'أخرى';var apt=document.getElementById('e-a')?.value||'عام';var date=document.getElementById('e-d')?.value||toDay();var desc=document.getElementById('e-ds')?.value||type;var amount=parseFloat(document.getElementById('e-am')?.value)||0;if(!amount){toast('أدخل المبلغ','error');return;}DB.expenses=(DB.expenses||[]).map(function(e){return e.id===_expId?Object.assign({},e,{type:type,apt:apt,date:date,desc:desc,amount:amount}):e;});save();closeSheet('expense');_expId=null;toast('تم التعديل','success');renderExpenses();renderDashboard();}
 
@@ -2190,6 +2264,7 @@ async function sbFetch(table, method, body, query) {
   var headers = {
     'apikey': SB_KEY,
     'Authorization': 'Bearer ' + SB_KEY,
+    'Cache-Control': 'no-cache',
   };
   if(method !== 'DELETE') headers['Content-Type'] = 'application/json';
   if(method==='POST' && query && query.includes('on_conflict')){
@@ -2516,14 +2591,15 @@ async function autoSyncToSupabase(){
 // Load from Supabase on startup
 async function loadFromSupabaseAuto(){
   try{
+    // Parallel fetch - fastest possible
     var [bookings, expenses, monthly, foundation, employees, units, sales] = await Promise.all([
-      sbFetch('bookings','GET',null,'?select=*&order=checkin.desc&limit=1000'),
-      sbFetch('expenses','GET',null,'?select=*&order=created_at.desc&limit=500'),
-      sbFetch('monthly_costs','GET',null,'?select=*'),
-      sbFetch('foundation_costs','GET',null,'?select=*'),
-      sbFetch('employees','GET',null,'?select=*'),
-      sbFetch('units','GET',null,'?select=*'),
-      sbFetch('sales','GET',null,'?select=*&order=created_at.desc&limit=500'),
+      sbFetch('bookings','GET',null,'?select=id,apt,guest,phone,source,checkin,checkout,nights,price,total,status,notes,code&order=checkin.desc'),
+      sbFetch('expenses','GET',null,'?select=id,type,amount,date,notes,apt'),
+      sbFetch('monthly_costs','GET',null,'?select=id,name,amount,apt'),
+      sbFetch('foundation_costs','GET',null,'?select=id,name,amount'),
+      sbFetch('employees','GET',null,'?select=id,name,role,salary'),
+      sbFetch('units','GET',null,'?select=id,name,type'),
+      sbFetch('sales','GET',null,'?select=id,description,amount,date,apt'),
     ]);
     
     var changed = false;
@@ -2596,30 +2672,30 @@ var _confirmCallback = null;
 
 function showConfirm(title, msg, onConfirm, opts){
   opts = opts||{};
-  document.getElementById('confirm-title').textContent = title||'تأكيد';
-  document.getElementById('confirm-msg').textContent = msg||'هل أنت متأكد؟';
-  document.getElementById('confirm-icon').textContent = opts.icon||'🗑️';
-  var okBtn = document.getElementById('confirm-ok');
-  okBtn.textContent = opts.okText||'حذف';
-  okBtn.style.background = opts.okColor||'var(--red)';
+  var ov = document.getElementById('confirm-overlay');
+  var t = document.getElementById('confirm-title');
+  var m = document.getElementById('confirm-msg');
+  var ok = document.getElementById('confirm-ok');
+  if(!ov||!t||!m||!ok) return;
+  t.textContent = title||'تأكيد';
+  m.textContent = msg||'هل أنت متأكد؟';
+  ok.textContent = opts.okText||'حذف';
+  ok.style.background = opts.okColor||'#dc2626';
   _confirmCallback = onConfirm;
-  document.getElementById('confirm-overlay').classList.add('show');
+  ov.style.display = 'flex';
 }
 
 function closeConfirm(){
-  document.getElementById('confirm-overlay').classList.remove('show');
+  var ov = document.getElementById('confirm-overlay');
+  if(ov) ov.style.display = 'none';
   _confirmCallback = null;
 }
 
 function doConfirm(){
+  var cb = _confirmCallback;
   closeConfirm();
-  if(_confirmCallback) _confirmCallback();
+  if(cb) cb();
 }
-
-// Close on overlay click
-document.addEventListener('click', function(e){
-  if(e.target.id === 'confirm-overlay') closeConfirm();
-});
 
 loadTheme();
 try{
@@ -2632,7 +2708,6 @@ try{
 <!-- CONFIRM DIALOG -->
 <div id="confirm-overlay">
   <div id="confirm-box">
-    <div id="confirm-icon">🗑️</div>
     <div id="confirm-title">تأكيد الحذف</div>
     <div id="confirm-msg">هل أنت متأكد؟ لا يمكن التراجع عن هذا الإجراء.</div>
     <div id="confirm-btns">
@@ -2640,5 +2715,6 @@ try{
       <button id="confirm-ok" onclick="doConfirm()">حذف</button>
     </div>
   </div>
+</div>
 </body>
 </html>
