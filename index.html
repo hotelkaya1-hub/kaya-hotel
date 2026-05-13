@@ -12,7 +12,7 @@
 :root{--bg:#f0f4f8;--bg2:#ffffff;--bg3:#e8eef6;--card:#ffffff;--card2:#f5f8fc;--border:#dde4ef;--border2:#b0bdd0;--text:#111827;--text2:#374151;--text3:#6b7280;--green:#059669;--yellow:#d97706;--red:#dc2626;--blue:#2563eb;--purple:#7c3aed;--accent:#b8943a;--accent2:#c9a84c;--gold:rgba(184,148,58,.12);--goldb:rgba(184,148,58,.35);}
 body.dark-mode{--bg:#070d1a;--bg2:#0b1220;--bg3:#0f1828;--card:#131f32;--card2:#182539;--border:#1e2f48;--border2:#253650;--text:#eef1f8;--text2:#8a97b4;--text3:#6b80a0;--green:#34d399;--yellow:#fbbf24;--red:#f87171;--blue:#7c8cf8;--purple:#a78bfa;--accent:#c8a96e;--accent2:#e8c98e;--gold:rgba(200,169,110,.12);--goldb:rgba(200,169,110,.25);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html, body {
+html,html, body {
   height: 100%;
   height: 100dvh;
   margin: 0;
@@ -496,22 +496,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 .s-value, .b-nights, .b-total, .perf-val, .stat-card,
 .cal-day, .dash-num { font-feature-settings: "tnum"; }
 </style>
-<script>
-// Suppress cross-origin Script error BEFORE any external scripts load
-window.onerror = function(msg, src, line, col, err){
-  if(!msg || msg === 'Script error.' || msg === 'Script error') return true;
-  return false;
-};
-window.addEventListener('unhandledrejection', function(e){
-  if(e && e.reason){
-    var m = (e.reason && e.reason.message) ? e.reason.message : String(e.reason||'');
-    if(m.indexOf('Load failed')>=0 || m.indexOf('NetworkError')>=0 || m.indexOf('Script error')>=0) {
-      e.preventDefault();
-    }
-  }
-});
-</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+
 </head>
 <body>
 
@@ -520,18 +505,177 @@ window.addEventListener('unhandledrejection', function(e){
 
 <!-- LOGIN -->
 <div id="login-screen">
+  <!-- LOGO -->
   <div style="margin-bottom:32px;text-align:center;">
     <div style="font-family:Georgia,serif;font-size:56px;font-weight:900;letter-spacing:10px;background:linear-gradient(135deg,#c8a96e,#e8c98e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:10px;">BODO</div>
     <div style="width:50px;height:1px;background:var(--goldb);margin:0 auto 10px;"></div>
     <div style="font-size:12px;color:var(--text3);letter-spacing:3px;font-weight:600;">Management Systems</div>
   </div>
-  <div class="login-card">
-    <div style="font-size:22px;font-weight:900;margin-bottom:6px;text-align:center;color:var(--text);">تسجيل الدخول</div>
-    <div style="margin-bottom:24px;"></div>
+
+  <!-- LOGIN CARD -->
+  <div class="login-card" id="card-login">
+    <div style="font-size:22px;font-weight:900;margin-bottom:20px;text-align:center;color:var(--text);">تسجيل الدخول</div>
     <div class="login-err" id="login-err">اسم المستخدم أو كلمة المرور غير صحيحة</div>
-    <div class="form-group"><label class="form-label" style="font-weight:700;font-size:13px;color:var(--text);">اسم المستخدم</label><input id="login-user" class="fi" placeholder="اسم المستخدم" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus();"></div>
-    <div class="form-group"><label class="form-label" style="font-weight:700;font-size:13px;color:var(--text);">كلمة المرور</label><input id="login-pass" class="fi" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin();"></div><div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><input type="checkbox" id="remember-me" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;" onchange="toggleRemember(this.checked)"><label for="remember-me" style="font-size:13px;color:var(--text);font-weight:600;cursor:pointer;">تذكرني دائماً</label></div>
-    <button class="btn btn-primary btn-full" style="margin-top:6px;height:50px;font-size:16px;" onclick="doLogin()">تسجيل الدخول</button>
+    <div class="form-group"><label class="form-label">اسم المستخدم</label><input id="login-user" class="fi" placeholder="اسم المستخدم" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus();"></div>
+    <div class="form-group"><label class="form-label">كلمة المرور</label><input id="login-pass" class="fi" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin();"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <input type="checkbox" id="remember-me" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;" onchange="toggleRemember(this.checked)">
+      <label for="remember-me" style="font-size:13px;color:var(--text);font-weight:600;cursor:pointer;">تذكرني دائماً</label>
+    </div>
+    <button class="btn btn-primary btn-full" style="height:50px;font-size:16px;" onclick="doLogin()">تسجيل الدخول</button>
+    <!-- Join link -->
+    <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
+      <span style="font-size:13px;color:var(--text3);">ليس لديك حساب؟ </span>
+      <button onclick="showJoinScreen()" style="background:none;border:none;color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">انضم معنا ←</button>
+    </div>
+  </div>
+</div>
+
+<!-- JOIN SCREEN -->
+<div id="join-screen" style="display:none;min-height:100vh;padding:32px 16px 40px;background:var(--bg);overflow-y:auto;">
+  <div style="max-width:420px;margin:0 auto;">
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-family:Georgia,serif;font-size:38px;font-weight:900;letter-spacing:8px;background:linear-gradient(135deg,#c8a96e,#e8c98e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;">BODO</div>
+      <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px;">انضم إلى منصة BODO</div>
+      <div style="font-size:12px;color:var(--text3);">إدارة نشاطك التأجيري باحترافية</div>
+    </div>
+
+    <!-- Packages -->
+    <div style="margin-bottom:24px;">
+      <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:12px;">اختر باقتك</div>
+      <div style="display:flex;flex-direction:column;gap:10px;" id="pkg-list">
+
+        <!-- Basic -->
+        <div class="pkg-card" id="pkg-basic" onclick="selectPkg('basic')" style="background:var(--card);border:2px solid var(--border);border-radius:14px;padding:14px 16px;cursor:pointer;transition:all .2s;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:18px;">🏠</span>
+              <div>
+                <div style="font-size:14px;font-weight:800;color:var(--text);">الأساسية</div>
+                <div style="font-size:11px;color:var(--text3);">حتى 5 وحدات · مستخدم واحد</div>
+              </div>
+            </div>
+            <div style="text-align:left;">
+              <div style="font-size:16px;font-weight:900;color:var(--accent);">99 ر.س</div>
+              <div style="font-size:10px;color:var(--text3);">/شهر</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pro -->
+        <div class="pkg-card" id="pkg-pro" onclick="selectPkg('pro')" style="background:var(--card);border:2px solid var(--accent);border-radius:14px;padding:14px 16px;cursor:pointer;transition:all .2s;position:relative;">
+          <div style="position:absolute;top:-10px;right:16px;background:var(--accent);color:#1a0f00;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;">الأكثر طلباً</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:18px;">🏢</span>
+              <div>
+                <div style="font-size:14px;font-weight:800;color:var(--text);">الاحترافية</div>
+                <div style="font-size:11px;color:var(--text3);">حتى 20 وحدة · 3 مستخدمين</div>
+              </div>
+            </div>
+            <div style="text-align:left;">
+              <div style="font-size:16px;font-weight:900;color:var(--accent);">199 ر.س</div>
+              <div style="font-size:10px;color:var(--text3);">/شهر</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enterprise -->
+        <div class="pkg-card" id="pkg-enterprise" onclick="selectPkg('enterprise')" style="background:var(--card);border:2px solid var(--border);border-radius:14px;padding:14px 16px;cursor:pointer;transition:all .2s;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:18px;">🏨</span>
+              <div>
+                <div style="font-size:14px;font-weight:800;color:var(--text);">المميزة</div>
+                <div style="font-size:11px;color:var(--text3);">وحدات غير محدودة · مستخدمون غير محدودون</div>
+              </div>
+            </div>
+            <div style="text-align:left;">
+              <div style="font-size:16px;font-weight:900;color:var(--accent);">399 ر.س</div>
+              <div style="font-size:10px;color:var(--text3);">/شهر</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- Billing toggle -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px;">
+        <span id="bill-m-lbl" style="font-size:12px;font-weight:700;color:var(--accent);">شهري</span>
+        <div onclick="toggleBilling()" id="bill-toggle" style="width:44px;height:24px;background:var(--bg3);border-radius:12px;cursor:pointer;position:relative;transition:background .2s;">
+          <div id="bill-knob" style="width:20px;height:20px;border-radius:50%;background:var(--accent);position:absolute;top:2px;left:2px;transition:left .2s;"></div>
+        </div>
+        <span id="bill-y-lbl" style="font-size:12px;color:var(--text3);">سنوي <span style="color:var(--green);font-weight:700;">وفر 20%</span></span>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:14px;">بيانات النشاط</div>
+      <div class="form-group"><label class="form-label">اسم صاحب النشاط</label><input id="j-name" class="fi" placeholder="الاسم الكامل"></div>
+      <div class="form-group"><label class="form-label">اسم النشاط</label><input id="j-biz" class="fi" placeholder="مثال: شقق الورود الفندقية"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group"><label class="form-label">رقم الجوال</label><input id="j-phone" class="fi" type="tel" placeholder="05xxxxxxxx"></div>
+        <div class="form-group"><label class="form-label">المدينة</label><input id="j-city" class="fi" placeholder="الرياض"></div>
+      </div>
+      <div class="form-group"><label class="form-label">البريد الإلكتروني</label><input id="j-email" class="fi" type="email" placeholder="example@email.com"></div>
+      <div class="form-group"><label class="form-label">كلمة المرور</label><input id="j-pass" class="fi" type="password" placeholder="••••••••"></div>
+    </div>
+
+    <!-- Payment placeholder -->
+    <div style="background:var(--card);border:1px dashed var(--accent);border-radius:16px;padding:16px;margin-bottom:20px;text-align:center;">
+      <div style="font-size:18px;margin-bottom:6px;">💳</div>
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">بوابة الدفع</div>
+      <div style="font-size:11px;color:var(--text3);">سيتم تفعيلها قريباً — سيتواصل معك الفريق بعد تأكيد طلبك</div>
+    </div>
+
+    <!-- Submit -->
+    <button class="btn btn-primary btn-full" style="height:52px;font-size:16px;font-weight:800;" onclick="submitJoin()">إرسال طلب الاشتراك ←</button>
+    <div style="text-align:center;margin-top:14px;">
+      <button onclick="showLoginScreen()" style="background:none;border:none;color:var(--text3);font-size:13px;cursor:pointer;font-family:inherit;">→ العودة لتسجيل الدخول</button>
+    </div>
+  </div>
+</div>
+
+<!-- OWNER PANEL -->
+<div id="owner-screen" style="display:none;min-height:100vh;background:var(--bg);overflow-y:auto;">
+  <!-- Owner Login -->
+  <div id="owner-login" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 16px;">
+    <div style="width:100%;max-width:360px;">
+      <div style="text-align:center;margin-bottom:32px;">
+        <div style="font-size:32px;margin-bottom:8px;">🔐</div>
+        <div style="font-family:Georgia,serif;font-size:28px;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,#c8a96e,#e8c98e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">BODO</div>
+        <div style="font-size:11px;color:var(--text3);letter-spacing:3px;margin-top:4px;">OWNER PANEL</div>
+      </div>
+      <div class="login-card">
+        <div class="login-err" id="owner-err">كلمة المرور غير صحيحة</div>
+        <div class="form-group"><label class="form-label">كلمة مرور المالك</label><input id="owner-pass-input" class="fi" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doOwnerLogin();"></div>
+        <button class="btn btn-primary btn-full" style="height:48px;" onclick="doOwnerLogin()">دخول لوحة التحكم</button>
+      </div>
+    </div>
+  </div>
+  <!-- Owner Dashboard -->
+  <div id="owner-dashboard" style="display:none;">
+    <!-- Topbar -->
+    <div style="background:var(--card);border-bottom:1px solid var(--border);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;">
+      <div>
+        <div style="font-family:Georgia,serif;font-size:18px;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#c8a96e,#e8c98e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">BODO</div>
+        <div style="font-size:10px;color:var(--text3);letter-spacing:2px;">OWNER PANEL</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="toggleTheme()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:14px;width:32px;height:32px;border-radius:8px;cursor:pointer;" id="owner-theme-btn">🌙</button>
+        <button onclick="ownerLogout()" style="background:var(--bg3);border:1px solid var(--border);color:var(--red);font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer;">خروج</button>
+      </div>
+    </div>
+    <!-- Tabs -->
+    <div style="display:flex;border-bottom:1px solid var(--border);background:var(--card);overflow-x:auto;">
+      <button class="owner-tab active" id="otab-1" onclick="showOwnerTab(1)" style="padding:12px 18px;border:none;background:none;font-size:13px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--accent);cursor:pointer;white-space:nowrap;font-family:inherit;">📋 الطلبات</button>
+      <button class="owner-tab" id="otab-2" onclick="showOwnerTab(2)" style="padding:12px 18px;border:none;background:none;font-size:13px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;font-family:inherit;">👥 المشتركون</button>
+      <button class="owner-tab" id="otab-3" onclick="showOwnerTab(3)" style="padding:12px 18px;border:none;background:none;font-size:13px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;font-family:inherit;">💰 الإيرادات</button>
+      <button class="owner-tab" id="otab-4" onclick="showOwnerTab(4)" style="padding:12px 18px;border:none;background:none;font-size:13px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;font-family:inherit;">⚙️ الإعدادات</button>
+    </div>
+    <!-- Content -->
+    <div style="padding:16px;" id="owner-content"></div>
   </div>
 </div>
 
@@ -577,7 +721,6 @@ window.addEventListener('unhandledrejection', function(e){
         <div>
           <div class="biz-label" class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
           <div class="page-title" id="calbooking-title">التقويم</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:2px;" id="book-sub"></div>
         </div>
         <button class="btn btn-primary btn-sm" onclick="openSheet('booking')">+ حجز</button>
       </div>
@@ -693,21 +836,22 @@ window.addEventListener('unhandledrejection', function(e){
       <div style="padding:0 16px;">
 
         <!-- ── بطاقة المستخدم الحالي ── -->
-        <div style="background:linear-gradient(135deg,var(--card2),var(--card));border:1px solid var(--goldb);border-radius:16px;padding:16px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px;">
-          <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#1a0f00;flex-shrink:0;box-shadow:0 4px 12px rgba(200,169,110,.35);" id="settings-avatar">A</div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:10px;color:var(--text3);font-weight:500;margin-bottom:2px;" id="gr-set">أهلاً</div>
-            <div style="font-size:17px;font-weight:900;color:var(--accent);" id="nm-set"></div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="role-set"></div>
-            <div id="settings-user-label" style="display:none;"></div>
-            <div id="user-label" style="display:none;"></div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-            <div id="rt-indicator" style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3);">
-              <span id="rt-dot" style="width:8px;height:8px;border-radius:50%;background:var(--text3);display:inline-block;transition:background .5s;"></span>
-              <span id="rt-label">غير متصل</span>
+        <div style="background:linear-gradient(135deg,var(--card2),var(--card));border:1px solid var(--goldb);border-radius:16px;padding:16px 18px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+            <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#1a0f00;flex-shrink:0;" id="settings-avatar">A</div>
+            <div style="flex:1;">
+              <div style="font-size:10px;color:var(--text3);font-weight:500;margin-bottom:2px;" id="gr-set">أهلاً</div>
+              <div style="font-size:16px;font-weight:900;color:var(--accent);" id="nm-set"></div>
+              <div style="font-size:11px;color:var(--text3);margin-top:1px;" id="role-set"></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text3);">
+              <span id="rt-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text3);display:inline-block;transition:background .5s;"></span>
+              <span id="rt-label">جارٍ الاتصال</span>
             </div>
           </div>
+
+          <!-- أزرار سريعة حسب الدور -->
+          <div id="admin-quick-actions"></div>
         </div>
 
         <!-- ── هوية النشاط ── -->
@@ -778,31 +922,6 @@ window.addEventListener('unhandledrejection', function(e){
           <div id="employees-list"></div>
         </div>
 
-        <!-- ── التكاليف الشهرية ── -->
-        <div style="margin-bottom:20px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div style="width:30px;height:30px;border-radius:8px;background:rgba(220,38,38,.12);display:flex;align-items:center;justify-content:center;font-size:14px;">📅</div>
-              <div style="font-size:14px;font-weight:800;color:var(--text);">التكاليف الشهرية</div>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="buildMonthlyForm(null);openSheet('monthly')">+ إضافة</button>
-          </div>
-          <div id="monthly-list-settings"></div>
-        </div>
-
-        <!-- ── تكاليف التأسيس ── -->
-        <div style="margin-bottom:20px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div style="width:30px;height:30px;border-radius:8px;background:rgba(251,191,36,.12);display:flex;align-items:center;justify-content:center;font-size:14px;">🏗️</div>
-              <div style="font-size:14px;font-weight:800;color:var(--text);">تكاليف التأسيس</div>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="buildFoundationForm(null);openSheet('foundation')">+ إضافة</button>
-          </div>
-          <div id="foundation-list-settings"></div>
-        </div>
-
-        <!-- deploy btn hidden --><div id="deploy-btn" style="display:none;"></div>
         <!-- ── المستخدمون ── -->
         <div id="users-section" style="margin-bottom:20px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -815,17 +934,6 @@ window.addEventListener('unhandledrejection', function(e){
           <div id="users-list"></div>
         </div>
 
-        <!-- ── رفع التطبيق ── -->
-        <div style="margin-bottom:24px;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-            <div style="width:30px;height:30px;border-radius:8px;background:rgba(37,99,235,.12);display:flex;align-items:center;justify-content:center;font-size:14px;">🚀</div>
-            <div style="font-size:14px;font-weight:800;color:var(--text);">تحديث التطبيق</div>
-          </div>
-          <button id="real-deploy-btn" class="btn btn-primary btn-full" onclick="deployToGitHub()" style="height:46px;font-size:14px;">
-            🚀 رفع التحديثات على GitHub
-          </button>
-        </div>
-
       </div>
     </div>
 
@@ -836,7 +944,7 @@ window.addEventListener('unhandledrejection', function(e){
       <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="8" width="7" height="13" rx="1"/></svg></div>
       <div class="nav-label">الرئيسية</div>
     </button>
-    <button class="nav-item" onclick="showPage('calbooking',this)" style="position:relative;"><div id="nav-badge" class="nav-badge" style="display:none;"></div>
+    <button class="nav-item" onclick="showPage('calbooking',this)" style="position:relative;">
       <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
       <div class="nav-label">الحجوزات</div>
     </button>
@@ -927,8 +1035,7 @@ function save(){
   if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;
   if(DB.adminPass&&DB.adminPass.username) ADMIN.username=DB.adminPass.username;
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-  // Instant sync to Supabase - no delay
-  autoSyncToSupabase().catch(function(){});
+  // Note: each save function calls sbFetch directly - no batch sync needed
 }
 
 
@@ -966,8 +1073,7 @@ function hasConflict(apt,cin,cout,exId){
 // ══ TOAST ══
 var _tt;
 function toast(msg,type){type=type||'info';var el=document.getElementById('toast');el.textContent=msg;el.className='show t-'+type;clearTimeout(_tt);_tt=setTimeout(function(){el.className='';},3500);}
-// Alias for compatibility
-function showToast(msg,type){ toast(msg,type); }
+var showToast=toast;
 
 // ══ AUTH ══
 function toggleTheme(){
@@ -998,8 +1104,379 @@ function toggleRemember(val){
   localStorage.setItem('kaya_remember', val?'1':'0');
 }
 
+// ══════════════════════════════════════════
+// OWNER PANEL & JOIN SCREEN
+// ══════════════════════════════════════════
+var OWNER_PASS = 'Bodo@Owner2025'; // غيّرها من إعدادات المالك
+var _ownerLoggedIn = false;
+var _selectedPkg = 'pro';
+var _billingYearly = false;
+var _ownerTab = 1;
+
+var PKG_PRICES = {
+  basic:    { monthly: 99,  yearly: 79,  label: 'الأساسية',    units: 5,    users: 1 },
+  pro:      { monthly: 199, yearly: 159, label: 'الاحترافية',  units: 20,   users: 3 },
+  enterprise:{ monthly: 399, yearly: 319, label: 'المميزة',    units: 999,  users: 999 }
+};
+
+// ── Hash Router ──
+function checkHash(){
+  if(location.hash === '#bodo-owner-2025'){
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('join-screen').style.display = 'none';
+    document.getElementById('owner-screen').style.display = 'block';
+    // Check if already logged in
+    if(localStorage.getItem('bodo_owner') === '1'){
+      _ownerLoggedIn = true;
+      showOwnerDashboard();
+    }
+  }
+}
+
+// ── Join Screen ──
+function showJoinScreen(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('join-screen').style.display = 'block';
+  selectPkg('pro');
+}
+function showLoginScreen(){
+  document.getElementById('join-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function selectPkg(pkg){
+  _selectedPkg = pkg;
+  ['basic','pro','enterprise'].forEach(function(p){
+    var el = document.getElementById('pkg-'+p);
+    if(!el) return;
+    el.style.borderColor = p === pkg ? 'var(--accent)' : 'var(--border)';
+    el.style.background = p === pkg ? 'rgba(200,169,110,.08)' : 'var(--card)';
+  });
+}
+
+function toggleBilling(){
+  _billingYearly = !_billingYearly;
+  var knob = document.getElementById('bill-knob');
+  var tog = document.getElementById('bill-toggle');
+  var ml = document.getElementById('bill-m-lbl');
+  var yl = document.getElementById('bill-y-lbl');
+  if(knob) knob.style.left = _billingYearly ? '22px' : '2px';
+  if(tog) tog.style.background = _billingYearly ? 'rgba(200,169,110,.3)' : 'var(--bg3)';
+  if(ml){ ml.style.color = _billingYearly ? 'var(--text3)' : 'var(--accent)'; ml.style.fontWeight = _billingYearly ? '400' : '700'; }
+  if(yl){ yl.style.color = _billingYearly ? 'var(--accent)' : 'var(--text3)'; }
+}
+
+function submitJoin(){
+  var name  = document.getElementById('j-name')?.value?.trim();
+  var biz   = document.getElementById('j-biz')?.value?.trim();
+  var phone = document.getElementById('j-phone')?.value?.trim();
+  var city  = document.getElementById('j-city')?.value?.trim();
+  var email = document.getElementById('j-email')?.value?.trim();
+  var pass  = document.getElementById('j-pass')?.value?.trim();
+
+  if(!name||!biz||!phone||!email||!pass){
+    toast('يرجى تعبئة جميع الحقول','error'); return;
+  }
+  if(pass.length < 6){ toast('كلمة المرور 6 أحرف على الأقل','error'); return; }
+
+  var pkg = PKG_PRICES[_selectedPkg];
+  var price = _billingYearly ? pkg.yearly : pkg.monthly;
+  var billing = _billingYearly ? 'سنوي' : 'شهري';
+
+  var req = {
+    id: uid(),
+    name: name, biz: biz, phone: phone,
+    city: city, email: email,
+    pkg: _selectedPkg, pkgLabel: pkg.label,
+    price: price, billing: billing,
+    status: 'pending',
+    date: toDay(),
+    pass: pass
+  };
+
+  // Save to Supabase
+  sbFetch('join_requests','POST', req, '?on_conflict=id').catch(function(){});
+
+  // Save locally for owner to see
+  if(!DB.joinRequests) DB.joinRequests = [];
+  DB.joinRequests.push(req);
+  try{localStorage.setItem('kaya_v9', JSON.stringify(DB));}catch(e){}
+
+  // Show success
+  document.getElementById('join-screen').innerHTML =
+    '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px;text-align:center;">'
+    +'<div style="font-size:56px;margin-bottom:20px;">✅</div>'
+    +'<div style="font-family:Georgia,serif;font-size:24px;font-weight:900;letter-spacing:4px;background:linear-gradient(135deg,#c8a96e,#e8c98e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:12px;">BODO</div>'
+    +'<div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:8px;">تم إرسال طلبك بنجاح!</div>'
+    +'<div style="font-size:13px;color:var(--text3);margin-bottom:6px;">سيتواصل معك فريق BODO خلال 24 ساعة</div>'
+    +'<div style="font-size:12px;color:var(--text3);margin-bottom:28px;">على رقم: '+phone+'</div>'
+    +'<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin-bottom:28px;width:100%;max-width:300px;">'
+    +'<div style="font-size:11px;color:var(--text3);margin-bottom:4px;">ملخص طلبك</div>'
+    +'<div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:2px;">'+biz+'</div>'
+    +'<div style="font-size:13px;color:var(--accent);font-weight:700;">باقة '+pkg.label+' · '+price+' ر.س/'+billing+'</div>'
+    +'</div>'
+    +'<button onclick="showLoginScreen()" class="btn btn-primary" style="padding:12px 32px;font-size:14px;">العودة لتسجيل الدخول</button>'
+    +'</div>';
+}
+
+// ── Owner Panel ──
+function doOwnerLogin(){
+  var p = document.getElementById('owner-pass-input')?.value;
+  if(p === OWNER_PASS){
+    _ownerLoggedIn = true;
+    localStorage.setItem('bodo_owner','1');
+    showOwnerDashboard();
+  } else {
+    var err = document.getElementById('owner-err');
+    if(err){ err.style.display='block'; setTimeout(function(){err.style.display='none';},3000); }
+  }
+}
+
+function ownerLogout(){
+  _ownerLoggedIn = false;
+  localStorage.removeItem('bodo_owner');
+  document.getElementById('owner-dashboard').style.display = 'none';
+  document.getElementById('owner-login').style.display = 'flex';
+  document.getElementById('owner-pass-input').value = '';
+  location.hash = '';
+  location.reload();
+}
+
+function showOwnerDashboard(){
+  document.getElementById('owner-login').style.display = 'none';
+  document.getElementById('owner-dashboard').style.display = 'block';
+  // Update theme button
+  var tb = document.getElementById('owner-theme-btn');
+  if(tb) tb.textContent = document.body.classList.contains('light') ? '🌙' : '☀️';
+  showOwnerTab(1);
+}
+
+function showOwnerTab(n){
+  _ownerTab = n;
+  [1,2,3,4].forEach(function(i){
+    var btn = document.getElementById('otab-'+i);
+    if(!btn) return;
+    btn.style.color = i===n ? 'var(--accent)' : 'var(--text3)';
+    btn.style.borderBottomColor = i===n ? 'var(--accent)' : 'transparent';
+  });
+  var content = document.getElementById('owner-content');
+  if(!content) return;
+  if(n===1) renderOwnerRequests();
+  else if(n===2) renderOwnerSubscribers();
+  else if(n===3) renderOwnerRevenue();
+  else if(n===4) renderOwnerSettings();
+}
+
+function renderOwnerRequests(){
+  var reqs = (DB.joinRequests||[]).sort(function(a,b){return b.date>a.date?1:-1;});
+  var pending = reqs.filter(function(r){return r.status==='pending';});
+  var approved = reqs.filter(function(r){return r.status==='approved';});
+  var rejected = reqs.filter(function(r){return r.status==='rejected';});
+
+  function reqCard(r){
+    var statusColor = r.status==='pending'?'var(--yellow)':r.status==='approved'?'var(--green)':'var(--red)';
+    var statusLabel = r.status==='pending'?'⏳ بانتظار الموافقة':r.status==='approved'?'✅ تم القبول':'❌ مرفوض';
+    return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">'
+        +'<div>'
+          +'<div style="font-size:14px;font-weight:800;color:var(--text);">'+r.biz+'</div>'
+          +'<div style="font-size:12px;color:var(--text3);">'+r.name+' · '+r.phone+'</div>'
+          +'<div style="font-size:11px;color:var(--text3);">'+r.email+' · '+r.city+'</div>'
+        +'</div>'
+        +'<div style="text-align:left;">'
+          +'<div style="font-size:13px;font-weight:900;color:var(--accent);">'+r.price+' ر.س</div>'
+          +'<div style="font-size:10px;color:var(--text3);">'+r.billing+'</div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;">'
+        +'<div style="display:flex;align-items:center;gap:6px;">'
+          +'<span style="font-size:10px;background:var(--bg3);padding:3px 8px;border-radius:8px;color:var(--text3);">'+r.pkgLabel+'</span>'
+          +'<span style="font-size:10px;color:'+statusColor+';font-weight:700;">'+statusLabel+'</span>'
+        +'</div>'
+        +(r.status==='pending'?
+          '<div style="display:flex;gap:6px;">'
+            +'<button class="btn btn-xs btn-success" onclick="approveRequest(\''+r.id+'\')">قبول</button>'
+            +'<button class="btn btn-xs btn-danger" onclick="rejectRequest(\''+r.id+'\')">رفض</button>'
+          +'</div>'
+          :'<div style="font-size:11px;color:var(--text3);">'+r.date+'</div>'
+        )
+      +'</div>'
+    +'</div>';
+  }
+
+  var content = document.getElementById('owner-content');
+  content.innerHTML =
+    // Stats
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px;">'
+      +'<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;">'
+        +'<div style="font-size:22px;font-weight:900;color:var(--yellow);">'+pending.length+'</div>'
+        +'<div style="font-size:10px;color:var(--text3);">بانتظار</div>'
+      +'</div>'
+      +'<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;">'
+        +'<div style="font-size:22px;font-weight:900;color:var(--green);">'+approved.length+'</div>'
+        +'<div style="font-size:10px;color:var(--text3);">مقبول</div>'
+      +'</div>'
+      +'<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;">'
+        +'<div style="font-size:22px;font-weight:900;color:var(--red);">'+rejected.length+'</div>'
+        +'<div style="font-size:10px;color:var(--text3);">مرفوض</div>'
+      +'</div>'
+    +'</div>'
+    // Pending first
+    +(pending.length ? '<div style="font-size:12px;font-weight:800;color:var(--yellow);margin-bottom:10px;">⏳ طلبات بانتظار الموافقة</div>'+pending.map(reqCard).join('') : '')
+    +(approved.length ? '<div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:10px;margin-top:16px;">✅ تم القبول</div>'+approved.map(reqCard).join('') : '')
+    +(rejected.length ? '<div style="font-size:12px;font-weight:800;color:var(--red);margin-bottom:10px;margin-top:16px;">❌ مرفوضة</div>'+rejected.map(reqCard).join('') : '')
+    +(!reqs.length ? '<div style="text-align:center;padding:40px;color:var(--text3);">لا توجد طلبات بعد</div>' : '');
+}
+
+function approveRequest(id){
+  if(!DB.joinRequests) return;
+  DB.joinRequests = DB.joinRequests.map(function(r){
+    return r.id===id ? Object.assign({},r,{status:'approved'}) : r;
+  });
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  sbFetch('join_requests','PATCH',{status:'approved'},'?id=eq.'+id).catch(function(){});
+  toast('✅ تم قبول الطلب','success');
+  renderOwnerRequests();
+}
+
+function rejectRequest(id){
+  if(!DB.joinRequests) return;
+  DB.joinRequests = DB.joinRequests.map(function(r){
+    return r.id===id ? Object.assign({},r,{status:'rejected'}) : r;
+  });
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  sbFetch('join_requests','PATCH',{status:'rejected'},'?id=eq.'+id).catch(function(){});
+  toast('تم رفض الطلب','info');
+  renderOwnerRequests();
+}
+
+function renderOwnerSubscribers(){
+  var approved = (DB.joinRequests||[]).filter(function(r){return r.status==='approved';});
+  var content = document.getElementById('owner-content');
+  content.innerHTML = approved.length ?
+    '<div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:12px;">'+approved.length+' مشترك نشط</div>'
+    +approved.map(function(r){
+      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">'
+        +'<div>'
+          +'<div style="font-size:14px;font-weight:800;">'+r.biz+'</div>'
+          +'<div style="font-size:11px;color:var(--text3);">'+r.name+' · '+r.phone+'</div>'
+          +'<div style="font-size:11px;color:var(--accent);font-weight:700;margin-top:2px;">باقة '+r.pkgLabel+'</div>'
+        +'</div>'
+        +'<div style="text-align:left;">'
+          +'<div style="font-size:14px;font-weight:900;color:var(--accent);">'+r.price+' ر.س</div>'
+          +'<div style="font-size:10px;color:var(--text3);">'+r.billing+'</div>'
+          +'<div style="font-size:10px;color:var(--text3);">منذ '+r.date+'</div>'
+        +'</div>'
+      +'</div>';
+    }).join('')
+    : '<div style="text-align:center;padding:40px;color:var(--text3);">لا يوجد مشتركون بعد</div>';
+}
+
+function renderOwnerRevenue(){
+  var approved = (DB.joinRequests||[]).filter(function(r){return r.status==='approved';});
+  var monthly = approved.filter(function(r){return r.billing==='شهري';}).reduce(function(s,r){return s+r.price;},0);
+  var yearly = approved.filter(function(r){return r.billing==='سنوي';}).reduce(function(s,r){return s+r.price;},0);
+  var total = monthly + yearly;
+  var content = document.getElementById('owner-content');
+  content.innerHTML =
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">'
+      +'<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;grid-column:1/-1;">'
+        +'<div style="font-size:11px;color:var(--text3);margin-bottom:4px;">إجمالي الإيرادات الشهرية</div>'
+        +'<div style="font-size:28px;font-weight:900;color:var(--accent);">'+fmtM(total)+' ر.س</div>'
+      +'</div>'
+      +'<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;">'
+        +'<div style="font-size:11px;color:var(--text3);margin-bottom:4px;">اشتراكات شهرية</div>'
+        +'<div style="font-size:20px;font-weight:900;color:var(--yellow);">'+fmtM(monthly)+' ر.س</div>'
+      +'</div>'
+      +'<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;">'
+        +'<div style="font-size:11px;color:var(--text3);margin-bottom:4px;">اشتراكات سنوية</div>'
+        +'<div style="font-size:20px;font-weight:900;color:var(--green);">'+fmtM(yearly)+' ر.س</div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">'
+      +['basic','pro','enterprise'].map(function(p){
+        var count = approved.filter(function(r){return r.pkg===p;}).length;
+        var pkg = PKG_PRICES[p];
+        return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;">'
+          +'<div style="font-size:20px;font-weight:900;color:var(--accent);">'+count+'</div>'
+          +'<div style="font-size:10px;color:var(--text3);">'+pkg.label+'</div>'
+        +'</div>';
+      }).join('')
+    +'</div>';
+}
+
+function renderOwnerSettings(){
+  var cfg = DB.ownerConfig || {};
+  var content = document.getElementById('owner-content');
+  content.innerHTML =
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px;">'
+      +'<div style="font-size:13px;font-weight:800;margin-bottom:14px;">🔑 أمان لوحة التحكم</div>'
+      +'<div class="form-group"><label class="form-label">كلمة المرور الحالية للمالك</label>'
+        +'<input id="ow-cur-pass" class="fi" type="password" placeholder="كلمة المرور الحالية"></div>'
+      +'<div class="form-group"><label class="form-label">كلمة المرور الجديدة</label>'
+        +'<input id="ow-new-pass" class="fi" type="password" placeholder="••••••••"></div>'
+      +'<button class="btn btn-primary btn-sm" onclick="changeOwnerPass()">تغيير كلمة المرور</button>'
+    +'</div>'
+    +'<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px;">'
+      +'<div style="font-size:13px;font-weight:800;margin-bottom:14px;">📬 إعدادات الإشعارات</div>'
+      +'<div class="form-group"><label class="form-label">رقم واتساب الإشعارات</label>'
+        +'<input id="ow-wa" class="fi" type="tel" placeholder="966xxxxxxxxx" value="'+(cfg.whatsapp||'')+'"></div>'
+      +'<div class="form-group"><label class="form-label">البريد الإلكتروني للإشعارات</label>'
+        +'<input id="ow-email" class="fi" type="email" placeholder="owner@bodo.app" value="'+(cfg.email||'')+'"></div>'
+      +'<button class="btn btn-primary btn-sm" onclick="saveOwnerConfig()">حفظ</button>'
+    +'</div>'
+    +'<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;">'
+      +'<div style="font-size:13px;font-weight:800;margin-bottom:14px;">💰 أسعار الباقات</div>'
+      +['basic','pro','enterprise'].map(function(p){
+        var pkg = PKG_PRICES[p];
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">'
+          +'<div style="font-size:13px;font-weight:700;">'+pkg.label+'</div>'
+          +'<div style="font-size:12px;color:var(--accent);">'+pkg.monthly+' / '+pkg.yearly+' ر.س</div>'
+        +'</div>';
+      }).join('')
+      +'<div style="font-size:11px;color:var(--text3);margin-top:10px;">شهري / سنوي — التعديل قريباً</div>'
+    +'</div>';
+}
+
+function changeOwnerPass(){
+  var cur = document.getElementById('ow-cur-pass')?.value;
+  var nw = document.getElementById('ow-new-pass')?.value;
+  if(cur !== OWNER_PASS){ toast('كلمة المرور الحالية غير صحيحة','error'); return; }
+  if(!nw||nw.length<6){ toast('كلمة المرور الجديدة 6 أحرف على الأقل','error'); return; }
+  OWNER_PASS = nw;
+  if(!DB.ownerConfig) DB.ownerConfig={};
+  DB.ownerConfig.pass = nw;
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  toast('✅ تم تغيير كلمة المرور','success');
+}
+
+function saveOwnerConfig(){
+  var wa = document.getElementById('ow-wa')?.value?.trim();
+  var em = document.getElementById('ow-email')?.value?.trim();
+  if(!DB.ownerConfig) DB.ownerConfig={};
+  DB.ownerConfig.whatsapp = wa;
+  DB.ownerConfig.email = em;
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  sbFetch('app_config','POST',{key:'owner_config',value:JSON.stringify(DB.ownerConfig)},'?on_conflict=key').catch(function(){});
+  toast('✅ تم الحفظ — الإشعارات ستُفعَّل قريباً','success');
+}
+
 function initAuth(){
-  // Check remember me
+  // Load owner config
+  if(DB.ownerConfig && DB.ownerConfig.pass) OWNER_PASS = DB.ownerConfig.pass;
+
+  // Hash router — owner panel
+  if(location.hash === '#bodo-owner-2025'){
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('owner-screen').style.display = 'block';
+    if(localStorage.getItem('bodo_owner')==='1'){
+      _ownerLoggedIn = true;
+      showOwnerDashboard();
+    }
+    return;
+  }
+
+  // Normal auth flow
   var remember = localStorage.getItem('kaya_remember');
   var session = localStorage.getItem('kaya_session');
   if(remember==='1' && session){
@@ -1014,12 +1491,11 @@ function initAuth(){
       }
     }catch(e){}
   }
-  // Restore remember checkbox state
   var cb = document.getElementById('remember-me');
   if(cb) cb.checked = remember==='1';
-
   initIcons();
-  if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;if(DB.adminPass&&DB.adminPass.username) ADMIN.username=DB.adminPass.username;
+  if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;
+  if(DB.adminPass&&DB.adminPass.username) ADMIN.username=DB.adminPass.username;
   if(!DB.appUsers) DB.appUsers=[];
   var saved=localStorage.getItem('kaya_session');
   if(saved){try{currentUser=JSON.parse(saved);showApp();return;}catch{}}
@@ -1057,34 +1533,25 @@ function showApp(){
   var uname=currentUser.fullname||currentUser.username||'';
   var h=new Date().getHours();
   var greetTxt=h<12?'صباح الخير':h<17?'مرحباً':'أهلاً';
+  // Update all page user cards
+  // Fill dashboard
   var ndash=document.getElementById('nm-dash');if(ndash)ndash.textContent=uname;
   var gdash=document.getElementById('gr-dash');if(gdash)gdash.textContent=greetTxt;
+  // Fill settings
   var nset=document.getElementById('nm-set');if(nset)nset.textContent=uname;
   var gset=document.getElementById('gr-set');if(gset)gset.textContent=greetTxt;
+  // Reset all nav items visibility
   document.querySelectorAll('.nav-item').forEach(function(n){n.style.display='';});
   applyPerms();
   renderDashboard();
-  // Load data from Supabase
-  loadFromSupabaseAuto();
-  // Start realtime – guard inside initRealtime prevents duplicate clients
-  initRealtime();
-  // Polling fallback every 30s
+  // initRealtime يتكفل بكل السحب والمزامنة
+  if(window._pollTimer) clearInterval(window._pollTimer);
   if(window._syncInterval) clearInterval(window._syncInterval);
-  window._syncInterval = setInterval(function(){ loadFromSupabaseAuto(); }, 30000);
+  initRealtime();
 }
 function logout(){
   localStorage.removeItem('kaya_session');
   currentUser=null;
-  // Stop polling
-  if(window._syncInterval){ clearInterval(window._syncInterval); window._syncInterval=null; }
-  // Unsubscribe realtime channel (keep the client alive – no new instance needed on next login)
-  if(_realtimeChannel){
-    try{ var c=_getSupabaseClient(); if(c) c.removeChannel(_realtimeChannel); }catch(e){}
-    _realtimeChannel=null;
-  }
-  _rtConnected=false;
-  _realtimeStarted=false;
-  _updateRtIndicator(false);
   // Reset nav and pages to default state
   document.querySelectorAll('.nav-item').forEach(function(n){n.style.display='';n.classList.remove('active');});
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
@@ -1144,107 +1611,81 @@ function srcIcon(src,size){
 }
 function renderDashboard(){
   if(!DB.sales)DB.sales=[];
+  if(!DB.bookings)DB.bookings=[];
+  if(!DB.expenses)DB.expenses=[];
   var conf=DB.bookings.filter(function(b){return b.status==='confirmed';});
   var bookRev=conf.reduce(function(s,b){return s+b.total;},0);
   var salesRev=(DB.sales||[]).reduce(function(s,x){return s+x.amount;},0);
   var rev=bookRev+salesRev;
-  var expT=DB.expenses.reduce(function(s,e){return s+e.amount;},0);
+  var expT=(DB.expenses||[]).reduce(function(s,e){return s+e.amount;},0);
   var moT=(DB.monthly||[]).reduce(function(s,m){return s+m.amount;},0);
   var net=rev-expT-moT;
   var now=new Date();
+  var today=toDay();
+  var thisMonth=today.slice(0,7);
   var dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
   var units=Math.max(1,(DB.units||[]).length);
   var mn=conf.filter(function(b){var d=new Date(b.checkin);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}).reduce(function(s,b){return s+b.nights;},0);
   var occ=Math.min(100,Math.round((mn/(units*dim))*100));
-  document.getElementById('dash-stats').innerHTML=
+
+  var ds=document.getElementById('dash-stats');
+  if(ds) ds.innerHTML=
     '<div class="stat-card c-gold"><div class="s-label">إجمالي الإيرادات</div><div class="s-value">'+fmtM(rev)+' ر.س</div></div>'
     +'<div class="stat-card '+(net>=0?'c-green':'c-red')+'"><div class="s-label">صافي الربح</div><div class="s-value">'+fmtM(net)+' ر.س</div></div>'
-    +'<div class="stat-card c-blue"><div class="s-label">إجمالي الحجوزات</div><div class="s-value">'+DB.bookings.filter(function(b){return b.status!=="blocked";}).length+'</div></div>'
-    +'<div class="stat-card c-yellow"><div class="s-label">عدد الوحدات</div><div class="s-value">'+(DB.units||[]).length+'</div></div>';
-  var up=DB.bookings.filter(function(b){return b.status==='confirmed'&&b.checkin>=toDay();}).sort(function(a,b){return new Date(a.checkin)-new Date(b.checkin);}).slice(0,3);
+    +'<div class="stat-card c-blue"><div class="s-label">إجمالي الحجوزات</div><div class="s-value">'+DB.bookings.filter(function(b){return b.status!=='blocked';}).length+'</div></div>'
+    +'<div class="stat-card c-yellow"><div class="s-label">عدد الوحدات</div><div class="s-value">'+units+'</div></div>';
+
+  var up=DB.bookings.filter(function(b){return b.status==='confirmed'&&b.checkin>=today;}).sort(function(a,b){return new Date(a.checkin)-new Date(b.checkin);}).slice(0,3);
   var banner=document.getElementById('dash-upcoming');
-  if(up.length){banner.style.display='block';document.getElementById('dash-up-list').innerHTML=up.map(function(b){
-  var daysLeft=Math.ceil((new Date(b.checkin)-new Date())/86400000);
-  var tag=daysLeft<=0?'<span style="font-size:10px;background:var(--green);color:#fff;padding:2px 8px;border-radius:10px;">اليوم</span>':daysLeft===1?'<span style="font-size:10px;background:var(--yellow);color:#fff;padding:2px 8px;border-radius:10px;">غداً</span>':'<span style="font-size:10px;color:var(--text3);font-weight:600;">بعد '+daysLeft+' يوم</span>';
-  var nameColor=b.source==='airbnb'?'#ff5a5f':b.source==='gathern'?'#7028e4':b.source==='whatsapp'?'#25d366':'var(--accent)';
-  var unitBadge='<span style="font-size:11px;font-weight:900;color:var(--accent);background:var(--gold);padding:2px 8px;border-radius:6px;flex-shrink:0;">'+b.apt+'</span>';
-  var nameBadge='<span style="font-size:14px;font-weight:800;color:'+nameColor+';">'+b.guest+'</span>';
-  return'<div class="up-row" style="cursor:pointer;padding:8px 0;">'
-    // Always: unit then name, forced LTR so unit always on left
-    +'<div style="display:flex;align-items:center;gap:8px;direction:ltr;">'+unitBadge+nameBadge+'</div>'
-    +'<div style="text-align:left;flex-shrink:0;">'+tag+'<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+fmtRange(b.checkin,b.checkout)+'</div></div>'
-  +'</div>';
-}).join('');}
-  else banner.style.display='none';
-  var maxR=Math.max.apply(null,(DB.units||[]).map(function(a){return conf.filter(function(b){return b.apt===a;}).reduce(function(s,b){return s+b.total;},0);}).concat([1]));
-  // ── SMART KPIs ──
-  var today = toDay();
-  var thisMonth = today.slice(0,7);
-  var now = new Date();
+  if(banner){
+    if(up.length){
+      banner.style.display='block';
+      var ul=document.getElementById('dash-up-list');
+      if(ul) ul.innerHTML=up.map(function(b){
+        var daysLeft=Math.ceil((new Date(b.checkin)-new Date())/86400000);
+        var tag=daysLeft<=0?'<span style="font-size:10px;background:var(--green);color:#fff;padding:2px 8px;border-radius:10px;">اليوم</span>':daysLeft===1?'<span style="font-size:10px;background:var(--yellow);color:#fff;padding:2px 8px;border-radius:10px;">غداً</span>':'<span style="font-size:10px;color:var(--text3);font-weight:600;">بعد '+daysLeft+' يوم</span>';
+        var nameColor=b.source==='airbnb'?'#ff5a5f':b.source==='gathern'?'#7028e4':b.source==='whatsapp'?'#25d366':'var(--accent)';
+        return'<div class="up-row" style="cursor:pointer;padding:8px 0;">'
+          +'<div style="display:flex;align-items:center;gap:8px;direction:ltr;">'
+          +'<span style="font-size:11px;font-weight:900;color:var(--accent);background:var(--gold);padding:2px 8px;border-radius:6px;flex-shrink:0;">'+b.apt+'</span>'
+          +'<span style="font-size:14px;font-weight:800;color:'+nameColor+';">'+b.guest+'</span>'
+          +'</div>'
+          +'<div style="text-align:left;flex-shrink:0;">'+tag+'<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+fmtRange(b.checkin,b.checkout)+'</div></div>'
+          +'</div>';
+      }).join('');
+    } else {
+      banner.style.display='none';
+    }
+  }
 
-  // Checkins today
-  var checkinsToday = (DB.bookings||[]).filter(function(b){
-    return b.checkin===today && b.status==='confirmed';
-  }).length;
+  // KPIs
+  var checkinsToday=(DB.bookings||[]).filter(function(b){return b.checkin===today&&b.status==='confirmed';}).length;
+  var checkoutsToday=(DB.bookings||[]).filter(function(b){return b.checkout===today&&b.status==='confirmed';}).length;
+  var stayingNow=(DB.bookings||[]).filter(function(b){return b.checkin<=today&&b.checkout>today&&b.status==='confirmed';}).length;
+  var monthRev=conf.filter(function(b){return b.checkin&&b.checkin.startsWith(thisMonth);}).reduce(function(s,b){return s+b.total;},0);
+  var d7=new Date(now);d7.setDate(d7.getDate()+7);
+  var d7str=d7.toISOString().slice(0,10);
+  var upcoming7=(DB.bookings||[]).filter(function(b){return b.checkin>today&&b.checkin<=d7str&&b.status==='confirmed';}).length;
+  var daysInMonth=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  var monthNights=conf.filter(function(b){return b.checkin&&b.checkin.startsWith(thisMonth);}).reduce(function(s,b){return s+b.nights;},0);
+  var occupancy=Math.min(100,Math.round((monthNights/(daysInMonth*units))*100));
 
-  // Checkouts today
-  var checkoutsToday = (DB.bookings||[]).filter(function(b){
-    return b.checkout===today && b.status==='confirmed';
-  }).length;
-
-  // Currently staying
-  var stayingNow = (DB.bookings||[]).filter(function(b){
-    return b.checkin<=today && b.checkout>today && b.status==='confirmed';
-  }).length;
-
-  // This month revenue
-  var monthRev = conf.filter(function(b){
-    return b.checkin && b.checkin.startsWith(thisMonth);
-  }).reduce(function(s,b){return s+b.total;},0);
-
-  // Upcoming 7 days bookings
-  var d7 = new Date(now); d7.setDate(d7.getDate()+7);
-  var d7str = d7.toISOString().slice(0,10);
-  var upcoming7 = (DB.bookings||[]).filter(function(b){
-    return b.checkin>today && b.checkin<=d7str && b.status==='confirmed';
-  }).length;
-
-  // Occupancy this month
-  var daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
-  var units = Math.max(1,(DB.units||[]).length);
-  var monthNights = conf.filter(function(b){
-    return b.checkin && b.checkin.startsWith(thisMonth);
-  }).reduce(function(s,b){return s+b.nights;},0);
-  var occupancy = Math.min(100, Math.round((monthNights/(daysInMonth*units))*100));
-
-  document.getElementById('dash-perf').innerHTML =
+  var dp=document.getElementById('dash-perf');
+  if(dp) dp.innerHTML=
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
-    +'<div style="background:var(--bg3);border-radius:12px;padding:14px;">'
-    +'<div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;">دخول اليوم</div>'
-    +'<div style="font-size:28px;font-weight:900;color:var(--green);">'+checkinsToday+'</div>'
-    +'</div>'
-    +'<div style="background:var(--bg3);border-radius:12px;padding:14px;">'
-    +'<div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;">خروج اليوم</div>'
-    +'<div style="font-size:28px;font-weight:900;color:var(--red);">'+checkoutsToday+'</div>'
-    +'</div>'
-    +'<div style="background:var(--bg3);border-radius:12px;padding:14px;">'
-    +'<div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;">نزلاء الآن</div>'
-    +'<div style="font-size:28px;font-weight:900;color:var(--accent);">'+stayingNow+'</div>'
-    +'</div>'
-
+    +'<div style="background:var(--bg3);border-radius:12px;padding:14px;"><div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;">دخول اليوم</div><div style="font-size:28px;font-weight:900;color:var(--green);">'+checkinsToday+'</div></div>'
+    +'<div style="background:var(--bg3);border-radius:12px;padding:14px;"><div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;">خروج اليوم</div><div style="font-size:28px;font-weight:900;color:var(--red);">'+checkoutsToday+'</div></div>'
+    +'<div style="background:var(--bg3);border-radius:12px;padding:14px;"><div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;">نزلاء الآن</div><div style="font-size:28px;font-weight:900;color:var(--accent);">'+stayingNow+'</div></div>'
+    +'<div style="background:var(--bg3);border-radius:12px;padding:14px;"><div style="font-size:11px;color:var(--text2);font-weight:600;margin-bottom:6px;">قادم خلال 7 أيام</div><div style="font-size:28px;font-weight:900;color:var(--yellow);">'+upcoming7+'</div></div>'
     +'<div style="background:var(--bg3);border-radius:12px;padding:14px;grid-column:1/-1;">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
-    +'<div style="font-size:11px;color:var(--text2);font-weight:600;">إيرادات هذا الشهر</div>'
-    +'<div style="font-size:11px;color:var(--text3);">إشغال '+occupancy+'%</div>'
-    +'</div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><div style="font-size:11px;color:var(--text2);font-weight:600;">إيرادات هذا الشهر</div><div style="font-size:11px;color:var(--text3);">إشغال '+occupancy+'%</div></div>'
     +'<div style="font-size:22px;font-weight:900;color:var(--accent);margin-bottom:8px;">'+fmtM(monthRev)+' ر.س</div>'
-    +'<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">'
-    +'<div style="height:100%;width:'+occupancy+'%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .5s;"></div>'
-    +'</div>'
-    +'</div>'
-    +'</div>';
+    +'<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;"><div style="height:100%;width:'+occupancy+'%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .5s;"></div></div>'
+    +'</div></div>';
+
   var recent=[].concat(DB.bookings).filter(function(b){return b.status!=='blocked';}).sort(function(a,b){return new Date(b.checkin)-new Date(a.checkin);}).slice(0,6);
-  document.getElementById('dash-recent').innerHTML=recent.length?recent.map(function(b){
+  var dr=document.getElementById('dash-recent');
+  if(dr) dr.innerHTML=recent.length?recent.map(function(b){
     var si=SRC[b.source]||{};
     return'<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">'
       +'<div class="b-ico" style="width:38px;height:38px;border-radius:9px;background:'+(si.bg||'var(--bg3)')+';">'+srcIcon(b.source,17)+'</div>'
@@ -1253,14 +1694,10 @@ function renderDashboard(){
       +'<div style="flex-shrink:0;">'+(b.total>0?'<div style="font-weight:900;font-size:13px;color:var(--accent);">'+fmtM(b.total)+' ر.س</div>':'<span class="badge '+(ST[b.status]?.cls||'')+'">● '+(ST[b.status]?.label||b.status)+'</span>')+'</div>'
     +'</div>';
   }).join(''):'<div class="empty"><div class="empty-icon"></div><div class="empty-text">لا توجد حجوزات بعد</div><button class="btn btn-primary" onclick="openSheet(\'booking\')">إضافة حجز</button></div>';
-  updateBadge();
 }
+
 function updateBadge(){
-  var n=DB.bookings.filter(function(b){return b.status==='confirmed';}).length;
-  var el=document.getElementById('nav-badge');
-  if(el){if(n>0){el.textContent=n;el.style.display='flex';}else el.style.display='none';}
-  var sub=document.getElementById('book-sub');
-  if(sub)sub.textContent='('+DB.bookings.filter(function(b){return b.status!=='blocked';}).length+' إجمالي)';
+  // no-op - badge removed
 }
 
 // ══ CALENDAR ══
@@ -1477,12 +1914,19 @@ function savB(){
   var status=document.getElementById('b-st')?.value;var notes=document.getElementById('b-n')?.value||'';
   if(!guest){toast('أدخل اسم الضيف','error');return;}
   if(!ci||!co||ci>=co){toast('تحقق من التواريخ','error');return;}
-  if(hasConflict(apt,ci,co,_eid)){toast('️ الوحدة محجوزة!','error');return;}
+  if(hasConflict(apt,ci,co,_eid)){toast('⚠️ الوحدة محجوزة!','error');return;}
   var n=nts(ci,co);
   var phone=document.getElementById('b-ph')?.value||'';
   var b={id:_eid||uid(),apt:apt,guest:guest,phone:phone,source:_cs,checkin:ci,checkout:co,price:price,nights:n,total:n*price,status:status,notes:notes,addedBy:_eid?undefined:(currentUser?currentUser.username:''),addedAt:_eid?undefined:new Date().toISOString().slice(0,10)};
   if(_eid)DB.bookings=DB.bookings.map(function(x){return x.id===_eid?b:x;});else DB.bookings.push(b);
-  save();closeSheet('booking');toast(_eid?' تم تعديل الحجز':' تم حفظ الحجز','success');renderAll();
+  // ── حفظ فوري في Supabase ──
+  sbFetch('bookings','POST',{
+    id:b.id,apt:b.apt,guest:b.guest,phone:b.phone||'',source:b.source,
+    checkin:b.checkin,checkout:b.checkout,nights:b.nights,price:b.price,
+    total:b.total,status:b.status,notes:b.notes||'',code:b.code||''
+  },'?on_conflict=id').catch(function(err){showToast('⚠️ الحفظ السحابي فشل: '+err.message,'error');});
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  closeSheet('booking');toast(_eid?'✅ تم تعديل الحجز':'✅ تم حفظ الحجز','success');renderAll();
 }
 function openEB(id){var b=DB.bookings.find(function(x){return x.id===id;});if(!b)return;buildBookingForm(b);document.getElementById('sheet-booking').classList.add('open');}
 function delB(id){
@@ -1494,16 +1938,13 @@ function delB(id){
     'سيتم حذف حجز "'+name+'" نهائياً.',
     function(){
       document.querySelectorAll('.sheet-overlay').forEach(function(s){s.classList.remove('open');});
-      // Delete locally immediately
       DB.bookings=(DB.bookings||[]).filter(function(b){return b.id!==id;});
-      try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-      // Mark as deleted to prevent sync from restoring it
       if(!DB._deleted) DB._deleted={};
       DB._deleted['booking_'+id]=true;
       try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
       renderAll();
-      showToast('تم الحذف','success');
-      // Delete from Supabase
+      showToast('✅ تم الحذف','success');
+      // ── حذف فوري من Supabase ──
       sbFetch('bookings','DELETE',null,'?id=eq.'+id).catch(function(){});
     },
     {okText:'حذف',okColor:'#dc2626'}
@@ -1517,19 +1958,24 @@ function openPE(id){
   _pid=id;
   document.getElementById('bk-title').textContent='تحديد السعر';
   document.getElementById('bk-body').innerHTML=
-    '<div style="margin-bottom:16px;background:var(--bg3);border-radius:12px;padding:14px;">'+
-    '<div style="font-size:13px;font-weight:700;margin-bottom:4px;">'+b.guest+'</div>'+
-    '<div style="font-size:11px;color:var(--text3);">'+b.apt+' · '+b.nights+' ليلة</div>'+
-    '</div>'+
-    '<div class="form-group">'+
-    '<label class="form-label">السعر لليلة (ر.س)</label>'+
-    '<input type="number" id="pr" class="fi" placeholder="0" oninput="pCalc('+b.nights+')" style="font-size:18px;font-weight:700;" autofocus>'+
-    '</div>'+
-    '<div class="calc-box" id="pr-c" style="display:none;"></div>'+
-    '<button class="btn btn-primary btn-full" onclick="savP()" style="height:48px;font-size:16px;margin-top:4px;">حفظ السعر</button>';
+    '<div style="margin-bottom:14px;background:var(--bg3);border-radius:12px;padding:14px;">'
+    +'<div style="font-size:13px;font-weight:700;">'+b.guest+' · '+b.apt+'</div>'
+    +'<div style="font-size:11px;color:var(--text3);margin-top:3px;">'+b.nights+' ليلة</div>'
+    +'</div>'
+    +'<div class="form-group"><label class="form-label">السعر / ليلة (ر.س)</label>'
+    +'<input type="number" id="pr" class="fi" placeholder="0" value="'+(b.price||'')+'" oninput="pCalc('+b.nights+')"></div>'
+    +'<div id="pr-c" class="calc-box" style="display:none;"></div>'
+    +'<button class="btn btn-primary btn-full" onclick="savP()">حفظ السعر</button>';
   document.getElementById('sheet-booking').classList.add('open');
 }
-function savP(){var p=parseFloat(document.getElementById('pr')?.value)||0;DB.bookings=DB.bookings.map(function(b){return b.id===_pid?Object.assign({},b,{price:p,total:b.nights*p}):b;});save();closeSheet('booking');toast(' تم حفظ السعر','success');renderAll();}
+function savP(){
+  var p=parseFloat(document.getElementById('pr')?.value)||0;
+  DB.bookings=DB.bookings.map(function(b){return b.id===_pid?Object.assign({},b,{price:p,total:b.nights*p}):b;});
+  var updated=DB.bookings.find(function(b){return b.id===_pid;});
+  sbFetch('bookings','PATCH',{price:p,total:updated?updated.total:0},'?id=eq.'+_pid).catch(function(){});
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  closeSheet('booking');toast('✅ تم حفظ السعر','success');renderAll();
+}
 
 // ══ DETAIL ══
 function openDetail(id){
@@ -1567,8 +2013,15 @@ function savExp(){
   var desc=document.getElementById('e-ds')?.value||type;
   if(type==='راتب'){var s=document.getElementById('e-em');if(s){var nm=s.options[s.selectedIndex]?.text?.split('(')[0]?.trim();if(nm)desc='راتب: '+nm;}}
   if(!DB.expenses)DB.expenses=[];
-  DB.expenses.push({id:uid(),type:type,apt:apt,date:date,desc:desc,amount:amount});
-  save();closeSheet('expense');toast(' تم حفظ المصروف','success');renderExpenses();renderDashboard();
+  var exp={id:uid(),type:type,apt:apt,date:date,desc:desc,amount:amount};
+  DB.expenses.push(exp);
+  // ── حفظ فوري في Supabase ──
+  sbFetch('expenses','POST',{
+    id:exp.id,type:exp.type,amount:exp.amount,date:exp.date,
+    apt:exp.apt,desc:exp.desc,notes:exp.desc
+  },'?on_conflict=id').catch(function(err){showToast('⚠️ الحفظ السحابي فشل: '+err.message,'error');});
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  closeSheet('expense');toast('✅ تم حفظ المصروف','success');renderExpenses();renderDashboard();
 }
 
 // ══ REVENUE ══
@@ -1741,11 +2194,25 @@ function saveSale(){
   if(!desc){toast('أدخل الوصف','error');return;}if(!amount){toast('أدخل المبلغ','error');return;}
   if(!DB.sales)DB.sales=[];
   var entry={id:_saleId||uid(),desc:desc,date:date,apt:apt,amount:amount,notes:notes};
-  if(_saleId)DB.sales=DB.sales.map(function(s){return s.id===_saleId?entry:s;});else DB.sales.push(entry);
-  save();closeSheet('sale');toast(_saleId?'تم التعديل':' تم الحفظ','success');renderRevenue();renderDashboard();
+  if(_saleId){
+    DB.sales=DB.sales.map(function(s){return s.id===_saleId?entry:s;});
+    sbFetch('sales','PATCH',{desc:desc,date:date,apt:apt,amount:amount,notes:notes,description:desc},'?id=eq.'+_saleId).catch(function(){});
+  } else {
+    DB.sales.push(entry);
+    sbFetch('sales','POST',{id:entry.id,desc:desc,description:desc,date:date,apt:apt,amount:amount,notes:notes},'?on_conflict=id').catch(function(err){showToast('⚠️ الحفظ السحابي فشل','error');});
+  }
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  closeSheet('sale');toast(_saleId?'✅ تم التعديل':'✅ تم الحفظ','success');renderRevenue();renderDashboard();
 }
 function delSale(id){
-  sbFetch('sales','DELETE',null,'?id=eq.'+id).catch(function(){});if(!DB.sales)return;DB.sales=DB.sales.filter(function(s){return s.id!==id;});save();toast('تم الحذف','info');renderRevenue();renderDashboard();}
+  showConfirm('حذف الإيراد','سيتم الحذف نهائياً.',function(){
+    if(!DB.sales)return;
+    DB.sales=DB.sales.filter(function(s){return s.id!==id;});
+    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    sbFetch('sales','DELETE',null,'?id=eq.'+id).catch(function(){});
+    renderRevenue();renderDashboard();showToast('✅ تم الحذف','success');
+  },{okText:'حذف',okColor:'#dc2626'});
+}
 
 // ══ COST TABS ══
 var _currentCostTab = 1;
@@ -1914,17 +2381,12 @@ function renderExpenses(){
   else renderCostAnalysis();
 }
 function delE(id){
-  var ex=(DB.expenses||[]).find(function(x){return x.id===id;});
-  var name=ex?(ex.type+' - '+fmtM(ex.amount)+' ر.س'):'هذا المصروف';
-  showConfirm('حذف المصروف','سيتم حذف "'+name+'" نهائياً.',function(){
-    var backup=DB.expenses.slice();
-    DB.expenses=DB.expenses.filter(function(e){return e.id!==id;});
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  showConfirm('حذف المصروف','سيتم حذف هذا المصروف نهائياً.',function(){
     DB.expenses=(DB.expenses||[]).filter(function(e){return e.id!==id;});
-    if(!DB._deleted)DB._deleted={};
-    DB._deleted['expense_'+id]=true;
     try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-    renderAll();showToast('تم الحذف','success');
+    renderExpenses();renderDashboard();
+    showToast('✅ تم الحذف','success');
+    // ── حذف فوري من Supabase ──
     sbFetch('expenses','DELETE',null,'?id=eq.'+id).catch(function(){});
   },{okText:'حذف',okColor:'#dc2626'});
 }
@@ -1943,7 +2405,17 @@ function openEditExp(id){
     +'<button class="btn btn-primary btn-full" onclick="savExpEdit()">حفظ التعديل</button>';
   document.getElementById('sheet-expense').classList.add('open');
 }
-function savExpEdit(){var type=document.getElementById('e-t')?.value||'أخرى';var apt=document.getElementById('e-a')?.value||'عام';var date=document.getElementById('e-d')?.value||toDay();var desc=document.getElementById('e-ds')?.value||type;var amount=parseFloat(document.getElementById('e-am')?.value)||0;if(!amount){toast('أدخل المبلغ','error');return;}DB.expenses=(DB.expenses||[]).map(function(e){return e.id===_expId?Object.assign({},e,{type:type,apt:apt,date:date,desc:desc,amount:amount}):e;});save();closeSheet('expense');_expId=null;toast('تم التعديل','success');renderExpenses();renderDashboard();}
+function savExpEdit(){
+  var type=document.getElementById('e-t')?.value||'أخرى';var apt=document.getElementById('e-a')?.value||'عام';
+  var date=document.getElementById('e-d')?.value||toDay();var desc=document.getElementById('e-ds')?.value||type;
+  var amount=parseFloat(document.getElementById('e-am')?.value)||0;
+  if(!amount){toast('أدخل المبلغ','error');return;}
+  DB.expenses=(DB.expenses||[]).map(function(e){return e.id===_expId?Object.assign({},e,{type:type,apt:apt,date:date,desc:desc,amount:amount}):e;});
+  // ── تحديث فوري في Supabase ──
+  sbFetch('expenses','PATCH',{type:type,apt:apt,date:date,desc:desc,notes:desc,amount:amount},'?id=eq.'+_expId).catch(function(err){showToast('⚠️ التحديث السحابي فشل','error');});
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  closeSheet('expense');_expId=null;toast('✅ تم التعديل','success');renderExpenses();renderDashboard();
+}
 
 // ══ SETTINGS ══
 function getMA(){var conf=DB.bookings.filter(function(b){return b.status==='confirmed';});if(!conf.length)return 0;var dates=conf.map(function(b){return new Date(b.checkin);});var min=new Date(Math.min.apply(null,dates));return Math.max(1,Math.round((new Date()-min)/(1000*60*60*24*30)));}
@@ -2168,6 +2640,73 @@ function saveBusinessName(){
   }
 }
 
+function renderAdminQuickActions(){
+  var el = document.getElementById('admin-quick-actions');
+  if(!el) return;
+  var admin = isAdmin();
+
+  if(admin){
+    // مدير النظام — يشوف كل شيء ويتحكم
+    var totalUsers = (DB.appUsers||[]).length;
+    var totalUnits = (DB.units||[]).length;
+    var totalEmp   = (DB.employees||[]).length;
+    var moT = (DB.monthly||[]).reduce(function(s,m){return s+m.amount;},0);
+    var empT = (DB.employees||[]).reduce(function(s,e){return s+e.salary;},0);
+
+    el.innerHTML =
+      // ملخص سريع للأدمن
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">'
+      +'<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center;">'
+        +'<div style="font-size:18px;font-weight:900;color:var(--accent);">'+totalUnits+'</div>'
+        +'<div style="font-size:10px;color:var(--text3);">وحدة</div>'
+      +'</div>'
+      +'<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center;">'
+        +'<div style="font-size:18px;font-weight:900;color:var(--accent);">'+totalEmp+'</div>'
+        +'<div style="font-size:10px;color:var(--text3);">موظف</div>'
+      +'</div>'
+      +'<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center;">'
+        +'<div style="font-size:18px;font-weight:900;color:var(--accent);">'+totalUsers+'</div>'
+        +'<div style="font-size:10px;color:var(--text3);">مستخدم</div>'
+      +'</div>'
+      +'</div>'
+      // تكاليف شهرية ثابتة
+      +'<div style="background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.2);border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">'
+        +'<div style="font-size:12px;color:var(--text2);">💸 التكاليف الشهرية الثابتة</div>'
+        +'<div style="font-size:14px;font-weight:900;color:var(--red);">'+fmtM(moT+empT)+' ر.س</div>'
+      +'</div>'
+      // أزرار سريعة للأدمن
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
+        +'<button class="btn btn-sm" style="background:var(--bg3);color:var(--text2);border:1px solid var(--border);" onclick="editAdminInfo()">✏️ تعديل بيانات الأدمن</button>'
+        +'<button class="btn btn-sm" style="background:var(--bg3);color:var(--text2);border:1px solid var(--border);" onclick="showChangePass()">🔑 تغيير كلمة المرور</button>'
+        +'<button class="btn btn-sm" style="background:var(--bg3);color:var(--text2);border:1px solid var(--border);grid-column:1/-1;" onclick="openSheet(\'adduser\')">👤 إضافة مستخدم جديد</button>'
+      +'</div>';
+  } else {
+    // موظف — يشوف صلاحياته فقط
+    var perms = currentUser ? (currentUser.perms || {}) : {};
+    var permNames = {
+      calendars:'📅 التقويم',
+      bookings:'🛏 الحجوزات',
+      revenue:'💰 الإيرادات',
+      expenses:'📊 التكاليف',
+      settings:'⚙️ الإعدادات'
+    };
+    var allowed = Object.keys(permNames).filter(function(k){ return perms[k]; });
+    var denied  = Object.keys(permNames).filter(function(k){ return !perms[k]; });
+
+    el.innerHTML =
+      '<div style="margin-bottom:6px;font-size:11px;font-weight:700;color:var(--text3);">صلاحياتك</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">'
+      + allowed.map(function(k){
+          return '<span style="font-size:11px;background:rgba(52,211,153,.12);color:var(--green);border-radius:8px;padding:4px 10px;">'+permNames[k]+'</span>';
+        }).join('')
+      + denied.map(function(k){
+          return '<span style="font-size:11px;background:var(--bg3);color:var(--text3);border-radius:8px;padding:4px 10px;opacity:.5;">'+permNames[k]+'</span>';
+        }).join('')
+      +'</div>'
+      +'<div style="font-size:10px;color:var(--text3);">للحصول على صلاحيات إضافية تواصل مع مدير النظام</div>';
+  }
+}
+
 function renderSettings(){
   try{
     var bi=document.getElementById('biz-name');
@@ -2190,6 +2729,7 @@ function renderSettings(){
     var roleEl=document.getElementById('role-set');
     if(roleEl)roleEl.textContent=currentUser&&currentUser.role==='admin'?'🔑 مدير النظام':'موظف';
     _updateRtIndicator(_rtConnected);
+    renderAdminQuickActions();
   }catch(e2){}
 
   if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;if(DB.adminPass&&DB.adminPass.username) ADMIN.username=DB.adminPass.username;
@@ -2266,42 +2806,6 @@ function renderSettings(){
   document.getElementById('employees-list').innerHTML=listRow(DB.employees||[],function(e){var hasAcc=(DB.appUsers||[]).find(function(u){return u.employeeId===e.id;});return row(rowHd('<div style="display:flex;align-items:center;gap:10px;"><div style="width:40px;height:40px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px;"></div><div><div style="font-weight:700;font-size:13px;">'+e.name+(hasAcc?'<span style="font-size:9px;background:rgba(52,211,153,.15);color:var(--green);padding:2px 6px;border-radius:8px;margin-right:6px;"> لديه حساب</span>':'')+'</div><div style="font-size:11px;color:var(--text3);">'+e.role+'</div></div></div>','<div style="font-weight:900;color:var(--accent);">'+fmtM(e.salary)+' ر.س</div>')+rowActs(editBtn('openEditEm',e.id)+delBtn('delEm',e.id)));}, 'لا يوجد موظفون');
   document.getElementById('units-list').innerHTML=(DB.units||[]).map(function(u){return row(rowHd('<div><div style="font-weight:700;font-size:14px;">'+u+'</div>'+(DB.unitTypes&&DB.unitTypes[u]?'<div style="font-size:11px;color:var(--text3);">'+DB.unitTypes[u]+'</div>':'')+'</div>','')+'<div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn btn-xs btn-success" onclick="openEditU(this.dataset.u)" data-u="'+u+'">تعديل</button><button class="btn btn-xs btn-danger" onclick="delU(this.dataset.u)" data-u="'+u+'">حذف</button></div>');}).join('')||'<div class="empty" style="padding:20px;"><div class="empty-text">لا توجد وحدات</div></div>';
   renderUsersList();
-  
-  // Render monthly costs in settings
-  var mlSet = document.getElementById('monthly-list-settings');
-  if(mlSet){
-    if((DB.monthly||[]).length){
-      mlSet.innerHTML = (DB.monthly||[]).map(function(m){
-        return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">'+
-          '<div><div style="font-weight:700;font-size:13px;">'+m.name+'</div><div style="font-size:11px;color:var(--text3);">'+(m.apt&&m.apt!=='عام'?m.apt:'جميع الوحدات')+'</div></div>'+
-          '<div style="display:flex;align-items:center;gap:10px;">'+
-          '<div style="font-weight:900;color:var(--accent);">'+fmtM(m.amount)+' ر.س</div>'+
-          '<button class="btn btn-xs btn-success" onclick="openEditMo(this.dataset.id)" data-id="'+m.id+'">تعديل</button>'+
-          '<button class="btn btn-xs btn-danger" onclick="delMo(this.dataset.id)" data-id="'+m.id+'">حذف</button>'+
-          '</div></div>';
-      }).join('');
-    } else {
-      mlSet.innerHTML = '<div class="empty" style="padding:18px;"><div class="empty-text">لا توجد تكاليف شهرية</div></div>';
-    }
-  }
-  
-  // Render foundation costs in settings
-  var flSet = document.getElementById('foundation-list-settings');
-  if(flSet){
-    if((DB.foundation||[]).length){
-      flSet.innerHTML = (DB.foundation||[]).map(function(f){
-        return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">'+
-          '<div><div style="font-weight:700;font-size:13px;">'+f.name+'</div><div style="font-size:11px;color:var(--text3);">'+(f.date||'')+'</div></div>'+
-          '<div style="display:flex;align-items:center;gap:10px;">'+
-          '<div style="font-weight:900;color:var(--yellow);">'+fmtM(f.amount)+' ر.س</div>'+
-          '<button class="btn btn-xs btn-success" onclick="openEditFo(this.dataset.id)" data-id="'+f.id+'">تعديل</button>'+
-          '<button class="btn btn-xs btn-danger" onclick="delFo(this.dataset.id)" data-id="'+f.id+'">حذف</button>'+
-          '</div></div>';
-      }).join('');
-    } else {
-      flSet.innerHTML = '<div class="empty" style="padding:18px;"><div class="empty-text">لا توجد تكاليف تأسيس</div></div>';
-    }
-  }
 }
 
 // ══ MONTHLY/FOUNDATION/EMPLOYEE/UNIT FORMS ══
@@ -2350,12 +2854,30 @@ function saveMo(editId){
   var selBtns=document.querySelectorAll('.mo-unit-btn.sel');
   var apt=selBtns.length===0?'عام':selBtns.length===1?selBtns[0].dataset.t:Array.from(selBtns).map(function(b){return b.dataset.t;}).join(',');
   if(!DB.monthly)DB.monthly=[];
-  if(editId&&editId!=='null'){DB.monthly=DB.monthly.map(function(m){return m.id===editId?Object.assign({},m,{name:name,apt:apt,amount:amount}):m;});toast('تم التعديل','success');}
-  else{DB.monthly.push({id:uid(),name:name,apt:apt,amount:amount});toast(' تم الحفظ','success');}
-  save();closeSheet('monthly');renderSettings();renderDashboard();
+  var rec;
+  if(editId&&editId!=='null'){
+    DB.monthly=DB.monthly.map(function(m){if(m.id===editId){rec=Object.assign({},m,{name:name,apt:apt,amount:amount});return rec;}return m;});
+    // ── تحديث فوري ──
+    sbFetch('monthly_costs','PATCH',{name:name,apt:apt,amount:amount},'?id=eq.'+editId).catch(function(){});
+    toast('✅ تم التعديل','success');
+  } else {
+    rec={id:uid(),name:name,apt:apt,amount:amount};
+    DB.monthly.push(rec);
+    // ── حفظ فوري ──
+    sbFetch('monthly_costs','POST',{id:rec.id,name:rec.name,apt:rec.apt,amount:rec.amount},'?on_conflict=id').catch(function(err){showToast('⚠️ الحفظ السحابي فشل','error');});
+    toast('✅ تم الحفظ','success');
+  }
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  closeSheet('monthly');renderExpenses();renderDashboard();
 }
 function delMo(id){
-  sbFetch('monthly_costs','DELETE',null,'?id=eq.'+id).catch(function(){});DB.monthly=(DB.monthly||[]).filter(function(m){return m.id!==id;});save();toast('تم الحذف','info');renderSettings();renderDashboard();}
+  showConfirm('حذف التكلفة','سيتم حذف هذه التكلفة الشهرية نهائياً.',function(){
+    DB.monthly=(DB.monthly||[]).filter(function(m){return m.id!==id;});
+    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    sbFetch('monthly_costs','DELETE',null,'?id=eq.'+id).catch(function(){});
+    renderExpenses();renderDashboard();showToast('✅ تم الحذف','success');
+  },{okText:'حذف',okColor:'#dc2626'});
+}
 
 function buildFoundationForm(pre){
   var id=pre?pre.id:null;
@@ -2366,9 +2888,33 @@ function buildFoundationForm(pre){
     +'<button class="btn btn-primary btn-full" onclick="saveFo(\''+id+'\')">'+(pre?'حفظ التعديل':'حفظ')+'</button>';
 }
 function openEditFo(id){var f=(DB.foundation||[]).find(function(x){return x.id===id;});if(f){buildFoundationForm(f);document.getElementById('sheet-foundation').classList.add('open');}}
-function saveFo(editId){var name=document.getElementById('fo-n')?.value?.trim();var date=document.getElementById('fo-d')?.value||toDay();var amount=parseFloat(document.getElementById('fo-am')?.value)||0;if(!name||!amount){toast('أدخل الاسم والمبلغ','error');return;}if(!DB.foundation)DB.foundation=[];if(editId&&editId!=='null'){DB.foundation=DB.foundation.map(function(f){return f.id===editId?Object.assign({},f,{name:name,date:date,amount:amount}):f;});toast('تم التعديل','success');}else{DB.foundation.push({id:uid(),name:name,date:date,amount:amount});toast(' تم الحفظ','success');}save();closeSheet('foundation');renderSettings();}
+function saveFo(editId){
+  var name=document.getElementById('fo-n')?.value?.trim();
+  var date=document.getElementById('fo-d')?.value||toDay();
+  var amount=parseFloat(document.getElementById('fo-am')?.value)||0;
+  if(!name||!amount){toast('أدخل الاسم والمبلغ','error');return;}
+  if(!DB.foundation)DB.foundation=[];
+  if(editId&&editId!=='null'){
+    DB.foundation=DB.foundation.map(function(f){return f.id===editId?Object.assign({},f,{name:name,date:date,amount:amount}):f;});
+    sbFetch('foundation_costs','PATCH',{name:name,date:date,amount:amount},'?id=eq.'+editId).catch(function(){});
+    toast('✅ تم التعديل','success');
+  } else {
+    var rec={id:uid(),name:name,date:date,amount:amount};
+    DB.foundation.push(rec);
+    sbFetch('foundation_costs','POST',{id:rec.id,name:rec.name,date:rec.date,amount:rec.amount},'?on_conflict=id').catch(function(err){showToast('⚠️ الحفظ السحابي فشل','error');});
+    toast('✅ تم الحفظ','success');
+  }
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  closeSheet('foundation');renderExpenses();renderDashboard();
+}
 function delFo(id){
-  sbFetch('foundation_costs','DELETE',null,'?id=eq.'+id).catch(function(){});DB.foundation=(DB.foundation||[]).filter(function(f){return f.id!==id;});save();toast('تم الحذف','info');renderSettings();}
+  showConfirm('حذف تكلفة التأسيس','سيتم الحذف نهائياً.',function(){
+    DB.foundation=(DB.foundation||[]).filter(function(f){return f.id!==id;});
+    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    sbFetch('foundation_costs','DELETE',null,'?id=eq.'+id).catch(function(){});
+    renderExpenses();renderDashboard();showToast('✅ تم الحذف','success');
+  },{okText:'حذف',okColor:'#dc2626'});
+}
 
 var _emId=null;
 function buildEmployeeForm(pre){
@@ -2381,9 +2927,33 @@ function buildEmployeeForm(pre){
     +'<button class="btn btn-primary btn-full" onclick="saveEm()">'+(pre?'حفظ التعديل':'إضافة')+'</button>';
 }
 function openEditEm(id){var e=(DB.employees||[]).find(function(x){return x.id===id;});if(e){buildEmployeeForm(e);document.getElementById('sheet-employee').classList.add('open');}}
-function saveEm(){var name=document.getElementById('em-n')?.value?.trim();var role=document.getElementById('em-r')?.value?.trim()||'موظف';var salary=parseFloat(document.getElementById('em-s')?.value)||0;if(!name){toast('أدخل الاسم','error');return;}if(!DB.employees)DB.employees=[];if(_emId){DB.employees=DB.employees.map(function(e){return e.id===_emId?Object.assign({},e,{name:name,role:role,salary:salary}):e;});toast('تم التعديل','success');}else{DB.employees.push({id:uid(),name:name,role:role,salary:salary});toast(' تم الإضافة','success');}save();closeSheet('employee');renderSettings();}
+function saveEm(){
+  var name=document.getElementById('em-n')?.value?.trim();
+  var role=document.getElementById('em-r')?.value?.trim()||'موظف';
+  var salary=parseFloat(document.getElementById('em-s')?.value)||0;
+  if(!name){toast('أدخل الاسم','error');return;}
+  if(!DB.employees)DB.employees=[];
+  if(_emId){
+    DB.employees=DB.employees.map(function(e){return e.id===_emId?Object.assign({},e,{name:name,role:role,salary:salary}):e;});
+    sbFetch('employees','PATCH',{name:name,role:role,salary:salary},'?id=eq.'+_emId).catch(function(){});
+    toast('✅ تم التعديل','success');
+  } else {
+    var rec={id:uid(),name:name,role:role,salary:salary};
+    DB.employees.push(rec);
+    sbFetch('employees','POST',{id:rec.id,name:rec.name,role:rec.role,salary:rec.salary},'?on_conflict=id').catch(function(err){showToast('⚠️ الحفظ السحابي فشل','error');});
+    toast('✅ تم الإضافة','success');
+  }
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  closeSheet('employee');renderSettings();
+}
 function delEm(id){
-  sbFetch('employees','DELETE',null,'?id=eq.'+id).catch(function(){});DB.employees=(DB.employees||[]).filter(function(e){return e.id!==id;});save();toast('تم الحذف','info');renderSettings();}
+  showConfirm('حذف الموظف','سيتم حذف هذا الموظف نهائياً.',function(){
+    DB.employees=(DB.employees||[]).filter(function(e){return e.id!==id;});
+    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    sbFetch('employees','DELETE',null,'?id=eq.'+id).catch(function(){});
+    renderSettings();showToast('✅ تم الحذف','success');
+  },{okText:'حذف',okColor:'#dc2626'});
+}
 
 var _uEditOld=null;
 function buildUnitForm(){
@@ -2424,19 +2994,32 @@ function saveU(){
     if(name!==_uEditOld&&DB.units.includes(name)){toast('الوحدة موجودة','error');return;}
     DB.units=DB.units.map(function(u){return u===_uEditOld?name:u;});
     DB.bookings=DB.bookings.map(function(b){return b.apt===_uEditOld?Object.assign({},b,{apt:name}):b;});
-    DB.expenses=DB.expenses.map(function(e){return e.apt===_uEditOld?Object.assign({},e,{apt:name}):e;});
+    DB.expenses=(DB.expenses||[]).map(function(e){return e.apt===_uEditOld?Object.assign({},e,{apt:name}):e;});
     delete DB.unitTypes[_uEditOld];
     DB.unitTypes[name]=type;
-    toast('تم التعديل','success');
+    // Delete old, insert new
+    sbFetch('units','DELETE',null,'?id=eq.'+encodeURIComponent(_uEditOld)).catch(function(){});
+    sbFetch('units','POST',{id:name,name:name,type:type},'?on_conflict=id').catch(function(){});
+    toast('✅ تم التعديل','success');
   } else {
     if(DB.units.includes(name)){toast('الوحدة موجودة بالفعل','error');return;}
     DB.units.push(name);DB.unitTypes[name]=type;
-    toast(' تم الإضافة','success');
+    sbFetch('units','POST',{id:name,name:name,type:type},'?on_conflict=id').catch(function(err){showToast('⚠️ الحفظ السحابي فشل','error');});
+    toast('✅ تم الإضافة','success');
   }
-  save();closeSheet('unit');renderSettings();
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  closeSheet('unit');renderSettings();
 }
 function delU(name){
-  sbFetch('units','DELETE',null,'?id=eq.'+encodeURIComponent(name)).catch(function(){});if(DB.bookings.some(function(b){return b.apt===name;})){toast('لا يمكن حذف وحدة عليها حجوزات','error');return;}DB.units=(DB.units||[]).filter(function(u){return u!==name;});if(DB.unitTypes)delete DB.unitTypes[name];save();toast('تم الحذف','info');renderSettings();}
+  if((DB.bookings||[]).some(function(b){return b.apt===name&&b.status!=='cancelled';})){toast('⚠️ لا يمكن حذف وحدة عليها حجوزات','error');return;}
+  showConfirm('حذف الوحدة','سيتم حذف وحدة "'+name+'" نهائياً.',function(){
+    DB.units=(DB.units||[]).filter(function(u){return u!==name;});
+    if(DB.unitTypes)delete DB.unitTypes[name];
+    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    sbFetch('units','DELETE',null,'?id=eq.'+encodeURIComponent(name)).catch(function(){});
+    renderSettings();showToast('✅ تم الحذف','success');
+  },{okText:'حذف',okColor:'#dc2626'});
+}
 
 // ══ USERS ══
 function renderUsersList(){
@@ -2678,30 +3261,23 @@ async function sbFetch(table, method, body, query) {
     'Cache-Control': 'no-cache',
   };
   if(method !== 'DELETE') headers['Content-Type'] = 'application/json';
-  if(method === 'POST' && query && query.indexOf('on_conflict') >= 0){
+  if(method==='POST' && query && query.includes('on_conflict')){
     headers['Prefer'] = 'resolution=merge-duplicates,return=minimal';
-  } else if(method === 'POST'){
-    headers['Prefer'] = 'return=representation';
-  } else if(method === 'PATCH'){
+  } else if(method==='POST'){
     headers['Prefer'] = 'return=minimal';
-  } else if(method === 'DELETE'){
+  } else if(method==='PATCH'){
+    headers['Prefer'] = 'return=minimal';
+  } else if(method==='DELETE'){
     headers['Prefer'] = 'return=minimal';
   }
   var opts = {method: method||'GET', headers: headers};
   if(body) opts.body = JSON.stringify(body);
-  var resp;
-  try{
-    resp = await fetch(url, opts);
-  } catch(netErr){
-    throw new Error('Network error: ' + netErr.message);
-  }
+  var resp = await fetch(url, opts);
   if(!resp.ok){
-    var errText = '';
-    try{ errText = await resp.text(); }catch(e){}
-    throw new Error('Supabase ' + method + ' ' + table + ' [' + resp.status + ']: ' + errText.slice(0,200));
+    var err = await resp.text();
+    throw new Error('Supabase '+method+' '+table+': '+err.slice(0,200));
   }
-  var text = '';
-  try{ text = await resp.text(); }catch(e){}
+  var text = await resp.text();
   return text ? JSON.parse(text) : [];
 }
 
@@ -2709,11 +3285,9 @@ async function sbFetch(table, method, body, query) {
 async function syncToSupabase() {
   try {
     showToast('⏳ جارٍ المزامنة...', 'info');
-    var i, b, u, m, e;
     
     // Sync bookings
-    for(i=0; i<(DB.bookings||[]).length; i++) {
-      b = DB.bookings[i];
+    for(var b of (DB.bookings||[])) {
       await sbFetch('bookings', 'POST', {
         id: b.id, apt: b.apt, guest: b.guest, phone: b.phone||'',
         source: b.source, checkin: b.checkin, checkout: b.checkout,
@@ -2723,24 +3297,21 @@ async function syncToSupabase() {
     }
     
     // Sync units
-    for(i=0; i<(DB.units||[]).length; i++) {
-      u = DB.units[i];
+    for(var u of (DB.units||[])) {
       await sbFetch('units', 'POST', {
         id: u, name: u, type: (DB.unitTypes&&DB.unitTypes[u])||''
       }, '?on_conflict=id');
     }
     
     // Sync monthly costs
-    for(i=0; i<(DB.monthly||[]).length; i++) {
-      m = DB.monthly[i];
+    for(var m of (DB.monthly||[])) {
       await sbFetch('monthly_costs', 'POST', {
         id: m.id, name: m.name, amount: m.amount, apt: m.apt||''
       }, '?on_conflict=id');
     }
     
     // Sync expenses
-    for(i=0; i<(DB.expenses||[]).length; i++) {
-      e = DB.expenses[i];
+    for(var e of (DB.expenses||[])) {
       await sbFetch('expenses', 'POST', {
         id: e.id, type: e.type, amount: e.amount,
         date: e.date||new Date().toISOString().slice(0,10),
@@ -2789,7 +3360,7 @@ async function loadFromSupabase() {
 
 // ══ GITHUB DEPLOY ══
 async function deployToGitHub(){
-  var btn=document.getElementById('real-deploy-btn');
+  var btn=document.getElementById('deploy-btn');
   btn.textContent='⏳ جارٍ الرفع...';
   btn.disabled=true;
   try{
@@ -2928,80 +3499,15 @@ function updateNavBadge(){
 // ══ AUTO SYNC ══
 var _syncInProgress = false;
 
+// autoSyncToSupabase - now lightweight backup only
+// All saves happen directly via sbFetch in each function above
+// This is only called from save() as a safety net for bizInfo changes
 async function autoSyncToSupabase(){
-  if(_syncInProgress) return;
-  _syncInProgress = true;
-  try{
-    if(!SB_URL||!SB_KEY) return;
-    
-    // Sync bookings (upsert)
-    for(var i=0;i<(DB.bookings||[]).length;i++){
-      var b=DB.bookings[i];
-      await sbFetch('bookings','POST',{
-        id:b.id,apt:b.apt||'',guest:b.guest||'',phone:b.phone||'',
-        source:b.source||'manual',checkin:b.checkin,checkout:b.checkout,
-        nights:b.nights||1,price:b.price||0,total:b.total||0,
-        status:b.status||'confirmed',notes:b.notes||'',code:b.code||''
-      },'?on_conflict=id');
-    }
-    
-    // Sync expenses (upsert)
-    for(var i=0;i<(DB.expenses||[]).length;i++){
-      var e=DB.expenses[i];
-      await sbFetch('expenses','POST',{
-        id:e.id,type:e.type||'أخرى',amount:e.amount||0,
-        date:e.date||new Date().toISOString().slice(0,10),
-        notes:e.notes||'',apt:e.apt||''
-      },'?on_conflict=id');
-    }
-    
-    // Sync monthly costs (upsert)
-    for(var i=0;i<(DB.monthly||[]).length;i++){
-      var m=DB.monthly[i];
-      await sbFetch('monthly_costs','POST',{
-        id:m.id,name:m.name||'',amount:m.amount||0,apt:m.apt||''
-      },'?on_conflict=id');
-    }
-    
-    // Sync foundation costs (upsert)
-    for(var i=0;i<(DB.foundation||[]).length;i++){
-      var f=DB.foundation[i];
-      await sbFetch('foundation_costs','POST',{
-        id:f.id,name:f.name||'',amount:f.amount||0
-      },'?on_conflict=id');
-    }
-    
-    // Sync employees (upsert)
-    for(var i=0;i<(DB.employees||[]).length;i++){
-      var em=DB.employees[i];
-      await sbFetch('employees','POST',{
-        id:em.id,name:em.name||'',role:em.role||'',salary:em.salary||0
-      },'?on_conflict=id');
-    }
-    
-    // Sync units (upsert)
-    for(var i=0;i<(DB.units||[]).length;i++){
-      var u=DB.units[i];
-      await sbFetch('units','POST',{
-        id:u,name:u,type:(DB.unitTypes&&DB.unitTypes[u])||''
-      },'?on_conflict=id');
-    }
-    
-    // Sync sales (upsert)
-    for(var i=0;i<(DB.sales||[]).length;i++){
-      var s=DB.sales[i];
-      await sbFetch('sales','POST',{
-        id:s.id,description:s.description||'',amount:s.amount||0,
-        date:s.date||new Date().toISOString().slice(0,10),apt:s.apt||''
-      },'?on_conflict=id');
-    }
-    
-
-  }catch(e){
-    // Silent fail
-  }
-  _syncInProgress = false;
+  // No-op - all direct saves handle Supabase instantly
+  // Kept for compatibility
 }
+
+var _syncInProgress = false;
 
 // Load from Supabase on startup
 async function loadFromSupabaseAuto(){
@@ -3089,7 +3595,16 @@ function showSyncStatus(msg, success, error){
 
 
 
-// Error handlers defined earlier (before external scripts)
+window.onerror = function(msg,src,line,col,err){
+  if(!msg||msg==='Script error.'||msg==='Script error') return true;
+  return false;
+};
+window.addEventListener('unhandledrejection',function(e){
+  if(e&&e.reason&&e.reason.message&&e.reason.message.indexOf('Load failed')>=0) e.preventDefault();
+});
+
+
+// ══ CONFIRM DIALOG ══
 var _confirmCallback = null;
 
 function showConfirm(title, msg, onConfirm, opts){
@@ -3119,76 +3634,106 @@ function doConfirm(){
   if(cb) cb();
 }
 
-function _updateRtIndicator(connected){
-  var dot=document.getElementById('rt-dot');
-  var lbl=document.getElementById('rt-label');
-  if(dot) dot.style.background=connected?'var(--green)':'var(--text3)';
-  if(lbl) lbl.textContent=connected?'متصل مباشر':'جارٍ الاتصال...';
-}
-
-// ══ SUPABASE REALTIME (Fixed - using Supabase JS Client only) ══
-// ── Single Supabase client instance – created ONCE, never recreated ──
-var _supabaseClient = null;
-var _realtimeChannel = null;
+// ══ SYNC ENGINE - Smart Polling (موثوق 100%) ══
+// كل عملية تُحفظ فوراً في Supabase عبر sbFetch
+// هذا الـ polling يسحب أي تغيير من أجهزة أخرى كل 3 ثوان
 var _rtConnected = false;
-var _realtimeStarted = false;   // guard: prevent double-subscribe
+var _lastSync = 0;
+var _pollTimer = null;
 
-function _getSupabaseClient(){
-  // Return existing client if already created
-  if(_supabaseClient) return _supabaseClient;
-  var lib = window.supabase || (typeof supabase !== 'undefined' ? supabase : null);
-  if(!lib || typeof lib.createClient !== 'function') return null;
-  // Create exactly once, no auth persistence needed (we handle auth ourselves)
-  _supabaseClient = lib.createClient(SB_URL, SB_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    realtime: { params: { eventsPerSecond: 10 } }
-  });
-  return _supabaseClient;
+function _updateRtIndicator(connected){
+  var dot = document.getElementById('rt-dot');
+  var lbl = document.getElementById('rt-label');
+  if(dot) dot.style.background = connected ? 'var(--green)' : '#888';
+  if(lbl) lbl.textContent = connected ? 'متصل مباشر' : 'جارٍ الاتصال...';
 }
 
 function initRealtime(){
-  // If already subscribed, do nothing
-  if(_realtimeStarted && _realtimeChannel) return;
+  clearInterval(_pollTimer);
+  // Poll every 3 seconds — fast enough to feel real-time
+  _pollTimer = setInterval(function(){
+    _pollChanges();
+  }, 3000);
+  // First pull immediately
+  _pollChanges();
+}
 
-  var client = _getSupabaseClient();
-  if(!client){
-    // Library not loaded yet – retry
-    setTimeout(initRealtime, 800);
-    return;
-  }
+// Track last-known updated_at per table to only fetch NEW changes
+var _lastKnown = {};
 
-  try{
-    // Remove old channel if exists (without creating a new client)
-    if(_realtimeChannel){
-      try{ client.removeChannel(_realtimeChannel); }catch(e){}
-      _realtimeChannel = null;
+async function _pollChanges(){
+  try {
+    // Quick ping to check connection
+    var result = await sbFetch('bookings','GET',null,'?select=id,status,notes,checkin,checkout,total,price,guest,phone,source,apt,nights,code&order=id.desc&limit=200');
+    if(!result) return;
+
+    _rtConnected = true;
+    _updateRtIndicator(true);
+
+    var changed = false;
+    var deleted = DB._deleted || {};
+
+    // ── bookings ──
+    if(Array.isArray(result)){
+      var filtered = result.filter(function(b){ return !deleted['booking_'+b.id]; });
+      // Check if anything changed
+      var oldStr = JSON.stringify((DB.bookings||[]).map(function(b){return b.id+b.status+b.notes+b.total+b.price;}).sort());
+      var newStr = JSON.stringify(filtered.map(function(b){return b.id+b.status+b.notes+b.total+b.price;}).sort());
+      if(oldStr !== newStr){ DB.bookings = filtered; changed = true; }
     }
 
-    var tables = ['bookings','expenses','monthly_costs','units','sales','foundation_costs','employees','app_config'];
-    _realtimeChannel = client.channel('kaya-all-v2');
+    // Pull other tables less frequently (every 4th poll = ~12s)
+    _lastKnown._pollCount = (_lastKnown._pollCount||0) + 1;
+    if(_lastKnown._pollCount % 4 === 0){
+      var [expenses, monthly, foundation, employees, sales, appCfg] = await Promise.all([
+        sbFetch('expenses','GET',null,'?select=id,type,amount,date,apt,desc,notes').catch(function(){return null;}),
+        sbFetch('monthly_costs','GET',null,'?select=id,name,amount,apt').catch(function(){return null;}),
+        sbFetch('foundation_costs','GET',null,'?select=id,name,amount,date').catch(function(){return null;}),
+        sbFetch('employees','GET',null,'?select=id,name,role,salary').catch(function(){return null;}),
+        sbFetch('sales','GET',null,'?select=id,desc,description,amount,date,apt,notes').catch(function(){return null;}),
+        sbFetch('app_config','GET',null,'?select=key,value').catch(function(){return null;}),
+      ]);
 
-    tables.forEach(function(table){
-      _realtimeChannel.on('postgres_changes', {event:'*', schema:'public', table:table}, function(payload){
-        handleRealtimeChange(table, payload);
-      });
-    });
-
-    _realtimeChannel.subscribe(function(status){
-      if(status === 'SUBSCRIBED'){
-        _rtConnected = true;
-        _realtimeStarted = true;
-        _updateRtIndicator(true);
-      } else if(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT'){
-        _rtConnected = false;
-        _realtimeStarted = false;
-        _updateRtIndicator(false);
-        // Retry channel subscription only (no new client)
-        setTimeout(initRealtime, 6000);
+      if(expenses && Array.isArray(expenses)){
+        var newExp = expenses.filter(function(e){return !deleted['expense_'+e.id];}).map(function(e){
+          return {id:e.id,type:e.type,amount:e.amount,date:e.date,desc:e.desc||e.notes||e.type,apt:e.apt||'عام'};
+        });
+        if(JSON.stringify(newExp) !== JSON.stringify(DB.expenses||[])){ DB.expenses=newExp; changed=true; }
       }
-    });
-  }catch(e){
-    _realtimeStarted = false;
-    setTimeout(initRealtime, 6000);
+      if(monthly && Array.isArray(monthly) && monthly.length){
+        var newMo = monthly.map(function(m){return {id:m.id,name:m.name,amount:m.amount,apt:m.apt||''};});
+        if(JSON.stringify(newMo) !== JSON.stringify(DB.monthly||[])){ DB.monthly=newMo; changed=true; }
+      }
+      if(foundation && Array.isArray(foundation) && foundation.length){
+        var newFo = foundation.map(function(f){return {id:f.id,name:f.name,amount:f.amount,date:f.date||''};});
+        if(JSON.stringify(newFo) !== JSON.stringify(DB.foundation||[])){ DB.foundation=newFo; changed=true; }
+      }
+      if(employees && Array.isArray(employees) && employees.length){
+        var newEm = employees.map(function(e){return {id:e.id,name:e.name,role:e.role,salary:e.salary};});
+        if(JSON.stringify(newEm) !== JSON.stringify(DB.employees||[])){ DB.employees=newEm; changed=true; }
+      }
+      if(sales && Array.isArray(sales)){
+        var newSl = sales.map(function(s){return {id:s.id,desc:s.desc||s.description||'',amount:s.amount,date:s.date,apt:s.apt||'عام',notes:s.notes||''};});
+        if(JSON.stringify(newSl) !== JSON.stringify(DB.sales||[])){ DB.sales=newSl; changed=true; }
+      }
+      if(appCfg && Array.isArray(appCfg)){
+        var bn = appCfg.find(function(c){return c.key==='biz_name';});
+        if(bn && bn.value && bn.value !== DB.bizName){
+          DB.bizName = bn.value; updateBizLabels();
+          var cn=document.getElementById('current-biz-name'); if(cn) cn.textContent=bn.value;
+          changed = true;
+        }
+      }
+    }
+
+    if(changed){
+      try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+      renderAll();
+    }
+
+  } catch(e){
+    _rtConnected = false;
+    _updateRtIndicator(false);
   }
 }
 
@@ -3294,6 +3839,10 @@ function handleRealtimeChange(table, payload){
         if(bi && document.activeElement!==bi) bi.value='';
       }
       return; // No full renderAll needed for config
+    } else if(table === 'units'){
+      // Reload units from Supabase on any change
+      loadFromSupabaseAuto().catch(function(){});
+      return;
     }
     
     // Save locally and re-render
@@ -3303,6 +3852,13 @@ function handleRealtimeChange(table, payload){
 }
 
 
+window.onerror = function(msg,src,line,col,err){
+  if(!msg||msg==='Script error.'||msg==='Script error') return true;
+  return false;
+};
+window.addEventListener('unhandledrejection',function(e){
+  if(e&&e.reason&&e.reason.message&&e.reason.message.indexOf('Load failed')>=0) e.preventDefault();
+});
 
 loadTheme();
 try{
