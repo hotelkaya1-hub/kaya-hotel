@@ -150,8 +150,8 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     color: var(--accent) !important;
   }
   .nav-item.active::before { display: none !important; }
-  .nav-icon { font-size: 20px !important; order: 1; flex-shrink: 0; }
-  .nav-label { font-size: 14px !important; font-weight: 700; order: 0; flex: 1; text-align: right; }
+  .nav-icon { font-size: 20px !important; order: 0; flex-shrink: 0; }
+  .nav-label { font-size: 14px !important; font-weight: 700; order: 1; flex: 1; text-align: right; }
   .nav-badge { top: 50%; transform: translateY(-50%); right: auto; left: 10px; }
 
   /* Sheets as modals */
@@ -237,30 +237,6 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 .nav-item.active::before{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:0 0 3px 3px;}
 .nav-icon{font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;}
 .nav-label{font-size:9px;font-weight:700;}
-@media (min-width: 1024px) {
-  .nav-item {
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 12px !important;
-    padding: 12px 20px !important;
-    height: auto !important;
-    width: 100% !important;
-    border-radius: 10px;
-    margin: 2px 8px;
-    width: calc(100% - 16px) !important;
-    box-sizing: border-box;
-  }
-  .nav-item.active::before {
-    display: none;
-  }
-  .nav-item.active {
-    background: var(--gold);
-    border-radius: 10px;
-  }
-  .nav-icon { font-size: 18px !important; }
-  .nav-label { font-size: 13px !important; font-weight: 700; }
-}
 .nav-badge{position:absolute;top:6px;right:14%;background:var(--accent);color:var(--bg);font-size:9px;font-weight:900;min-width:15px;height:15px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px;}
 
 /* TOPBAR */
@@ -2243,7 +2219,30 @@ function renderBookingsList(){
   if(fs)list=list.filter(function(b){return b.source===fs;});
   if(fst)list=list.filter(function(b){return b.status===fst;});
   var el=document.getElementById('bookings-list');if(!el)return;
-  el.innerHTML=list.length?list.map(function(b){
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon"></div><div class="empty-text">لا توجد حجوزات</div></div>';updateBadge();return;}
+  if(window.innerWidth>=1024){
+    var rows=list.map(function(b){
+      var si=SRC[b.source]||{};
+      var statusBadge='<span class="badge '+(ST[b.status]?.cls||'')+'">● '+(ST[b.status]?.label||b.status)+'</span>';
+      var srcBadge='<span class="badge '+(si.cls||'')+'">'+srcIcon(b.source,12)+' '+(si.label||b.source)+'</span>';
+      var acts='<div style="display:flex;gap:6px;justify-content:flex-end;">'
+        +(b.total===0?'<button class="btn btn-xs btn-gold" onclick="openPE(this.dataset.id)" data-id="'+b.id+'">سعر</button>':'')
+        +'<button class="btn btn-xs btn-success" onclick="openEB(this.dataset.id)" data-id="'+b.id+'">تعديل</button>'
+        +'<button class="btn btn-xs btn-danger" onclick="delB(this.dataset.id)" data-id="'+b.id+'">حذف</button>'
+        +'</div>';
+      return[
+        '<span style="font-size:13px;font-weight:700;color:var(--text);">'+b.guest+'</span><div style="font-size:11px;color:var(--text3);">'+b.apt+'</div>',
+        srcBadge,
+        statusBadge,
+        '<span style="font-size:12px;color:var(--text2);">'+fmtRange(b.checkin,b.checkout)+'</span><div style="font-size:11px;color:var(--text3);">'+b.nights+' ليلة</div>',
+        b.total>0?'<span style="font-size:14px;font-weight:900;color:var(--accent);">'+fmtM(b.total)+' ر.س</span>':'—',
+        acts
+      ];
+    });
+    el.innerHTML=_tbl(['الضيف','المصدر','الحالة','التواريخ','المبلغ','إجراء'],rows);
+    updateBadge();return;
+  }
+  el.innerHTML=list.map(function(b){
     var si=SRC[b.source]||{};
     return'<div class="b-row"><div class="b-top">'
       +'<div class="b-ico" style="background:'+(si.bg||'var(--bg3)')+';">'+srcIcon(b.source)+'</div>'
@@ -2256,7 +2255,7 @@ function renderBookingsList(){
       +'<button class="btn btn-xs btn-success" onclick="openEB(this.dataset.id)" data-id="'+b.id+'">تعديل</button>'
       +'<button class="btn btn-xs btn-danger" onclick="delB(this.dataset.id)" data-id="'+b.id+'">حذف</button>'
       +'</div></div>';
-  }).join(''):'<div class="empty"><div class="empty-icon"></div><div class="empty-text">لا توجد حجوزات</div></div>';
+  }).join('');
   updateBadge();
 }
 function renderCalendars(){
@@ -2873,19 +2872,37 @@ function renderSalesList(){
   if(!DB.sales)DB.sales=[];
   var sorted=[].concat(DB.sales).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
   var el=document.getElementById('sales-list');if(!el)return;
-  el.innerHTML=sorted.length?sorted.map(function(s){
-    return'<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">'
-      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">'
-        +'<div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:14px;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+s.desc+'</div>'
-        +'<div style="font-size:11px;color:var(--text3);">'+fmtD(s.date)+(s.apt&&s.apt!=='عام'?' · '+s.apt:'')+'</div>'
-        +(s.notes?'<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+s.notes+'</div>':'')+'</div>'
-        +'<div style="font-weight:900;font-size:17px;color:var(--accent);margin-right:12px;white-space:nowrap;">'+fmtM(s.amount)+' ر.س</div>'
-      +'</div>'
-      +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+  if(!sorted.length){el.innerHTML='<div class="empty" style="padding:24px;"><div class="empty-text">لا توجد إيرادات — اضغط "+ إيراد"</div></div>';return;}
+  if(window.innerWidth>=1024){
+    var rows=sorted.map(function(s){
+      var acts='<div style="display:flex;gap:6px;justify-content:flex-end;">'
         +'<button class="btn btn-xs btn-success" onclick="openEditSale(this.dataset.id)" data-id="'+s.id+'">تعديل</button>'
         +'<button class="btn btn-xs btn-danger" onclick="delSale(this.dataset.id)" data-id="'+s.id+'">حذف</button>'
-      +'</div></div>';
-  }).join(''):'<div class="empty" style="padding:24px;"><div class="empty-icon"></div><div class="empty-text">لا توجد إيرادات — اضغط "+ إيراد"</div></div>';
+        +'</div>';
+      return[
+        '<span style="font-size:13px;font-weight:700;color:var(--text);">'+s.desc+'</span>',
+        '<span style="font-size:12px;color:var(--text3);">'+(s.apt||'عام')+'</span>',
+        '<span style="font-size:12px;color:var(--text3);">'+fmtD(s.date)+'</span>',
+        '<span style="font-size:14px;font-weight:900;color:var(--accent);">'+fmtM(s.amount)+' ر.س</span>',
+        acts
+      ];
+    });
+    el.innerHTML=_tbl(['الوصف','الوحدة','التاريخ','المبلغ','إجراء'],rows);
+  } else {
+    el.innerHTML=sorted.map(function(s){
+      return'<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">'
+          +'<div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:14px;margin-bottom:3px;">'+s.desc+'</div>'
+          +'<div style="font-size:11px;color:var(--text3);">'+fmtD(s.date)+(s.apt&&s.apt!=='عام'?' · '+s.apt:'')+'</div>'
+          +(s.notes?'<div style="font-size:11px;color:var(--text3);">'+s.notes+'</div>':'')+'</div>'
+          +'<div style="font-weight:900;font-size:17px;color:var(--accent);margin-right:12px;">'+fmtM(s.amount)+' ر.س</div>'
+        +'</div>'
+        +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+          +'<button class="btn btn-xs btn-success" onclick="openEditSale(this.dataset.id)" data-id="'+s.id+'">تعديل</button>'
+          +'<button class="btn btn-xs btn-danger" onclick="delSale(this.dataset.id)" data-id="'+s.id+'">حذف</button>'
+        +'</div></div>';
+    }).join('');
+  }
 }
 var _saleId=null;
 function buildSaleForm(pre){
@@ -2952,6 +2969,26 @@ function showCostTab(n){
   if(n===3) renderCostAnalysis();
 }
 
+
+// ── Desktop Table Helper ──
+function _tbl(headers, rows){
+  if(!rows.length) return null;
+  var ths=headers.map(function(h){
+    return '<th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text3);font-weight:700;white-space:nowrap;">'+h+'</th>';
+  }).join('');
+  var trs=rows.map(function(r,i){
+    var bg=i%2===0?'var(--bg2)':'var(--card)';
+    var tds=r.map(function(td,j){
+      var align=j===r.length-2?'text-align:left;':'text-align:right;';
+      return '<td style="padding:12px 16px;'+align+'vertical-align:middle;">'+td+'</td>';
+    }).join('');
+    return '<tr style="background:'+bg+';border-bottom:1px solid var(--border);">'+tds+'</tr>';
+  }).join('');
+  return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">'
+    +'<table style="width:100%;border-collapse:collapse;font-family:Cairo,sans-serif;">'
+    +'<thead><tr style="background:var(--bg3);border-bottom:2px solid var(--border);">'+ths+'</tr></thead>'
+    +'<tbody>'+trs+'</tbody></table></div>';
+}
 function renderExpensesList(){
   var sorted=[].concat(DB.expenses||[]).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
   var el=document.getElementById('expenses-list');if(!el)return;
@@ -3241,33 +3278,65 @@ function renderFixedCosts(){
 
   var mcEl=document.getElementById('monthly-list-costs');
   if(mcEl){
-    mcEl.innerHTML=(DB.monthly||[]).length?(DB.monthly||[]).map(function(m){
-      var aptLabel = m.apt&&m.apt!=='عام' ? m.apt : 'عام';
-      var dueLabel = m.dueDate
-        ? '<div style="font-size:11px;color:var(--text3);">'+fmtDate(m.dueDate)+'</div>'
-        : '';
-      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">'
-        +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">'
-          +'<div style="width:42px;height:42px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
-            +'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
-          +'</div>'
-          +'<div style="flex:1;min-width:0;">'
-            +'<div style="font-weight:700;font-size:13px;margin-bottom:2px;">'+m.name+' <span style="color:var(--accent);">· '+aptLabel+'</span></div>'
-            +'<div style="font-size:11px;color:var(--text3);">'+(m.dueDate?'تاريخ الاستحقاق: '+_fmtCalDate(m.dueDate):'شهري')+'</div>'
-          +'</div>'
-          +'<div style="font-weight:900;font-size:15px;color:var(--yellow);white-space:nowrap;">'+fmtM(m.amount)+' ر.س</div>'
-        +'</div>'
-        +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    var monthly=DB.monthly||[];
+    if(!monthly.length){
+      mcEl.innerHTML='<div class="empty" style="padding:20px;"><div class="empty-text">لا توجد تكاليف شهرية — اضغط "+ تكلفة شهرية"</div></div>';
+    } else if(window.innerWidth>=1024){
+      var rows=monthly.map(function(m){
+        var aptLabel=m.apt&&m.apt!=='عام'?m.apt:'عام';
+        var acts='<div style="display:flex;gap:6px;justify-content:flex-end;">'
           +'<button class="btn btn-xs btn-success" onclick="openEditMo(\''+m.id+'\')">تعديل</button>'
           +'<button class="btn btn-xs btn-danger" onclick="delMo(\''+m.id+'\')">حذف</button>'
-        +'</div></div>';
-    }).join(''):'<div class="empty" style="padding:20px;"><div class="empty-text">لا توجد تكاليف شهرية — اضغط "+ تكلفة شهرية"</div></div>';
+          +'</div>';
+        return[
+          '<span style="font-size:13px;font-weight:700;color:var(--text);">'+m.name+'</span>',
+          '<span style="font-size:12px;color:var(--text3);">'+aptLabel+'</span>',
+          '<span style="font-size:12px;color:var(--text3);">'+(m.dueDate?_fmtCalDate(m.dueDate):'شهري')+'</span>',
+          '<span style="font-size:14px;font-weight:900;color:var(--yellow);">'+fmtM(m.amount)+' ر.س</span>',
+          acts
+        ];
+      });
+      mcEl.innerHTML=_tbl(['الاسم','الوحدة','الاستحقاق','المبلغ','إجراء'],rows);
+    } else {
+      mcEl.innerHTML=monthly.map(function(m){
+        var aptLabel=m.apt&&m.apt!=='عام'?m.apt:'عام';
+        return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">'
+          +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">'
+            +'<div style="width:42px;height:42px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+              +'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+            +'</div>'
+            +'<div style="flex:1;min-width:0;">'
+              +'<div style="font-weight:700;font-size:13px;margin-bottom:2px;">'+m.name+' <span style="color:var(--accent);">· '+aptLabel+'</span></div>'
+              +'<div style="font-size:11px;color:var(--text3);">'+(m.dueDate?'تاريخ الاستحقاق: '+_fmtCalDate(m.dueDate):'شهري')+'</div>'
+            +'</div>'
+            +'<div style="font-weight:900;font-size:15px;color:var(--yellow);white-space:nowrap;">'+fmtM(m.amount)+' ر.س</div>'
+          +'</div>'
+          +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+            +'<button class="btn btn-xs btn-success" onclick="openEditMo(\''+m.id+'\')">تعديل</button>'
+            +'<button class="btn btn-xs btn-danger" onclick="delMo(\''+m.id+'\')">حذف</button>'
+          +'</div></div>';
+      }).join('');
+    }
   }
   var emEl=document.getElementById('employees-costs-list');
   if(emEl){
-    emEl.innerHTML=(DB.employees||[]).length?(DB.employees||[]).map(function(e){
-      return row(rowHd('<div style="display:flex;align-items:center;gap:10px;"><div style="width:40px;height:40px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div><div style="font-weight:700;font-size:13px;">'+e.name+'</div><div style="font-size:11px;color:var(--text3);">'+e.role+'</div></div></div>','<div style="font-weight:900;color:var(--accent);">'+fmtM(e.salary)+' ر.س/شهر</div>'));
-    }).join(''):'<div class="empty" style="padding:20px;"><div class="empty-text">لا يوجد موظفون</div></div>';
+    var emps=DB.employees||[];
+    if(!emps.length){
+      emEl.innerHTML='<div class="empty" style="padding:20px;"><div class="empty-text">لا يوجد موظفون</div></div>';
+    } else if(window.innerWidth>=1024){
+      var erows=emps.map(function(e){
+        return[
+          '<span style="font-size:13px;font-weight:700;color:var(--text);">'+e.name+'</span>',
+          '<span style="font-size:12px;color:var(--text3);">'+e.role+'</span>',
+          '<span style="font-size:14px;font-weight:900;color:var(--accent);">'+fmtM(e.salary)+' ر.س/شهر</span>'
+        ];
+      });
+      emEl.innerHTML=_tbl(['الموظف','الدور','الراتب الشهري'],erows);
+    } else {
+      emEl.innerHTML=emps.map(function(e){
+        return row(rowHd('<div style="display:flex;align-items:center;gap:10px;"><div style="width:40px;height:40px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div><div style="font-weight:700;font-size:13px;">'+e.name+'</div><div style="font-size:11px;color:var(--text3);">'+e.role+'</div></div></div>','<div style="font-weight:900;color:var(--accent);">'+fmtM(e.salary)+' ر.س/شهر</div>'));
+      }).join('');
+    }
   }
 }
 
