@@ -3012,7 +3012,7 @@ function _tbl(headers, rows){
   if(!rows.length) return null;
   var ths=headers.map(function(h,i){
     var isLast=i===headers.length-1;
-    return '<th style="padding:11px 14px;text-align:right;font-size:12px;color:var(--text3);font-weight:700;white-space:nowrap;border-bottom:2px solid var(--border);'+(isLast?'text-align:center;':'')+'">'+h+'</th>';
+    return '<th style="padding:11px 14px;text-align:right;font-size:12px;color:var(--text3);font-weight:700;white-space:nowrap;border-bottom:2px solid var(--border);'+(isLast?'text-align:right;':'')+'">'+h+'</th>';
   }).join('');
   var trs=rows.map(function(r,i){
     var bg=i%2===0?'var(--card)':'var(--bg2)';
@@ -3068,7 +3068,7 @@ function renderExpensesList(){
         +'<th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text3);font-weight:700;">الوحدة</th>'
         +'<th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text3);font-weight:700;">التاريخ</th>'
         +'<th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text3);font-weight:700;">المبلغ</th>'
-        +'<th style="padding:12px 16px;text-align:center;font-size:12px;color:var(--text3);font-weight:700;">إجراء</th>'
+        +'<th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text3);font-weight:700;">إجراء</th>'
       +'</tr></thead><tbody>'
       +sorted.map(function(e,i){
         var isSalary=e.type==='راتب'&&e.salaryRef;
@@ -3082,7 +3082,7 @@ function renderExpensesList(){
           +'<td style="padding:12px 16px;font-size:12px;color:var(--text3);">'+(e.apt||'عام')+'</td>'
           +'<td style="padding:12px 16px;font-size:12px;color:var(--text3);">'+fmtD(e.date)+'</td>'
           +'<td style="padding:12px 16px;font-size:14px;font-weight:900;color:var(--red);text-align:left;">'+fmtM(e.amount)+' ر.س</td>'
-          +'<td style="padding:12px 16px;text-align:center;white-space:nowrap;">'
+          +'<td style="padding:12px 16px;text-align:right;white-space:nowrap;">'
             +'<button class="btn btn-xs btn-success" onclick="openEditExp(this.dataset.id)" data-id="'+e.id+'" style="margin-left:4px;">تعديل</button>'
             +'<button class="btn btn-xs btn-danger" onclick="delE(this.dataset.id)" data-id="'+e.id+'">حذف</button>'
           +'</td>'
@@ -5166,20 +5166,23 @@ document.addEventListener('touchend', function(){
   _ptrOn = false;
   var ind = document.getElementById('ptr-indicator');
   if(_ptrDone){
-    var spinner = document.getElementById('ptr-spinner');
-    var txt = document.getElementById('ptr-text');
     if(spinner) spinner.classList.add('spinning');
     if(txt) txt.textContent = 'جارٍ التحديث...';
     if(ind) ind.style.height = '50px';
-    loadFromSupabaseAuto().finally(function(){
+    loadFromSupabaseAuto().then(function(){
       if(spinner) spinner.classList.remove('spinning');
-      if(txt) txt.textContent = 'تم التحديث ✓';
+      if(txt) txt.textContent = '✓ تم التحديث';
       setTimeout(function(){
         if(ind){ind.style.height='0';ind.classList.remove('ptr-visible');}
         if(spinner) spinner.style.borderTopColor='';
         if(txt) txt.textContent = 'اسحب للتحديث';
         _ptrDone = false;
-      }, 800);
+      }, 600);
+    }).catch(function(){
+      if(spinner) spinner.classList.remove('spinning');
+      if(txt) txt.textContent = 'اسحب للتحديث';
+      if(ind){ind.style.height='0';ind.classList.remove('ptr-visible');}
+      _ptrDone=false;
     });
   } else {
     if(ind){ind.style.height='0';ind.classList.remove('ptr-visible');}
@@ -5246,7 +5249,7 @@ async function loadFromSupabaseAuto(){
     // Parallel fetch - fastest possible
     var [bookings, expenses, monthly, foundation, employees, units, sales, appCfg] = await Promise.all([
       sbFetch('bookings','GET',null,'?select=id,apt,guest,phone,source,checkin,checkout,nights,price,total,status,notes,code&order=checkin.desc'),
-      sbFetch('expenses','GET',null,'?select=id,type,amount,date,notes,apt,desc'),
+      sbFetch('expenses','GET',null,'?select=id,type,amount,date,notes,apt,desc,salaryRef,salaryMonth&biz_id=eq.'+getBizId()),
       sbFetch('monthly_costs','GET',null,'?select=id,name,amount,apt,due_date&biz_id=eq.'+getBizId()),
       sbFetch('foundation_costs','GET',null,'?select=id,name,amount,date&biz_id=eq.'+getBizId()),
       sbFetch('employees','GET',null,'?select=id,name,role,salary&biz_id=eq.'+getBizId()),
@@ -5266,7 +5269,7 @@ async function loadFromSupabaseAuto(){
     if(expenses&&Array.isArray(expenses)){
       var deleted = DB._deleted||{};
       DB.expenses = expenses.filter(function(e){return !deleted['expense_'+e.id];}).map(function(e){
-        return{id:e.id,type:e.type,amount:e.amount,date:e.date,desc:e.desc||e.notes||e.type,apt:e.apt||'عام'};
+        return{id:e.id,type:e.type,amount:e.amount,date:e.date,desc:e.desc||e.notes||e.type,apt:e.apt||'عام',salaryRef:e.salaryRef||e.salary_ref||'',salaryMonth:e.salaryMonth||e.salary_month||''};
       });
       changed = true;
     }
