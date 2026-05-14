@@ -674,6 +674,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
 .s-value, .b-nights, .b-total, .perf-val, .stat-card,
 .cal-day, .dash-num { font-feature-settings: "tnum"; }
+
+
 </style>
 
 </head>
@@ -2436,7 +2438,7 @@ function sExp(i,el){_et=EXP_TYPES[i].t;document.getElementById('e-t').value=_et;
 function fSal(){var sel=document.getElementById('e-em');var el=document.getElementById('e-am');if(sel&&el)el.value=sel.value;}
 function savExp(){
   var type=document.getElementById('e-t')?.value||'أخرى';var apt=document.getElementById('e-a')?.value||'عام';
-  var date=document.getElementById('e-d')?.value||toDay();var amount=parseFloat(document.getElementById('e-am')?.value)||0;
+  var date=(document.getElementById('e-d')||{}).value||toDay();var amount=parseFloat(document.getElementById('e-am')?.value)||0;
   if(!amount){toast('أدخل المبلغ','error');return;}
   var desc=document.getElementById('e-ds')?.value||type;
   if(type==='راتب'){var s=document.getElementById('e-em');if(s){var nm=s.options[s.selectedIndex]?.text?.split('(')[0]?.trim();if(nm)desc='راتب: '+nm;}}
@@ -3046,7 +3048,7 @@ function openEditExp(id){
 }
 function savExpEdit(){
   var type=document.getElementById('e-t')?.value||'أخرى';var apt=document.getElementById('e-a')?.value||'عام';
-  var date=document.getElementById('e-d')?.value||toDay();var desc=document.getElementById('e-ds')?.value||type;
+  var date=(document.getElementById('e-d')||{}).value||toDay();var desc=document.getElementById('e-ds')?.value||type;
   var amount=parseFloat(document.getElementById('e-am')?.value)||0;
   if(!amount){toast('أدخل المبلغ','error');return;}
   DB.expenses=(DB.expenses||[]).map(function(e){return e.id===_expId?Object.assign({},e,{type:type,apt:apt,date:date,desc:desc,amount:amount}):e;});
@@ -3662,7 +3664,6 @@ function renderSettings(){
             +'<span style="display:inline-flex;align-items:center;gap:3px;">'
             +'</span>'
           +'</div>'
-        +'</div>'
         +'<div style="display:flex;gap:6px;flex-shrink:0;">'
           +'<button class="btn btn-xs btn-success" onclick="openEditU(this.dataset.u)" data-u="'+u+'">تعديل</button>'
           +'<button class="btn btn-xs btn-danger" onclick="delU(this.dataset.u)" data-u="'+u+'">حذف</button>'
@@ -3674,43 +3675,50 @@ function renderSettings(){
   var uSec=document.getElementById('users-section');if(uSec)uSec.style.display='none';
 }
 
+
+// ── Date Select Helpers ──
+function _dayOpts(val){
+  var d=val?val.slice(8,10):''; var h='';
+  for(var i=1;i<=31;i++){var v=String(i).padStart(2,'0');h+='<option value="'+v+'"'+(d===v?' selected':'')+'>'+i+'</option>';}
+  return h;
+}
+function _monOpts(val){
+  var mn=val?val.slice(5,7):'';
+  var M=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  return M.map(function(m,i){var v=String(i+1).padStart(2,'0');return'<option value="'+v+'"'+(mn===v?' selected':'')+'>'+m+'</option>';}).join('');
+}
+function _yrOpts(val){
+  var y=val?val.slice(0,4):''; var h=''; var cur=new Date().getFullYear();
+  for(var i=cur-1;i<=cur+5;i++){h+='<option value="'+i+'"'+(y===String(i)?' selected':'')+'>'+i+'</option>';}
+  return h;
+}
+function _readDate(prefix){
+  var d=document.getElementById(prefix+'-d'), m=document.getElementById(prefix+'-m'), y=document.getElementById(prefix+'-y');
+  return (y&&y.value&&m&&m.value&&d&&d.value)?(y.value+'-'+m.value+'-'+d.value):'';
+}
+
 // ══ MONTHLY/FOUNDATION/EMPLOYEE/UNIT FORMS ══
 function buildMonthlyForm(pre){
   var id = pre ? pre.id : null;
-  var unitsHtml = '<div class="exp-opt'+(!pre||(pre.apt||'عام')==='عام'?' sel':'')+' mo-unit-btn" data-t="عام" onclick="selMoUnit(this)">عام (كل)</div>';
+  var uHtml='<div class="exp-opt'+(!pre||(pre.apt||'عام')==='عام'?' sel':'')+' mo-unit-btn" data-t="عام" onclick="selMoUnit(this)">عام (كل)</div>';
   (DB.units||[]).forEach(function(u){
-    var sel = pre&&pre.apt&&pre.apt.split(',').indexOf(u)>=0?' sel':'';
-    unitsHtml += '<div class="exp-opt'+sel+' mo-unit-btn" data-t="'+u+'" onclick="selMoUnit(this)">'+u+'</div>';
+    var sel=pre&&pre.apt&&pre.apt.split(',').indexOf(u)>=0?' sel':'';
+    uHtml+='<div class="exp-opt'+sel+' mo-unit-btn" data-t="'+u+'" onclick="selMoUnit(this)">'+u+'</div>';
   });
-
-  document.getElementById('mo-body').innerHTML =
-    '<div class="form-group">'
-      +'<label class="form-label">اسم التكلفة <span style="color:var(--red)">*</span></label>'
-      +'<input id="mo-n" class="fi" placeholder="مثال: إيجار، كهرباء" value="'+(pre?pre.name:'')+'"></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">'
-      +'<div class="form-group" style="margin:0">'
-        +'<label class="form-label">المبلغ الشهري (ر.س) <span style="color:var(--red)">*</span></label>'
+  document.getElementById('mo-body').innerHTML=
+    '<div class="form-group"><label class="form-label">اسم التكلفة <span style="color:var(--red)">*</span></label>'
+    +'<input id="mo-n" class="fi" placeholder="مثال: إيجار، كهرباء" value="'+(pre?pre.name:'')+'"></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+      +'<div class="form-group" style="margin:0"><label class="form-label">المبلغ (ر.س) <span style="color:var(--red)">*</span></label>'
         +'<input id="mo-am" class="fi" placeholder="0" value="'+(pre?pre.amount:'')+'"></div>'
-      +'<div class="form-group" style="margin:0">'
-        +'<label class="form-label">تاريخ الاستحقاق</label>'
-        +'<input type="date" id="mo-due" class="fi" style="font-size:13px;direction:ltr;"></div>'
+      +'<div class="form-group" style="margin:0"><label class="form-label">تاريخ الاستحقاق</label>'
+        +'<input type="date" id="mo-due" class="fi"></div>'
     +'</div>'
-    +'<div class="form-group">'
-      +'<label class="form-label">الوحدة / الفئة</label>'
-      +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'+unitsHtml+'</div>'
+    +'<div class="form-group"><label class="form-label">الوحدة / الفئة</label>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'+uHtml+'</div>'
     +'</div>'
     +'<button class="btn btn-primary btn-full" onclick="saveMo(this.dataset.id)" data-id="'+id+'">'+(pre?'حفظ التعديل':'إضافة')+'</button>';
-
-  // Set date using valueAsDate - most reliable cross-browser/iOS method
-  if(pre && pre.dueDate && /^\d{4}-\d{2}-\d{2}$/.test(pre.dueDate)){
-    var el = document.getElementById('mo-due');
-    if(el){
-      try{
-        var parts = pre.dueDate.split('-');
-        el.valueAsDate = new Date(Date.UTC(+parts[0], +parts[1]-1, +parts[2]));
-      }catch(e){ el.value = pre.dueDate; }
-    }
-  }
+  if(pre&&pre.dueDate){var el=document.getElementById('mo-due');if(el)el.value=pre.dueDate;}
 }
 function openEditMo(id){var m=(DB.monthly||[]).find(function(x){return x.id===id;});if(m){buildMonthlyForm(m);document.getElementById('sheet-monthly').classList.add('open');}}
 function selExUnit(el){
@@ -3724,6 +3732,7 @@ function selExUnit(el){
     if(!document.querySelector('.ex-unit-btn.sel')){document.querySelector('.ex-unit-btn[data-t=""]').classList.add('sel');}
   }
 }
+
 function selMoUnit(el){
   var t=el.dataset.t;
   if(t==='عام'){
@@ -3743,20 +3752,7 @@ function selMoUnit(el){
 function saveMo(editId){
   var name   = document.getElementById('mo-n')?.value?.trim();
   var amount = parseFloat(document.getElementById('mo-am')?.value)||0;
-  // Read date reliably - valueAsDate always returns ISO format
-  var duEl = document.getElementById('mo-due');
-  var dueDate = '';
-  if(duEl){
-    if(duEl.valueAsDate){
-      // valueAsDate is always UTC ISO - format to YYYY-MM-DD
-      var vd = duEl.valueAsDate;
-      dueDate = vd.getUTCFullYear()+'-'
-        +String(vd.getUTCMonth()+1).padStart(2,'0')+'-'
-        +String(vd.getUTCDate()).padStart(2,'0');
-    } else if(duEl.value && /^\d{4}-\d{2}-\d{2}$/.test(duEl.value)){
-      dueDate = duEl.value;
-    }
-  }
+  var dueDate=(document.getElementById('mo-due')||{}).value||'';
   if(!name||!amount){toast('أدخل الاسم والمبلغ','error');return;}
   var selBtns=document.querySelectorAll('.mo-unit-btn.sel');
   var apt=selBtns.length===0?'عام':selBtns.length===1?selBtns[0].dataset.t:Array.from(selBtns).map(function(b){return b.dataset.t;}).join(',');
