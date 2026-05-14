@@ -1613,23 +1613,27 @@ function submitJoin(){
   var price  = _billingYearly ? pkg.yearly  : pkg.monthly;
   var billing= _billingYearly ? 'سنوي' : 'شهري';
 
+  var bizId = email.toLowerCase().replace(/[^a-z0-9]/g,'_');
   var req = {
-    id:name+Date.now(), name:name, phone:phone, city:city, email:email,
+    id:email+Date.now(), name:name, phone:phone, city:city, email:email,
     biz:biz, bizType:btype, approxUnits:units,
     pkg:_selectedPkg, pkgLabel:pkg.label,
     price:price, billing:billing,
-    status:'pending', date:toDay(), pass:pass
+    status:'pending', date:toDay(), pass:pass, biz_id:bizId
   };
 
   sbFetch('join_requests','POST',req,'?on_conflict=id').catch(function(){});
   if(!DB.joinRequests) DB.joinRequests=[];
   DB.joinRequests.push(req);
+  // Generate unique biz_id from email (unique per subscriber)
+  var bizId = email.toLowerCase().replace(/[^a-z0-9]/g,'_');
   DB.subscriberInfo = {
     name:name, email:email, phone:phone, city:city,
     biz:biz, bizType:btype,
     pkg:_selectedPkg, pkgLabel:pkg.label,
     price:price, billing:billing,
-    date:toDay(), status:'pending'
+    date:toDay(), status:'pending',
+    bizId: bizId
   };
   // Pre-fill bizName
   if(!DB.bizName){ DB.bizName=biz; updateBizLabels(); }
@@ -2369,11 +2373,11 @@ function savB(){
   var b={id:_eid||uid(),apt:apt,guest:guest,phone:phone,source:_cs,checkin:ci,checkout:co,price:price,nights:n,total:n*price,status:status,notes:notes,addedBy:_eid?undefined:(currentUser?currentUser.username:''),addedAt:_eid?undefined:new Date().toISOString().slice(0,10)};
   if(_eid)DB.bookings=DB.bookings.map(function(x){return x.id===_eid?b:x;});else DB.bookings.push(b);
   // ── حفظ فوري في Supabase ──
-  sbFetch('bookings','POST',{
+  sbFetch('bookings','POST',Object.assign({biz_id:getBizId()},{
     id:b.id,apt:b.apt,guest:b.guest,phone:b.phone||'',source:b.source,
     checkin:b.checkin,checkout:b.checkout,nights:b.nights,price:b.price,
     total:b.total,status:b.status,notes:b.notes||'',code:b.code||''
-  },'?on_conflict=id').catch(function(){});
+  }),'?on_conflict=id').catch(function(){});
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('booking');toast(_eid?'✅ تم تعديل الحجز':'✅ تم حفظ الحجز','success');renderAll();
 }
@@ -3349,7 +3353,7 @@ function _profileField(id, label, value, icon, opts){
 
   var editBtn = readonly ? '' :
     '<button onclick="toggleFieldEdit(\''+id+'\')" id="btn-'+id+'" '
-    +'style="background:var(--bg3);border:1px solid var(--border);color:var(--text3);font-size:11px;font-weight:700;padding:5px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;font-family:inherit;">✏️</button>';
+    +'style="background:var(--bg3);border:1px solid var(--border);color:var(--text3);width:34px;height:34px;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
 
   return '<div id="field-wrap-'+id+'" style="display:flex;align-items:flex-start;gap:12px;padding:13px 16px;">'
     +'<div style="width:34px;height:34px;border-radius:9px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;margin-top:1px;">'+icon+'</div>'
@@ -3376,7 +3380,9 @@ function toggleFieldEdit(id){
   var isEditing = edit.style.display !== 'none';
   view.style.display = isEditing ? 'block' : 'none';
   edit.style.display = isEditing ? 'none'  : 'block';
-  if(btn) btn.textContent = isEditing ? '✏️' : '✕';
+  var EDIT_SVG  = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+  var CLOSE_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  if(btn) btn.innerHTML = isEditing ? EDIT_SVG : CLOSE_SVG;
   if(!isEditing){
     var inp = document.getElementById('inp-'+id);
     if(inp) setTimeout(function(){ inp.focus(); }, 50);
@@ -3686,14 +3692,12 @@ function renderSettings(){
 
   // ── الوحدات ──
   var units = DB.units || [];
-  var typeIcons = {شقة:'🏠', استديو:'🛋', غرفة:'🚪', فيلا:'🏡', شاليه:'🌴'};
+  var _unitSVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
   document.getElementById('units-list').innerHTML = units.length ?
     units.map(function(u){
       var type = (DB.unitTypes&&DB.unitTypes[u]) || '';
-      var typeIcons = {شقة:'🏠',استديو:'🛋',غرفة:'🚪',فيلا:'🏡',شاليه:'🌴'};
-      var icon = typeIcons[type] || '🏠';
       return '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">'
-        +'<div style="width:36px;height:36px;border-radius:9px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">'+icon+'</div>'
+        +'<div style="width:36px;height:36px;border-radius:9px;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text2);flex-shrink:0;">'+_unitSVG+'</div>'
         +'<div style="flex:1;min-width:0;">'
           +'<div style="font-size:13px;font-weight:800;color:var(--text);">'+u+'</div>'
           +(type?'<div style="font-size:11px;color:var(--text3);margin-top:1px;">'+type+'</div>':'')
@@ -3878,12 +3882,12 @@ function saveMo(editId){
   if(editId&&editId!=='null'){
     DB.monthly=DB.monthly.map(function(m){if(m.id===editId){rec=Object.assign({},m,{name:name,apt:apt,amount:amount,dueDate:dueDate});return rec;}return m;});
     toast('✅ تم التعديل','success');
-    sbFetch('monthly_costs','PATCH',{name:name,apt:apt,amount:amount,due_date:dueDate||null},'?id=eq.'+editId).catch(function(){});
+    sbFetch('monthly_costs','PATCH',{name:name,apt:apt,amount:amount,due_date:dueDate||null,biz_id:getBizId()},'?id=eq.'+editId).catch(function(){});
   } else {
     rec={id:uid(),name:name,apt:apt,amount:amount,dueDate:dueDate};
     DB.monthly.push(rec);
     toast('✅ تم الحفظ','success');
-    sbFetch('monthly_costs','POST',{id:rec.id,name:rec.name,apt:rec.apt,amount:rec.amount,due_date:rec.dueDate||null},'?on_conflict=id').catch(function(){});
+    sbFetch('monthly_costs','POST',{id:rec.id,name:rec.name,apt:rec.apt,amount:rec.amount,due_date:rec.dueDate||null,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
   }
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('monthly');
@@ -4534,6 +4538,17 @@ function injectGmailBookings(){
 const SB_URL = 'https://uoysyclcycnttnidllxc.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVveXN5Y2xjeWNudHRuaWRsbHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjI0MjEsImV4cCI6MjA5MzgzODQyMX0.0GJbr8bQpcZ3G__p6CIW3t8dvEZAjjQL5FXLXmQ9Jmg';
 
+
+// ── Business Identifier ──
+function getBizId(){
+  var sub = DB.subscriberInfo || {};
+  // bizId = email-based unique ID set at registration
+  if(sub.bizId) return sub.bizId;
+  // Fallback: generate from email or username
+  var email = sub.email || '';
+  if(email) return email.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  return (currentUser&&currentUser.username) || DB.bizName || 'default';
+}
 async function sbFetch(table, method, body, query) {
   var url = SB_URL + '/rest/v1/' + table + (query||'');
   var headers = {
@@ -4620,10 +4635,10 @@ async function loadFromSupabase() {
     
     var [bookings, units, monthly, expenses, sales] = await Promise.all([
       sbFetch('bookings', 'GET', null, '?select=*&order=checkin.desc'),
-      sbFetch('units', 'GET', null, '?select=*'),
-      sbFetch('monthly_costs', 'GET', null, '?select=id,name,amount,apt,due_date'),
-      sbFetch('expenses', 'GET', null, '?select=*&order=created_at.desc'),
-      sbFetch('sales', 'GET', null, '?select=*&order=created_at.desc'),
+      sbFetch('units', 'GET', null, '?select=*&biz_id=eq.'+getBizId()),
+      sbFetch('monthly_costs', 'GET', null, '?select=id,name,amount,apt,due_date&biz_id=eq.'+getBizId()),
+      sbFetch('expenses', 'GET', null, '?select=*&biz_id=eq.'+getBizId()+'&order=created_at.desc'),
+      sbFetch('sales', 'GET', null, '?select=*&biz_id=eq.'+getBizId()+'&order=created_at.desc'),
     ]);
     
     if(bookings.length) DB.bookings = bookings;
@@ -4803,11 +4818,11 @@ async function loadFromSupabaseAuto(){
     var [bookings, expenses, monthly, foundation, employees, units, sales, appCfg] = await Promise.all([
       sbFetch('bookings','GET',null,'?select=id,apt,guest,phone,source,checkin,checkout,nights,price,total,status,notes,code&order=checkin.desc'),
       sbFetch('expenses','GET',null,'?select=id,type,amount,date,notes,apt,desc'),
-      sbFetch('monthly_costs','GET',null,'?select=id,name,amount,apt,due_date'),
-      sbFetch('foundation_costs','GET',null,'?select=id,name,amount,date'),
-      sbFetch('employees','GET',null,'?select=id,name,role,salary'),
-      sbFetch('units','GET',null,'?select=id,name,type'),
-      sbFetch('sales','GET',null,'?select=id,desc,description,amount,date,apt,notes'),
+      sbFetch('monthly_costs','GET',null,'?select=id,name,amount,apt,due_date&biz_id=eq.'+getBizId()),
+      sbFetch('foundation_costs','GET',null,'?select=id,name,amount,date&biz_id=eq.'+getBizId()),
+      sbFetch('employees','GET',null,'?select=id,name,role,salary&biz_id=eq.'+getBizId()),
+      sbFetch('units','GET',null,'?select=id,name,type&biz_id=eq.'+getBizId()),
+      sbFetch('sales','GET',null,'?select=id,desc,description,amount,date,apt,notes&biz_id=eq.'+getBizId()),
       sbFetch('app_config','GET',null,'?select=key,value').catch(function(){return[];}),
     ]);
     
@@ -4951,7 +4966,7 @@ var _lastKnown = {};
 async function _pollChanges(){
   try {
     // Quick ping to check connection
-    var result = await sbFetch('bookings','GET',null,'?select=id,status,notes,checkin,checkout,total,price,guest,phone,source,apt,nights,code&order=id.desc&limit=200');
+    var result = await sbFetch('bookings','GET',null,'?select=id,status,notes,checkin,checkout,total,price,guest,phone,source,apt,nights,code&biz_id=eq.'+getBizId()+'&order=id.desc&limit=200');
     if(!result) return;
 
     _rtConnected = true;
@@ -4973,11 +4988,11 @@ async function _pollChanges(){
     _lastKnown._pollCount = (_lastKnown._pollCount||0) + 1;
     if(_lastKnown._pollCount % 4 === 0){
       var [expenses, monthly, foundation, employees, sales, appCfg] = await Promise.all([
-        sbFetch('expenses','GET',null,'?select=id,type,amount,date,apt,desc,notes').catch(function(){return null;}),
-        sbFetch('monthly_costs','GET',null,'?select=id,name,amount,apt,due_date').catch(function(){return null;}),
-        sbFetch('foundation_costs','GET',null,'?select=id,name,amount,date').catch(function(){return null;}),
-        sbFetch('employees','GET',null,'?select=id,name,role,salary').catch(function(){return null;}),
-        sbFetch('sales','GET',null,'?select=id,desc,description,amount,date,apt,notes').catch(function(){return null;}),
+        sbFetch('expenses','GET',null,'?select=id,type,amount,date,apt,desc,notes&biz_id=eq.'+getBizId()).catch(function(){return null;}),
+        sbFetch('monthly_costs','GET',null,'?select=id,name,amount,apt,due_date&biz_id=eq.'+getBizId()).catch(function(){return null;}),
+        sbFetch('foundation_costs','GET',null,'?select=id,name,amount,date&biz_id=eq.'+getBizId()).catch(function(){return null;}),
+        sbFetch('employees','GET',null,'?select=id,name,role,salary&biz_id=eq.'+getBizId()).catch(function(){return null;}),
+        sbFetch('sales','GET',null,'?select=id,desc,description,amount,date,apt,notes&biz_id=eq.'+getBizId()).catch(function(){return null;}),
         sbFetch('app_config','GET',null,'?select=key,value').catch(function(){return null;}),
       ]);
 
