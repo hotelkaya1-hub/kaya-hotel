@@ -41,11 +41,18 @@ body, input, select, textarea, button, span, div, td, th {
 }
 /* Specific overrides for Arabic locale number display */
 input[type="number"],
-input[type="date"],
 input[type="tel"] {
   direction: ltr;
   text-align: right;
+}
+input[type="date"] {
+  direction: ltr;
+  text-align: right;
   unicode-bidi: embed;
+  -webkit-locale: "en-GB";
+}
+input[type="date"]::-webkit-datetime-edit-month-field {
+  content: attr(data-month);
 }
 input,select,button,textarea{font-family:'Cairo',sans-serif;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -119,10 +126,29 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     font-weight: 900;
     letter-spacing: 5px;
     color: var(--accent);
-    padding: 24px 16px 16px;
+    padding: 24px 16px 4px;
+    text-align: right;
+  }
+  #nav::after {
+    content: 'Management Systems';
+    display: block;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--text3);
+    padding: 0 16px 0;
+    text-align: right;
+  }
+  /* biz name in nav sidebar - desktop only */
+  #nav-biz-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text3);
+    padding: 4px 16px 12px;
     border-bottom: 1px solid var(--border);
     margin-bottom: 4px;
     text-align: right;
+    display: block;
   }
   #nav .nav-item {
     all: unset;
@@ -194,6 +220,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 }
 /* Mobile nav - bottom bar */
 @media (max-width: 1023px) {
+  #nav-biz-label { display: none !important; }
   #nav {
     position: fixed;
     bottom: 0;
@@ -751,10 +778,9 @@ document.addEventListener('DOMContentLoaded', function(){
               <div style="font-size:15px;font-weight:800;color:var(--text);">ابدأ مجاناً</div>
               <div style="font-size:11px;color:var(--text3);">جرّب بدون أي التزام</div>
             </div>
-              <div style="font-size:10px;font-weight:800;color:var(--red);margin-top:3px;">⏰ لفترة محدودة</div>
           </div>
           <div style="text-align:left;">
-            <div style="display:flex;align-items:baseline;gap:3px;justify-content:flex-end;"><span style="font-size:22px;font-weight:900;color:var(--green);" id="price-free">مجاناً</span><span style="font-size:12px;color:var(--text3);" id="price-free-period">لفترة محدودة</span></div>
+            <div style="display:flex;align-items:baseline;gap:3px;justify-content:flex-end;"><span style="font-size:22px;font-weight:900;color:var(--green);" id="price-free">مجاناً</span><span style="font-size:10px;color:var(--red);font-weight:700;" id="price-free-period">لفترة محدودة</span></div>
             <div style="min-height:14px;" id="price-free-old"></div>
           </div>
         </div>
@@ -959,6 +985,7 @@ document.addEventListener('DOMContentLoaded', function(){
 </div>
 <div id="app" style="display:none;">
   <div id="nav">
+    <span id="nav-biz-label"></span>
     <button class="nav-item active" onclick="showPage('dashboard',this)">
       <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="8" width="7" height="13" rx="1"/></svg></div>
       <div class="nav-label">الرئيسية</div>
@@ -967,14 +994,7 @@ document.addEventListener('DOMContentLoaded', function(){
       <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
       <div class="nav-label">الحجوزات</div>
     </button>
-    <!-- Notification Bell -->
-    <button id="notif-bell" onclick="openNotifications()" style="display:none;position:relative;border:none;background:none;cursor:pointer;padding:8px 12px;flex-direction:column;align-items:center;gap:3px;color:var(--text3);">
-      <div style="position:relative;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span id="notif-count" style="display:none;position:absolute;top:-4px;left:-4px;background:var(--red);color:#fff;font-size:9px;font-weight:900;width:16px;height:16px;border-radius:50%;align-items:center;justify-content:center;">0</span>
-      </div>
-      <div style="font-size:9px;font-weight:700;">تنبيهات</div>
-    </button>
+
     <button class="nav-item" onclick="showPage('revenue',this)">
       <div class="nav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
       <div class="nav-label">الإيرادات</div>
@@ -992,12 +1012,15 @@ document.addEventListener('DOMContentLoaded', function(){
 
     <!-- DASHBOARD -->
     <div id="page-dashboard" class="page active">
-      <!-- Notification Banner -->
-      <div id="dash-notif-banner" style="display:none;background:rgba(220,38,38,.06);border-bottom:1px solid rgba(220,38,38,.15);border-radius:0;margin-bottom:0;"></div>
-      <div class="topbar" style="display:flex;justify-content:space-between;align-items:center;">
+
+      <div class="topbar" style="display:flex;justify-content:space-between;align-items:center;position:relative;">
         <div>
-          <div class="biz-label" style="font-size:12px;font-weight:700;color:var(--text2);"></div>
+          <div class="biz-label" style="font-size:12px;font-weight:600;color:var(--text3);margin-bottom:2px;"></div>
           <div class="page-title">الرئيسية</div>
+        </div>
+        <div style="position:absolute;left:50%;transform:translateX(-50%);text-align:center;">
+          <div style="font-family:Georgia,serif;font-size:18px;font-weight:900;letter-spacing:5px;background:linear-gradient(135deg,#c8a96e,#f0d99a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;">BODO</div>
+          <div style="font-size:9px;color:var(--text3);letter-spacing:2px;margin-top:1px;">Management Systems</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           <div style="text-align:left;">
@@ -2021,30 +2044,7 @@ function renderDashboard(){
   if(!DB.sales)DB.sales=[];
   if(!DB.bookings)DB.bookings=[];
   if(!DB.expenses)DB.expenses=[];
-
-  // Urgent notifications banner
-  try{
-    var notes = getNotifications();
-    var urgent = notes.filter(function(n){return n.urgent;});
-    var dashNotif = document.getElementById('dash-notif-banner');
-    if(dashNotif){
-      if(urgent.length){
-        dashNotif.style.display = 'block';
-        dashNotif.innerHTML = urgent.map(function(n){
-          var payBtn = n.type==='due'
-            ? '<button onclick="payDueCost(\''+n.monthlyId+'\')" class="btn btn-sm" style="background:var(--accent);color:#1a0f00;border:none;white-space:nowrap;flex-shrink:0;margin-right:8px;">تسجيل الدفع</button>'
-            : '';
-          return '<div style="display:flex;align-items:center;gap:10px;padding:11px 16px;">'
-            +'<span style="font-size:16px;flex-shrink:0;">🔴</span>'
-            +'<div style="flex:1;"><div style="font-size:12px;font-weight:800;color:var(--red);">'+n.title+'</div>'
-            +'<div style="font-size:11px;color:var(--text3);">'+n.body+'</div></div>'
-            +payBtn+'</div>';
-        }).join('');
-      } else {
-        dashNotif.style.display = 'none';
-      }
-    }
-  }catch(e){}
+  try{renderNotificationsBell();}catch(e){}
 
   var conf=DB.bookings.filter(function(b){return b.status==='confirmed';});
   var bookRev=conf.reduce(function(s,b){return s+b.total;},0);
@@ -2291,8 +2291,8 @@ function buildBookingForm(pre){
     </div>
     <div class="form-group"><label class="form-label">اسم الضيف</label><input id="b-g" class="fi" placeholder="اسم الضيف" value="${f.guest||''}"></div>
     <div class="form-group"><label class="form-label">رقم الجوال <span style="font-size:10px;color:var(--text3);">(اختياري)</span></label><input id="b-ph" class="fi" type="tel" placeholder="05XXXXXXXX" value="${f.phone||''}"></div>
-    <div class="form-group"><label class="form-label">تاريخ الدخول</label><input type="date" id="b-ci" class="fi" value="${f.checkin}" onchange="autoCheckout();chkC();calcN()"></div>
-    <div class="form-group"><label class="form-label">تاريخ الخروج</label><input type="date" id="b-co" class="fi" value="${f.checkout}" onchange="chkC();calcN()"></div>
+    <div class="form-group"><label class="form-label">تاريخ الدخول</label><input type="date" lang="en" id="b-ci" class="fi" value="${f.checkin}" onchange="autoCheckout();chkC();calcN()"></div>
+    <div class="form-group"><label class="form-label">تاريخ الخروج</label><input type="date" lang="en" id="b-co" class="fi" value="${f.checkout}" onchange="chkC();calcN()"></div>
     <div id="cfb" class="conflict-box">️ هذه الوحدة محجوزة في هذه الفترة!</div>
     <div class="form-group"><label class="form-label">السعر / ليلة (ر.س)</label><input type="number" id="b-p" class="fi" placeholder="0" value="${f.price||''}" oninput="calcN()"></div>
     <div id="b-calc" class="calc-box"></div>
@@ -2358,7 +2358,7 @@ function savB(){
     id:b.id,apt:b.apt,guest:b.guest,phone:b.phone||'',source:b.source,
     checkin:b.checkin,checkout:b.checkout,nights:b.nights,price:b.price,
     total:b.total,status:b.status,notes:b.notes||'',code:b.code||''
-  },'?on_conflict=id').catch(function(err){showToast('⚠️ الحفظ السحابي فشل: '+err.message,'error');});
+  },'?on_conflict=id').catch(function(){});
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('booking');toast(_eid?'✅ تم تعديل الحجز':'✅ تم حفظ الحجز','success');renderAll();
 }
@@ -2433,7 +2433,7 @@ function buildExpenseForm(){
   document.getElementById('exp-body').innerHTML=
     '<div class="form-group"><label class="form-label">النوع</label><div class="exp-grid">'+EXP_TYPES.map(function(x,i){return'<div class="exp-opt'+(x.t==='صيانة'?' sel':'')+'" onclick="sExp('+i+',this)">'+x.i+' '+x.t+'</div>';}).join('')+'</div><input type="hidden" id="e-t" value="صيانة"></div>'
     +'<div id="ew" style="display:none;" class="form-group"><label class="form-label">الموظف</label><select id="e-em" class="fi" onchange="fSal()">'+(DB.employees||[]).map(function(e){return'<option value="'+e.salary+'">'+e.name+' ('+fmtM(e.salary)+' ر.س)</option>';}).join('')+'</select></div>'
-    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام">عام</option>'+(DB.units||[]).map(function(u){return'<option>'+u+'</option>';}).join('')+'</select></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" id="e-d" class="fi" value="'+toDay()+'"></div></div>'
+    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام">عام</option>'+(DB.units||[]).map(function(u){return'<option>'+u+'</option>';}).join('')+'</select></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" lang="en" id="e-d" class="fi" value="'+toDay()+'"></div></div>'
     +'<div class="form-group"><label class="form-label">الوصف</label><input id="e-ds" class="fi" placeholder="وصف المصروف"></div>'
     +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="e-am" class="fi" placeholder="0"></div>'
     +'<button class="btn btn-primary btn-full" onclick="savExp()">حفظ</button>';
@@ -2453,7 +2453,7 @@ function savExp(){
   sbFetch('expenses','POST',{
     id:exp.id,type:exp.type,amount:exp.amount,date:exp.date,
     apt:exp.apt,desc:exp.desc,notes:exp.desc
-  },'?on_conflict=id').catch(function(err){showToast('⚠️ الحفظ السحابي فشل: '+err.message,'error');});
+  },'?on_conflict=id').catch(function(){});
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('expense');toast('✅ تم حفظ المصروف','success');renderExpenses();renderDashboard();
 }
@@ -2614,7 +2614,7 @@ function buildSaleForm(pre){
  document.getElementById('sale-title').textContent=pre?'تعديل إيراد':' إضافة إيراد';
   document.getElementById('sale-body').innerHTML=
     '<div class="form-group"><label class="form-label">الوصف</label><input id="sl-d" class="fi" placeholder="مثال: إيراد شهر مايو..." value="'+(pre?pre.desc:'')+'"></div>'
-    +'<div class="form-row"><div class="form-group"><label class="form-label">التاريخ</label><input type="date" id="sl-dt" class="fi" value="'+(pre?pre.date:toDay())+'"></div>'
+    +'<div class="form-row"><div class="form-group"><label class="form-label">التاريخ</label><input type="date" lang="en" id="sl-dt" class="fi" value="'+(pre?pre.date:toDay())+'"></div>'
     +'<div class="form-group"><label class="form-label">الوحدة</label><select id="sl-a" class="fi"><option value="عام">عام</option>'+(DB.units||[]).map(function(u){return'<option'+(pre&&pre.apt===u?' selected':'')+'>'+u+'</option>';}).join('')+'</select></div></div>'
     +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input type="number" id="sl-am" class="fi" placeholder="0" value="'+(pre?pre.amount:'')+'"></div>'
     +'<div class="form-group"><label class="form-label">ملاحظات</label><input id="sl-n" class="fi" placeholder="اختياري" value="'+(pre?pre.notes||'':'')+'"></div>'
@@ -2633,7 +2633,7 @@ function saveSale(){
     sbFetch('sales','PATCH',{desc:desc,date:date,apt:apt,amount:amount,notes:notes,description:desc},'?id=eq.'+_saleId).catch(function(){});
   } else {
     DB.sales.push(entry);
-    sbFetch('sales','POST',{id:entry.id,desc:desc,description:desc,date:date,apt:apt,amount:amount,notes:notes},'?on_conflict=id').catch(function(err){showToast('⚠️ الحفظ السحابي فشل','error');});
+    sbFetch('sales','POST',{id:entry.id,desc:desc,description:desc,date:date,apt:apt,amount:amount,notes:notes},'?on_conflict=id').catch(function(){});
   }
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('sale');toast(_saleId?'✅ تم التعديل':'✅ تم الحفظ','success');renderRevenue();renderDashboard();
@@ -2694,56 +2694,48 @@ function renderExpensesList(){
 
 function getNotifications(){
   var notes = [];
-  var today = new Date();
-  var todayDay = today.getDate();
   var todayStr = toDay();
+  var tp = todayStr.split('-');
+  var tY=parseInt(tp[0]), tM=parseInt(tp[1]), tD=parseInt(tp[2]);
 
-  // 1. استحقاق التكاليف الثابتة
   (DB.monthly||[]).forEach(function(m){
     if(!m.dueDate) return;
-    // Calculate next due date (same day each month)
-    var firstDue = new Date(m.dueDate);
-    var dueDay   = firstDue.getDate();
-    var nextDue  = new Date(today.getFullYear(), today.getMonth(), dueDay);
-    if(nextDue < today) nextDue = new Date(today.getFullYear(), today.getMonth()+1, dueDay);
-    var nextDueStr = nextDue.toISOString().slice(0,10);
-    // Check if paid this month
-    var thisMonth = todayStr.slice(0,7);
-    var paidThisMonth = (DB.expenses||[]).some(function(e){
-      return e.monthlyRef===m.id && e.date && e.date.startsWith(thisMonth);
+    var dp = m.dueDate.split('-');
+    var dueDay = parseInt(dp[2]);
+    // Next due: same day this month or next
+    var nM=tM, nY=tY;
+    if(dueDay < tD){ nM++; if(nM>12){nM=1;nY++;} }
+    var nextDueStr = nY+'-'+String(nM).padStart(2,'0')+'-'+String(dueDay).padStart(2,'0');
+    var daysUntil = Math.round((Date.UTC(nY,nM-1,dueDay) - Date.UTC(tY,tM-1,tD)) / 86400000);
+    // Paid this month?
+    var paid = (DB.expenses||[]).some(function(e){
+      return e.monthlyRef===m.id && e.date && e.date.startsWith(todayStr.slice(0,7));
     });
-    if(paidThisMonth) return;
-    var daysUntil = Math.ceil((nextDue - today) / 86400000);
-    if(daysUntil <= 3){
+    if(paid) return;
+    if(daysUntil <= 7){
       notes.push({
-        id: 'due_'+m.id,
-        type: 'due',
-        title: daysUntil===0 ? '💸 مستحق اليوم' : '💸 مستحق خلال '+daysUntil+' أيام',
-        body: m.name + ' · ' + fmtM(m.amount) + ' ر.س · ' + nextDueStr,
-        amount: m.amount,
-        monthlyId: m.id,
-        monthlyName: m.name,
-        urgent: daysUntil <= 0
+        id:'due_'+m.id, type:'due',
+        title: daysUntil<0?'🔴 متأخر: '+m.name : daysUntil===0?'💸 مستحق اليوم: '+m.name : '💸 مستحق خلال '+daysUntil+' أيام: '+m.name,
+        body: fmtM(m.amount)+' ر.س · '+fmtDate(nextDueStr),
+        amount:m.amount, monthlyId:m.id, monthlyName:m.name,
+        urgent: daysUntil<=0
       });
     }
   });
 
-  // 2. انتهاء الاشتراك
-  var sub = DB.subscriberInfo||{};
+  var sub=DB.subscriberInfo||{};
   if(sub.expiryDate){
-    var expiry = new Date(sub.expiryDate);
-    var daysLeft = Math.ceil((expiry - today) / 86400000);
-    if(daysLeft <= 7){
+    var ep=sub.expiryDate.split('-');
+    var daysLeft=Math.round((Date.UTC(parseInt(ep[0]),parseInt(ep[1])-1,parseInt(ep[2]))-Date.UTC(tY,tM-1,tD))/86400000);
+    if(daysLeft<=7){
       notes.push({
-        id: 'sub_expiry',
-        type: 'subscription',
-        title: daysLeft<=0 ? '🔴 انتهى اشتراكك' : '⚠️ الاشتراك ينتهي خلال '+daysLeft+' أيام',
-        body: 'باقة '+( sub.pkgLabel||'') + (daysLeft>0?' — جدّد الآن':''),
-        urgent: daysLeft <= 0
+        id:'sub_expiry', type:'subscription',
+        title: daysLeft<=0?'🔴 انتهى اشتراكك':'⚠️ الاشتراك ينتهي خلال '+daysLeft+' أيام',
+        body: 'باقة '+(sub.pkgLabel||'')+(daysLeft>0?' — جدّد الآن':''),
+        urgent: daysLeft<=0
       });
     }
   }
-
   return notes;
 }
 
@@ -2774,17 +2766,18 @@ function payDueCost(monthlyId){
 
 function renderNotificationsBell(){
   var notes = getNotifications();
-  var count = notes.length;
-  // Nav bell
-  var bell  = document.getElementById('notif-bell');
-  var badge = document.getElementById('notif-count');
-  if(bell)  bell.style.display = count>0 ? 'flex' : 'none';
-  if(badge){ badge.textContent=count; badge.style.display=count>0?'flex':'none'; }
-  // Top bell (all pages)
+  var count  = notes.length;
+  var urgent = notes.filter(function(n){return n.urgent;});
+
+  // Update top bell only
   var bellTop  = document.getElementById('notif-bell-top');
   var badgeTop = document.getElementById('notif-count-top');
-  if(bellTop)  bellTop.style.display = count>0 ? 'flex' : 'flex'; // always show
-  if(badgeTop){ badgeTop.textContent=count; badgeTop.style.display=count>0?'flex':'none'; }
+  if(bellTop) bellTop.style.display = 'flex';
+  if(badgeTop){
+    badgeTop.textContent = count;
+    badgeTop.style.display = count>0 ? 'flex' : 'none';
+  }
+
 }
 
 // ══ NOTIFICATION HISTORY ══
@@ -3049,7 +3042,7 @@ function openEditExp(id){
   document.getElementById('sheet-expense').querySelector('.sheet-title').textContent='تعديل مصروف';
   document.getElementById('exp-body').innerHTML=
     '<div class="form-group"><label class="form-label">النوع</label><div class="exp-grid">'+EXP_TYPES.map(function(x,i){return'<div class="exp-opt'+(x.t===e.type?' sel':'')+'" onclick="sExp('+i+',this)">'+x.i+' '+x.t+'</div>';}).join('')+'</div><input type="hidden" id="e-t" value="'+(e.type||'صيانة')+'"></div>'
-    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام"'+(e.apt==='عام'?' selected':'')+'>عام</option>'+(DB.units||[]).map(function(u){return'<option'+(u===e.apt?' selected':'')+'>'+u+'</option>';}).join('')+'</select></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" id="e-d" class="fi" value="'+(e.date||toDay())+'"></div></div>'
+    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام"'+(e.apt==='عام'?' selected':'')+'>عام</option>'+(DB.units||[]).map(function(u){return'<option'+(u===e.apt?' selected':'')+'>'+u+'</option>';}).join('')+'</select></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" lang="en" id="e-d" class="fi" value="'+(e.date||toDay())+'"></div></div>'
     +'<div class="form-group"><label class="form-label">الوصف</label><input id="e-ds" class="fi" value="'+(e.desc||'')+'"></div>'
     +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="e-am" class="fi" value="'+(e.amount||'')+'"></div>'
     +'<button class="btn btn-primary btn-full" onclick="savExpEdit()">حفظ التعديل</button>';
@@ -3238,10 +3231,13 @@ function renderROI(){
 }
 function updateBizLabels(){
   var name = (DB&&DB.bizName) || '';
-  // اسم النشاط يظهر فقط في الرئيسية
+  // الرئيسية فقط
   var dashLabel = document.querySelector('#page-dashboard .biz-label');
   if(dashLabel) dashLabel.textContent = name;
-  // باقي الصفحات — نخليها فارغة
+  // nav sidebar (desktop)
+  var navLabel = document.getElementById('nav-biz-label');
+  if(navLabel) navLabel.textContent = name;
+  // باقي الصفحات — فارغة
   var all = document.getElementsByClassName('biz-label');
   for(var i=0; i<all.length; i++){
     if(all[i].closest && all[i].closest('#page-dashboard')){
@@ -3692,7 +3688,7 @@ function buildMonthlyForm(pre){
       +'<div class="form-group"><label class="form-label">المبلغ الشهري (ر.س) <span style="color:var(--red);">*</span></label>'
         +'<input id="mo-am" class="fi" placeholder="0" value="'+(pre?pre.amount:'')+'"></div>'
       +'<div class="form-group"><label class="form-label">تاريخ الاستحقاق <span style="font-size:10px;color:var(--text3);">(أول دفعة)</span></label>'
-        +'<input type="date" id="mo-due" class="fi" value="'+(pre&&pre.dueDate?pre.dueDate:pre&&pre.dueDay?'':'')+'" style="font-size:13px;"></div>'
+        +'<input type="date" lang="en" id="mo-due" class="fi" value="'+(pre&&pre.dueDate?pre.dueDate:pre&&pre.dueDay?'':'')+'" style="font-size:13px;"></div>'
     +'</div>'
     +'<div class="form-group"><label class="form-label">الوحدة / الفئة</label>'
     +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'
@@ -3743,16 +3739,19 @@ function saveMo(editId){
   var rec;
   if(editId&&editId!=='null'){
     DB.monthly=DB.monthly.map(function(m){if(m.id===editId){rec=Object.assign({},m,{name:name,apt:apt,amount:amount,dueDate:dueDate});return rec;}return m;});
-    sbFetch('monthly_costs','PATCH',{name:name,apt:apt,amount:amount,due_date:dueDate},'?id=eq.'+editId).catch(function(){});
     toast('✅ تم التعديل','success');
+    sbFetch('monthly_costs','PATCH',{name:name,apt:apt,amount:amount},'?id=eq.'+editId).catch(function(){});
   } else {
     rec={id:uid(),name:name,apt:apt,amount:amount,dueDate:dueDate};
     DB.monthly.push(rec);
-    sbFetch('monthly_costs','POST',{id:rec.id,name:rec.name,apt:rec.apt,amount:rec.amount,due_date:dueDate},'?on_conflict=id').catch(function(){});
     toast('✅ تم الحفظ','success');
+    sbFetch('monthly_costs','POST',{id:rec.id,name:rec.name,apt:rec.apt,amount:rec.amount},'?on_conflict=id').catch(function(){});
   }
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-  closeSheet('monthly');renderExpenses();renderDashboard();
+  closeSheet('monthly');
+  renderExpenses();
+  renderDashboard();
+  try{renderNotificationsBell();}catch(e){}
 }
 function delMo(id){
   showConfirm('حذف التكلفة','سيتم حذف هذه التكلفة الشهرية نهائياً.',function(){
@@ -3767,7 +3766,7 @@ function buildFoundationForm(pre){
   var id=pre?pre.id:null;
   document.getElementById('fo-body').innerHTML=
     '<div class="form-group"><label class="form-label">اسم التكلفة</label><input id="fo-n" class="fi" placeholder="مثال: فرش، أجهزة" value="'+(pre?pre.name:'')+'"></div>'
-    +'<div class="form-row"><div class="form-group"><label class="form-label">التاريخ</label><input type="date" id="fo-d" class="fi" value="'+(pre?pre.date:toDay())+'"></div>'
+    +'<div class="form-row"><div class="form-group"><label class="form-label">التاريخ</label><input type="date" lang="en" id="fo-d" class="fi" value="'+(pre?pre.date:toDay())+'"></div>'
     +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="fo-am" class="fi" placeholder="0" value="'+(pre?pre.amount:'')+'"></div></div>'
     +'<button class="btn btn-primary btn-full" onclick="saveFo(\''+id+'\')">'+(pre?'حفظ التعديل':'حفظ')+'</button>';
 }
@@ -3785,7 +3784,7 @@ function saveFo(editId){
   } else {
     var rec={id:uid(),name:name,date:date,amount:amount};
     DB.foundation.push(rec);
-    sbFetch('foundation_costs','POST',{id:rec.id,name:rec.name,date:rec.date,amount:rec.amount},'?on_conflict=id').catch(function(err){showToast('⚠️ الحفظ السحابي فشل','error');});
+    sbFetch('foundation_costs','POST',{id:rec.id,name:rec.name,date:rec.date,amount:rec.amount},'?on_conflict=id').catch(function(){});
     toast('✅ تم الحفظ','success');
   }
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
@@ -3819,7 +3818,7 @@ function buildEmployeeForm(pre){
     +'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
       +'<div class="form-group"><label class="form-label">رقم الجوال</label><input type="tel" id="em-ph" class="fi" placeholder="05xxxxxxxx" value="'+(pre&&pre.phone?pre.phone:'')+'"></div>'
-      +'<div class="form-group"><label class="form-label">تاريخ التوظيف</label><input type="date" id="em-hd" class="fi" value="'+(pre&&pre.hireDate?pre.hireDate:'')+'"></div>'
+      +'<div class="form-group"><label class="form-label">تاريخ التوظيف</label><input type="date" lang="en" id="em-hd" class="fi" value="'+(pre&&pre.hireDate?pre.hireDate:'')+'"></div>'
     +'</div>'
 
     // ── دخول التطبيق ──
@@ -4416,10 +4415,16 @@ async function sbFetch(table, method, body, query) {
   }
   var opts = {method: method||'GET', headers: headers};
   if(body) opts.body = JSON.stringify(body);
-  var resp = await fetch(url, opts);
+  var resp;
+  try{
+    resp = await fetch(url, opts);
+  } catch(fetchErr){
+    throw new Error('Network error: '+fetchErr.message);
+  }
   if(!resp.ok){
     var err = await resp.text();
-    throw new Error('Supabase '+method+' '+table+': '+err.slice(0,200));
+    var msg = 'Supabase '+method+' '+table+': '+err.slice(0,300);
+    throw new Error(msg);
   }
   var text = await resp.text();
   return text ? JSON.parse(text) : [];
