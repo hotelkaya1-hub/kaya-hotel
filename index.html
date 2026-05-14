@@ -67,7 +67,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 
 /* ── App Layout Base ── */
 #app { display:flex; flex-direction:column; height:100vh; overflow:hidden; position:fixed; inset:0; }
-#content { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; }
+#content { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; scroll-behavior:smooth; }
 
 /* ── Desktop ── */
 /* ═══ DESKTOP (≥1024px) ═══ */
@@ -180,10 +180,15 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 /* ── Mobile ── */
 @media (max-width: 1023px) {
   #content {
-    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 16px)) !important;
   }
   .page.active {
-    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    min-height: 100%;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 16px));
   }
 }
 /* Mobile nav - bottom bar */
@@ -1244,7 +1249,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
         <div id="users-section" style="display:none;"></div>
 
-        <div style="height:40px;"></div>
+        <div style="height:100px;"></div>
 
     </div>
 
