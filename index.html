@@ -369,7 +369,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 
 /* FILTERS */
 .f-sel{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:9px 10px;color:var(--text);font-size:12px;font-family:'Cairo',sans-serif;outline:none;width:100%;-webkit-appearance:none;appearance:none;}
-.filter-bar{display:grid;gap:8px;margin-bottom:14px;}.f3{grid-template-columns:1fr 1fr 1fr;}
+.filter-bar{display:grid;gap:8px;margin-bottom:14px;}.f2{grid-template-columns:1fr 1fr;}.f3{grid-template-columns:1fr 1fr 1fr;}
 
 /* UPCOMING BANNER */
 .up-banner{background:linear-gradient(135deg,rgba(200,169,110,.14),rgba(200,169,110,.06));border:1px solid var(--goldb);border-radius:14px;padding:14px;margin:0 16px 16px;}
@@ -1056,7 +1056,18 @@ document.addEventListener('DOMContentLoaded', function(){
         <button class="tab-btn" id="fin-tab-2" onclick="showFinTab(2)">تحليل الإيرادات</button>
         <button class="tab-btn" id="fin-tab-3" onclick="showFinTab(3)">التحليل المالي</button>
       </div>
-      <div id="fin-tab-content-1" style="padding:0 16px;"><div id="sales-list"></div></div>
+      <div id="fin-tab-content-1" style="padding:0 16px;">
+        <div class="filter-bar f2" style="margin-bottom:12px;">
+          <select class="f-sel" id="sl-f-apt" onchange="renderSalesList()"><option value="">الوحدات</option></select>
+          <select class="f-sel" id="sl-f-period" onchange="renderSalesList()">
+            <option value="">كل الفترات</option>
+            <option value="month">هذا الشهر</option>
+            <option value="3m">آخر 3 أشهر</option>
+            <option value="year">هذه السنة</option>
+          </select>
+        </div>
+        <div id="sales-list"></div>
+      </div>
       <div id="fin-tab-content-2" style="display:none;">
         <div style="display:flex;gap:8px;padding:0 16px;margin-bottom:14px;" id="rev-period-bar">
           <button class="btn btn-sm btn-gold active-period" id="rp-month" onclick="setRevPeriod('month',this)">هذا الشهر</button>
@@ -1102,6 +1113,16 @@ document.addEventListener('DOMContentLoaded', function(){
       </div>
       <!-- Tab 1: Actual Expenses -->
       <div id="cost-content-1" style="padding:0 16px;">
+        <div class="filter-bar f3" style="margin-bottom:12px;">
+          <select class="f-sel" id="ex-f-apt" onchange="renderExpensesList()"><option value="">الوحدات</option></select>
+          <select class="f-sel" id="ex-f-type" onchange="renderExpensesList()"><option value="">النوع</option></select>
+          <select class="f-sel" id="ex-f-period" onchange="renderExpensesList()">
+            <option value="">كل الفترات</option>
+            <option value="month">هذا الشهر</option>
+            <option value="3m">آخر 3 أشهر</option>
+            <option value="year">هذه السنة</option>
+          </select>
+        </div>
         <div id="expenses-list"></div>
       </div>
       <!-- Tab 2: Fixed & Variable Costs (monthly + employees) -->
@@ -2225,11 +2246,7 @@ function renderBookingsList(){
       var si=SRC[b.source]||{};
       var statusBadge='<span class="badge '+(ST[b.status]?.cls||'')+'">● '+(ST[b.status]?.label||b.status)+'</span>';
       var srcBadge='<span class="badge '+(si.cls||'')+'">'+srcIcon(b.source,12)+' '+(si.label||b.source)+'</span>';
-      var acts='<div style="display:flex;gap:6px;">'
-        +(b.total===0?'<button class="btn btn-xs btn-gold" onclick="openPE(this.dataset.id)" data-id="'+b.id+'">سعر</button>':'')
-        +'<button class="btn btn-xs btn-success" onclick="openEB(this.dataset.id)" data-id="'+b.id+'">تعديل</button>'
-        +'<button class="btn btn-xs btn-danger" onclick="delB(this.dataset.id)" data-id="'+b.id+'">حذف</button>'
-        +'</div>';
+      var acts='<div style="display:inline-flex;gap:6px;align-items:center;">'+(b.total===0?'<button class="btn btn-xs btn-gold" onclick="openPE(this.dataset.id)" data-id="'+b.id+'">سعر</button>':'')+'<button class="btn btn-xs btn-success" onclick="openEB(this.dataset.id)" data-id="'+b.id+'">تعديل</button>'+'<button class="btn btn-xs btn-danger" onclick="delB(this.dataset.id)" data-id="'+b.id+'">حذف</button>'+'</div>';
       return[
         '<span style="font-size:13px;font-weight:700;">'+b.guest+'</span><div style="font-size:11px;color:var(--text3);">'+b.apt+'</div>',
         srcBadge,
@@ -2359,6 +2376,8 @@ var _eid=null,_cs='airbnb';
 // ── Calendar Globals ──
 var _CAL_M = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 var _CAL = {yr:0, mo:0};
+function _readCal(id){ var el=document.getElementById(id); return el?el.value:''; }
+var _CAL = {yr:0, mo:0};
 
 function _fmtCalDate(d){
   if(!d||!/^\d{4}-\d{2}-\d{2}$/.test(d)) return '';
@@ -2441,7 +2460,10 @@ function _calPick(ds){
     btn.style.color='var(--text)';
     btn.style.borderColor='var(--accent)';
   }
-  _renderCal(); // refresh to show selected + update confirm button
+  // Trigger dependent logic for booking dates
+  if(_calActiveField==='b-ci'){ autoCheckout();chkC();calcN(); }
+  if(_calActiveField==='b-co'){ chkC();calcN(); }
+  _renderCal();
 }
 
 function _calClear(){
@@ -2499,8 +2521,8 @@ function buildBookingForm(pre){
     </div>
     <div class="form-group"><label class="form-label">اسم الضيف</label><input id="b-g" class="fi" placeholder="اسم الضيف" value="${f.guest||''}"></div>
     <div class="form-group"><label class="form-label">رقم الجوال <span style="font-size:10px;color:var(--text3);">(اختياري)</span></label><input id="b-ph" class="fi" type="tel" placeholder="05XXXXXXXX" value="${f.phone||''}"></div>
-    <div class="form-group"><label class="form-label">تاريخ الدخول</label><input type="date" id="b-ci" class="fi" value="${f.checkin}" onchange="autoCheckout();chkC();calcN()"></div>
-    <div class="form-group"><label class="form-label">تاريخ الخروج</label><input type="date" id="b-co" class="fi" value="${f.checkout}" onchange="chkC();calcN()"></div>
+    <div class="form-group"><label class="form-label">تاريخ الدخول</label><button type="button" id="b-ci-btn" data-fid="b-ci" onclick="calOpenField(this.dataset.fid)" class="fi" style="text-align:right;cursor:pointer;font-size:13px;">${_fmtCalDate(f.checkin)||'اختر تاريخ'}</button><input type="hidden" id="b-ci" value="${f.checkin}" onchange="autoCheckout();chkC();calcN()"></div>
+    <div class="form-group"><label class="form-label">تاريخ الخروج</label><button type="button" id="b-co-btn" data-fid="b-co" onclick="calOpenField(this.dataset.fid)" class="fi" style="text-align:right;cursor:pointer;font-size:13px;">${_fmtCalDate(f.checkout)||'اختر تاريخ'}</button><input type="hidden" id="b-co" value="${f.checkout}" onchange="chkC();calcN()"></div>
     <div id="cfb" class="conflict-box">️ هذه الوحدة محجوزة في هذه الفترة!</div>
     <div class="form-group"><label class="form-label">السعر / ليلة (ر.س)</label><input id="b-p" class="fi" placeholder="0" value="${f.price||''}" oninput="calcN()"></div>
     <div id="b-calc" class="calc-box"></div>
@@ -2511,11 +2533,14 @@ function sSrc(k){_cs=k;document.querySelectorAll('.src-opt').forEach(function(el
 function autoCheckout(){
   var ci=document.getElementById('b-ci')?.value;
   var co=document.getElementById('b-co');
+  var coBtn=document.getElementById('b-co-btn');
   if(!ci||!co)return;
-  // Only auto-update if checkout is empty or before checkin
   var d=new Date(ci);d.setDate(d.getDate()+1);
   var next=d.toISOString().split('T')[0];
-  if(!co.value||co.value<=ci) co.value=next;
+  if(!co.value||co.value<=ci){
+    co.value=next;
+    if(coBtn) coBtn.innerHTML=_fmtCalDate(next);
+  }
 }
 function chkC(){
   var apt=document.getElementById('b-apt')?.value;
@@ -2872,15 +2897,25 @@ function renderRevChart(){
 }
 function renderSalesList(){
   if(!DB.sales)DB.sales=[];
+  // Fill units filter
+  var aptEl=document.getElementById('sl-f-apt');
+  if(aptEl&&aptEl.options.length<=1){
+    aptEl.innerHTML='<option value="">الوحدات</option>'+(DB.units||[]).map(function(u){return'<option value="'+u+'">'+u+'</option>';}).join('');
+  }
+  var fApt=document.getElementById('sl-f-apt')?.value||'';
+  var fPeriod=document.getElementById('sl-f-period')?.value||'';
+  var now=new Date();
   var sorted=[].concat(DB.sales).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
+  // Apply filters
+  if(fApt) sorted=sorted.filter(function(s){return s.apt===fApt;});
+  if(fPeriod==='month') sorted=sorted.filter(function(s){var d=new Date(s.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();});
+  if(fPeriod==='3m') sorted=sorted.filter(function(s){var d=new Date(s.date);var t=new Date(now);t.setMonth(t.getMonth()-3);return d>=t;});
+  if(fPeriod==='year') sorted=sorted.filter(function(s){return new Date(s.date).getFullYear()===now.getFullYear();});
   var el=document.getElementById('sales-list');if(!el)return;
   if(!sorted.length){el.innerHTML='<div class="empty" style="padding:24px;"><div class="empty-text">لا توجد إيرادات — اضغط "+ إيراد"</div></div>';return;}
   if(window.innerWidth>=1024){
     var rows=sorted.map(function(s){
-      var acts='<div style="display:flex;gap:6px;justify-content:flex-end;">'
-        +'<button class="btn btn-xs btn-success" onclick="openEditSale(this.dataset.id)" data-id="'+s.id+'">تعديل</button>'
-        +'<button class="btn btn-xs btn-danger" onclick="delSale(this.dataset.id)" data-id="'+s.id+'">حذف</button>'
-        +'</div>';
+      var acts='<div style="display:inline-flex;gap:6px;align-items:center;">'+'<button class="btn btn-xs btn-success" onclick="openEditSale(this.dataset.id)" data-id="'+s.id+'">تعديل</button>'+'<button class="btn btn-xs btn-danger" onclick="delSale(this.dataset.id)" data-id="'+s.id+'">حذف</button>'+'</div>';
       return[
         '<span style="font-size:13px;font-weight:700;color:var(--text);">'+s.desc+'</span>',
         '<span style="font-size:12px;color:var(--text3);">'+(s.apt||'عام')+'</span>',
@@ -2975,13 +3010,15 @@ function showCostTab(n){
 // ── Desktop Table Helper ──
 function _tbl(headers, rows){
   if(!rows.length) return null;
-  var ths=headers.map(function(h){
-    return '<th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text3);font-weight:700;white-space:nowrap;border-bottom:2px solid var(--border);">'+h+'</th>';
+  var ths=headers.map(function(h,i){
+    var isLast=i===headers.length-1;
+    return '<th style="padding:11px 14px;text-align:right;font-size:12px;color:var(--text3);font-weight:700;white-space:nowrap;border-bottom:2px solid var(--border);'+(isLast?'text-align:center;':'')+'">'+h+'</th>';
   }).join('');
   var trs=rows.map(function(r,i){
     var bg=i%2===0?'var(--card)':'var(--bg2)';
-    var tds=r.map(function(td){
-      return '<td style="padding:12px 16px;text-align:right;vertical-align:middle;border-bottom:1px solid var(--border);">'+td+'</td>';
+    var tds=r.map(function(td,j){
+      var isLast=j===r.length-1;
+      return '<td style="padding:10px 14px;text-align:right;vertical-align:middle;border-bottom:1px solid var(--border);white-space:'+(isLast?'nowrap':'normal')+';'+(isLast?'text-align:center;':'')+'">'+td+'</td>';
     }).join('');
     return '<tr style="background:'+bg+';">'+tds+'</tr>';
   }).join('');
@@ -2993,6 +3030,26 @@ function _tbl(headers, rows){
 function renderExpensesList(){
   var sorted=[].concat(DB.expenses||[]).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
   var el=document.getElementById('expenses-list');if(!el)return;
+  // Fill filter options
+  var aptEl=document.getElementById('ex-f-apt');
+  if(aptEl&&aptEl.options.length<=1){
+    aptEl.innerHTML='<option value="">الوحدات</option>'+(DB.units||[]).map(function(u){return'<option value="'+u+'">'+u+'</option>';}).join('');
+  }
+  var typeEl=document.getElementById('ex-f-type');
+  if(typeEl&&typeEl.options.length<=1){
+    var types=[...new Set((DB.expenses||[]).map(function(e){return e.type;}))];
+    typeEl.innerHTML='<option value="">النوع</option>'+types.map(function(t){return'<option value="'+t+'">'+t+'</option>';}).join('');
+  }
+  // Apply filters
+  var fApt=document.getElementById('ex-f-apt')?.value||'';
+  var fType=document.getElementById('ex-f-type')?.value||'';
+  var fPeriod=document.getElementById('ex-f-period')?.value||'';
+  var now=new Date();
+  if(fApt) sorted=sorted.filter(function(e){return e.apt===fApt;});
+  if(fType) sorted=sorted.filter(function(e){return e.type===fType;});
+  if(fPeriod==='month') sorted=sorted.filter(function(e){var d=new Date(e.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();});
+  if(fPeriod==='3m') sorted=sorted.filter(function(e){var d=new Date(e.date);var t=new Date(now);t.setMonth(t.getMonth()-3);return d>=t;});
+  if(fPeriod==='year') sorted=sorted.filter(function(e){return new Date(e.date).getFullYear()===now.getFullYear();});
   var isDesktop=window.innerWidth>=1024;
   var MONTHS_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 
@@ -3010,18 +3067,18 @@ function renderExpensesList(){
         +'<th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text3);font-weight:700;">الوصف</th>'
         +'<th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text3);font-weight:700;">الوحدة</th>'
         +'<th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text3);font-weight:700;">التاريخ</th>'
-        +'<th style="padding:12px 16px;text-align:left;font-size:12px;color:var(--text3);font-weight:700;">المبلغ</th>'
+        +'<th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text3);font-weight:700;">المبلغ</th>'
         +'<th style="padding:12px 16px;text-align:center;font-size:12px;color:var(--text3);font-weight:700;">إجراء</th>'
       +'</tr></thead><tbody>'
       +sorted.map(function(e,i){
         var isSalary=e.type==='راتب'&&e.salaryRef;
         var emp=isSalary?(DB.employees||[]).find(function(x){return x.id===e.salaryRef;}):null;
         var mainTitle=isSalary?'راتب '+(emp?emp.name:''):(e.desc||'—');
-        var subLine=isSalary&&e.salaryMonth?(function(){var p=e.salaryMonth.split('-');return MONTHS_AR[parseInt(p[1])-1]+' '+p[0];}()):fmtD(e.date);
+        var salaryPeriod=isSalary&&e.salaryMonth?(function(){var p=e.salaryMonth.split('-');return MONTHS_AR[parseInt(p[1])-1]+' '+p[0];}()):'';
         var bg=i%2===0?'var(--bg2)':'var(--card)';
         return '<tr style="background:'+bg+';border-bottom:1px solid var(--border);">'
           +'<td style="padding:12px 16px;"><span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--text3);background:var(--bg3);padding:3px 10px;border-radius:20px;">'+(EI[e.type]||'📌')+' '+e.type+'</span></td>'
-          +'<td style="padding:12px 16px;font-size:13px;font-weight:600;color:var(--text);">'+mainTitle+'<div style="font-size:11px;color:var(--text3);margin-top:1px;">'+subLine+'</div></td>'
+          +'<td style="padding:12px 16px;font-size:13px;font-weight:600;color:var(--text);">'+mainTitle+(isSalary&&salaryPeriod?'<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+salaryPeriod+'</div>':'')+'</td>'
           +'<td style="padding:12px 16px;font-size:12px;color:var(--text3);">'+(e.apt||'عام')+'</td>'
           +'<td style="padding:12px 16px;font-size:12px;color:var(--text3);">'+fmtD(e.date)+'</td>'
           +'<td style="padding:12px 16px;font-size:14px;font-weight:900;color:var(--red);text-align:left;">'+fmtM(e.amount)+' ر.س</td>'
@@ -3285,8 +3342,7 @@ function renderFixedCosts(){
     } else if(window.innerWidth>=1024){
       var rows=monthly.map(function(m){
         var aptLabel=m.apt&&m.apt!=='عام'?m.apt:'عام';
-        var acts='<div style="display:flex;gap:6px;justify-content:flex-end;">'
-          +'<button class="btn btn-xs btn-success" onclick="openEditMo(\''+m.id+'\')">تعديل</button>'
+        var acts='<div style="display:inline-flex;gap:6px;align-items:center;">'+'<button class="btn btn-xs btn-success" onclick="openEditMo(\''+m.id+'\')">تعديل</button>'
           +'<button class="btn btn-xs btn-danger" onclick="delMo(\''+m.id+'\')">حذف</button>'
           +'</div>';
         return[
