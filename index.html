@@ -47,16 +47,16 @@ input[type="tel"] {
 }
 input[type="date"] {
   direction: ltr;
-  text-align: left;
-  font-variant-numeric: lining-nums;
-  -webkit-locale: "en-US";
-  font-family: 'Segoe UI', Arial, sans-serif !important;
+  text-align: center;
+  font-family: 'Cairo', sans-serif;
+  -webkit-locale: "ar";
 }
-input[type="date"]::-webkit-datetime-edit { font-family: 'Segoe UI', Arial, sans-serif; }
+input[type="date"]::-webkit-datetime-edit { direction: ltr; padding: 0 4px; }
 input[type="date"]::-webkit-datetime-edit-fields-wrapper { direction: ltr; }
+input[type="date"]::-webkit-datetime-edit-year-field,
 input[type="date"]::-webkit-datetime-edit-month-field,
 input[type="date"]::-webkit-datetime-edit-day-field,
-input[type="date"]::-webkit-datetime-edit-year-field { font-family: 'Segoe UI', Arial, sans-serif; }
+input[type="date"]::-webkit-datetime-edit-text { font-family: 'Cairo', sans-serif; color: var(--text); }
 input,select,button,textarea{font-family:'Cairo',sans-serif;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
@@ -2310,8 +2310,8 @@ function buildBookingForm(pre){
     </div>
     <div class="form-group"><label class="form-label">اسم الضيف</label><input id="b-g" class="fi" placeholder="اسم الضيف" value="${f.guest||''}"></div>
     <div class="form-group"><label class="form-label">رقم الجوال <span style="font-size:10px;color:var(--text3);">(اختياري)</span></label><input id="b-ph" class="fi" type="tel" placeholder="05XXXXXXXX" value="${f.phone||''}"></div>
-    <div class="form-group"><label class="form-label">تاريخ الدخول</label><input type="date" lang="en" id="b-ci" class="fi" value="${f.checkin}" onchange="autoCheckout();chkC();calcN()"></div>
-    <div class="form-group"><label class="form-label">تاريخ الخروج</label><input type="date" lang="en" id="b-co" class="fi" value="${f.checkout}" onchange="chkC();calcN()"></div>
+    <div class="form-group"><label class="form-label">تاريخ الدخول</label><input type="date" id="b-ci" class="fi" value="${f.checkin}" onchange="autoCheckout();chkC();calcN()"></div>
+    <div class="form-group"><label class="form-label">تاريخ الخروج</label><input type="date" id="b-co" class="fi" value="${f.checkout}" onchange="chkC();calcN()"></div>
     <div id="cfb" class="conflict-box">️ هذه الوحدة محجوزة في هذه الفترة!</div>
     <div class="form-group"><label class="form-label">السعر / ليلة (ر.س)</label><input id="b-p" class="fi" placeholder="0" value="${f.price||''}" oninput="calcN()"></div>
     <div id="b-calc" class="calc-box"></div>
@@ -2452,7 +2452,7 @@ function buildExpenseForm(){
   document.getElementById('exp-body').innerHTML=
     '<div class="form-group"><label class="form-label">النوع</label><div class="exp-grid">'+EXP_TYPES.map(function(x,i){return'<div class="exp-opt'+(x.t==='صيانة'?' sel':'')+'" onclick="sExp('+i+',this)">'+x.i+' '+x.t+'</div>';}).join('')+'</div><input type="hidden" id="e-t" value="صيانة"></div>'
     +'<div id="ew" style="display:none;" class="form-group"><label class="form-label">الموظف</label><select id="e-em" class="fi" onchange="fSal()">'+(DB.employees||[]).map(function(e){return'<option value="'+e.salary+'">'+e.name+' ('+fmtM(e.salary)+' ر.س)</option>';}).join('')+'</select></div>'
-    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام">عام</option>'+(DB.units||[]).map(function(u){return'<option>'+u+'</option>';}).join('')+'</select></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" lang="en" id="e-d" class="fi" value="'+toDay()+'"></div></div>'
+    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام">عام</option>'+(DB.units||[]).map(function(u){return'<option>'+u+'</option>';}).join('')+'</select></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" id="e-d" class="fi" value="'+toDay()+'"></div></div>'
     +'<div class="form-group"><label class="form-label">الوصف</label><input id="e-ds" class="fi" placeholder="وصف المصروف"></div>'
     +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="e-am" class="fi" placeholder="0"></div>'
     +'<button class="btn btn-primary btn-full" onclick="savExp()">حفظ</button>';
@@ -2633,7 +2633,7 @@ function buildSaleForm(pre){
  document.getElementById('sale-title').textContent=pre?'تعديل إيراد':' إضافة إيراد';
   document.getElementById('sale-body').innerHTML=
     '<div class="form-group"><label class="form-label">الوصف</label><input id="sl-d" class="fi" placeholder="مثال: إيراد شهر مايو..." value="'+(pre?pre.desc:'')+'"></div>'
-    +'<div class="form-row"><div class="form-group"><label class="form-label">التاريخ</label><input type="date" lang="en" id="sl-dt" class="fi" value="'+(pre?pre.date:toDay())+'"></div>'
+    +'<div class="form-row"><div class="form-group"><label class="form-label">التاريخ</label><input type="date" id="sl-dt" class="fi" value="'+(pre?pre.date:toDay())+'"></div>'
     +'<div class="form-group"><label class="form-label">الوحدة</label><select id="sl-a" class="fi"><option value="عام">عام</option>'+(DB.units||[]).map(function(u){return'<option'+(pre&&pre.apt===u?' selected':'')+'>'+u+'</option>';}).join('')+'</select></div></div>'
     +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="sl-am" class="fi" placeholder="0" value="'+(pre?pre.amount:'')+'"></div>'
     +'<div class="form-group"><label class="form-label">ملاحظات</label><input id="sl-n" class="fi" placeholder="اختياري" value="'+(pre?pre.notes||'':'')+'"></div>'
@@ -3063,7 +3063,7 @@ function openEditExp(id){
   document.getElementById('sheet-expense').querySelector('.sheet-title').textContent='تعديل مصروف';
   document.getElementById('exp-body').innerHTML=
     '<div class="form-group"><label class="form-label">النوع</label><div class="exp-grid">'+EXP_TYPES.map(function(x,i){return'<div class="exp-opt'+(x.t===e.type?' sel':'')+'" onclick="sExp('+i+',this)">'+x.i+' '+x.t+'</div>';}).join('')+'</div><input type="hidden" id="e-t" value="'+(e.type||'صيانة')+'"></div>'
-    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام"'+(e.apt==='عام'?' selected':'')+'>عام</option>'+(DB.units||[]).map(function(u){return'<option'+(u===e.apt?' selected':'')+'>'+u+'</option>';}).join('')+'</select></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" lang="en" id="e-d" class="fi" value="'+(e.date||toDay())+'"></div></div>'
+    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام"'+(e.apt==='عام'?' selected':'')+'>عام</option>'+(DB.units||[]).map(function(u){return'<option'+(u===e.apt?' selected':'')+'>'+u+'</option>';}).join('')+'</select></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" id="e-d" class="fi" value="'+(e.date||toDay())+'"></div></div>'
     +'<div class="form-group"><label class="form-label">الوصف</label><input id="e-ds" class="fi" value="'+(e.desc||'')+'"></div>'
     +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="e-am" class="fi" value="'+(e.amount||'')+'"></div>'
     +'<button class="btn btn-primary btn-full" onclick="savExpEdit()">حفظ التعديل</button>';
@@ -3783,16 +3783,24 @@ function _fmtCalDate(d){
   return parseInt(p[2])+' '+_CAL_M[parseInt(p[1])-1]+' '+p[0];
 }
 
-function openCal(){
-  var hid = document.getElementById('mo-due');
+// Active calendar field tracking
+var _calActiveField = 'mo-due';
+var _calActiveBtnId = 'mo-cal-btn';
+
+function calOpenField(fieldId){
+  _calActiveField = fieldId;
+  _calActiveBtnId = fieldId + '-btn';
+  var hid = document.getElementById(fieldId);
   var val = hid ? hid.value : '';
   var t = new Date();
   _CAL.yr = val ? +val.slice(0,4) : t.getFullYear();
   _CAL.mo = val ? +val.slice(5,7) : t.getMonth()+1;
   _renderCal();
   var ov = document.getElementById('cal-ov');
-  if(ov){ ov.style.display='flex'; }
+  if(ov) ov.style.display='flex';
 }
+
+function openCal(){ calOpenField('mo-due'); }
 
 function closeCal(){
   var ov = document.getElementById('cal-ov');
@@ -3809,7 +3817,7 @@ function _calNav(d){
 function _renderCal(){
   var inner = document.getElementById('cal-inner');
   if(!inner) return;
-  var hid = document.getElementById('mo-due');
+  var hid = document.getElementById(_calActiveField);
   var sel = hid ? hid.value : '';
   var t=new Date(); var tY=t.getFullYear(),tM=t.getMonth()+1,tD=t.getDate();
   var first=new Date(_CAL.yr,_CAL.mo-1,1).getDay();
@@ -3837,19 +3845,19 @@ function _renderCal(){
 }
 
 function _calPick(ds){
-  var hid=document.getElementById('mo-due');
-  var btn=document.getElementById('mo-cal-btn');
+  var hid=document.getElementById(_calActiveField);
+  var btn=document.getElementById(_calActiveBtnId);
   if(hid) hid.value=ds;
   if(btn){ btn.textContent=_fmtCalDate(ds); btn.style.color='var(--text)'; btn.style.borderColor='var(--accent)'; }
-  _renderCal(); // refresh to show selected
+  _renderCal();
   setTimeout(closeCal, 200);
 }
 
 function _calClear(){
-  var hid=document.getElementById('mo-due');
-  var btn=document.getElementById('mo-cal-btn');
+  var hid=document.getElementById(_calActiveField);
+  var btn=document.getElementById(_calActiveBtnId);
   if(hid) hid.value='';
-  if(btn){ btn.textContent='اختر تاريخ الاستحقاق'; btn.style.color='var(--text3)'; btn.style.borderColor='var(--border)'; }
+  if(btn){ btn.textContent='اختر تاريخ'; btn.style.color='var(--text3)'; btn.style.borderColor='var(--border)'; }
   closeCal();
 }
 // ═══ END CALENDAR ═══
@@ -3908,7 +3916,7 @@ function buildFoundationForm(pre){
   var id=pre?pre.id:null;
   document.getElementById('fo-body').innerHTML=
     '<div class="form-group"><label class="form-label">اسم التكلفة</label><input id="fo-n" class="fi" placeholder="مثال: فرش، أجهزة" value="'+(pre?pre.name:'')+'"></div>'
-    +'<div class="form-row"><div class="form-group"><label class="form-label">التاريخ</label><input type="date" lang="en" id="fo-d" class="fi" value="'+(pre?pre.date:toDay())+'"></div>'
+    +'<div class="form-row"><div class="form-group"><label class="form-label">التاريخ</label><input type="date" id="fo-d" class="fi" value="'+(pre?pre.date:toDay())+'"></div>'
     +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="fo-am" class="fi" placeholder="0" value="'+(pre?pre.amount:'')+'"></div></div>'
     +'<button class="btn btn-primary btn-full" onclick="saveFo(\''+id+'\')">'+(pre?'حفظ التعديل':'حفظ')+'</button>';
 }
@@ -3960,7 +3968,12 @@ function buildEmployeeForm(pre){
     +'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
       +'<div class="form-group"><label class="form-label">رقم الجوال</label><input type="tel" id="em-ph" class="fi" placeholder="05xxxxxxxx" value="'+(pre&&pre.phone?pre.phone:'')+'"></div>'
-      +'<div class="form-group"><label class="form-label">تاريخ التوظيف</label><input type="date" lang="en" id="em-hd" class="fi" value="'+(pre&&pre.hireDate?pre.hireDate:'')+'"></div>'
+      +'<div class="form-group"><label class="form-label">تاريخ التوظيف</label>'
+      +'<button type="button" id="em-hd-btn" onclick="calOpenField(\'em-hd\')" class="fi" style="text-align:right;cursor:pointer;font-size:13px;background:var(--bg3);border:1.5px solid var(--border);">'
+      +(pre&&pre.hireDate?_fmtCalDate(pre.hireDate):'اختر تاريخ')
+      +'</button>'
+      +'<input type="hidden" id="em-hd" value="'+(pre&&pre.hireDate?pre.hireDate:'')+'">'  
+      +'</div>'
     +'</div>'
 
     // ── دخول التطبيق ──
@@ -4091,7 +4104,7 @@ function saveEm(){
   var role     = document.getElementById('em-r')?.value?.trim() || 'موظف';
   var salary   = parseFloat(document.getElementById('em-s')?.value) || 0;
   var phone    = document.getElementById('em-ph')?.value?.trim() || '';
-  var hireDate = document.getElementById('em-hd')?.value?.trim() || '';
+  var hireDate = (document.getElementById('em-hd')||{}).value||'';
   if(!name){ toast('أدخل اسم الموظف','error'); return; }
 
   if(!DB.employees) DB.employees = [];
