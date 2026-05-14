@@ -74,7 +74,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    padding-bottom: calc(120px + env(safe-area-inset-bottom, 16px));
+    padding-bottom: calc(140px + env(safe-area-inset-bottom, 16px));
   }
 }
 /* Desktop layout */
@@ -179,7 +179,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
   #nav .nav-item { font-size: 14px !important; }
   #nav .nav-label { font-size: 14px !important; }
   #employees-list { display:flex; flex-direction:column; gap:8px; }
-  #units-list { display:flex !important; flex-direction:column !important; gap:8px; width:100%; }
+  #units-list { display:block; width:100%; }
   .sheet-overlay {
     align-items: center !important;
     justify-content: center !important;
@@ -251,7 +251,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 
 /* PAGES */
 .page{display:none;animation:fadeUp .3s ease;}
-.page.active{display:block;padding-bottom:calc(90px + env(safe-area-inset-bottom, 0px));}
+.page.active{display:block;padding-bottom:calc(140px + env(safe-area-inset-bottom, 0px));}
 
 /* NAV */
 .nav-item.active{color:var(--accent);}
@@ -3654,16 +3654,12 @@ function renderSettings(){
       var type = (DB.unitTypes&&DB.unitTypes[u]) || '';
       var typeIcons = {شقة:'🏠',استديو:'🛋',غرفة:'🚪',فيلا:'🏡',شاليه:'🌴'};
       var icon = typeIcons[type] || '🏠';
-      var today = toDay();
-      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;width:100%;box-sizing:border-box;">'
+      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">'
         +'<div style="width:36px;height:36px;border-radius:9px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">'+icon+'</div>'
         +'<div style="flex:1;min-width:0;">'
           +'<div style="font-size:13px;font-weight:800;color:var(--text);">'+u+'</div>'
-          +'<div style="font-size:11px;color:var(--text3);margin-top:1px;display:flex;align-items:center;gap:6px;">'
-            +(type?'<span>'+type+'</span>':'')
-            +'<span style="display:inline-flex;align-items:center;gap:3px;">'
-            +'</span>'
-          +'</div>'
+          +(type?'<div style="font-size:11px;color:var(--text3);margin-top:1px;">'+type+'</div>':'')
+        +'</div>'
         +'<div style="display:flex;gap:6px;flex-shrink:0;">'
           +'<button class="btn btn-xs btn-success" onclick="openEditU(this.dataset.u)" data-u="'+u+'">تعديل</button>'
           +'<button class="btn btn-xs btn-danger" onclick="delU(this.dataset.u)" data-u="'+u+'">حذف</button>'
@@ -3712,13 +3708,13 @@ function buildMonthlyForm(pre){
       +'<div class="form-group" style="margin:0"><label class="form-label">المبلغ (ر.س) <span style="color:var(--red)">*</span></label>'
         +'<input id="mo-am" class="fi" placeholder="0" value="'+(pre?pre.amount:'')+'"></div>'
       +'<div class="form-group" style="margin:0"><label class="form-label">تاريخ الاستحقاق</label>'
-        +'<input type="date" id="mo-due" class="fi"></div>'
+        +'<input type="text" id="mo-due" class="fi" placeholder="2026-06-01" style="direction:ltr;text-align:right;" autocomplete="off" inputmode="numeric"></div>'
     +'</div>'
     +'<div class="form-group"><label class="form-label">الوحدة / الفئة</label>'
       +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'+uHtml+'</div>'
     +'</div>'
     +'<button class="btn btn-primary btn-full" onclick="saveMo(this.dataset.id)" data-id="'+id+'">'+(pre?'حفظ التعديل':'إضافة')+'</button>';
-  if(pre&&pre.dueDate){setTimeout(function(){var el=document.getElementById('mo-due');if(el)el.value=pre.dueDate;},100);}
+  if(pre&&pre.dueDate){var el=document.getElementById('mo-due');if(el)el.value=pre.dueDate;}
 }
 function openEditMo(id){var m=(DB.monthly||[]).find(function(x){return x.id===id;});if(m){buildMonthlyForm(m);document.getElementById('sheet-monthly').classList.add('open');}}
 function selExUnit(el){
@@ -3752,7 +3748,7 @@ function selMoUnit(el){
 function saveMo(editId){
   var name   = document.getElementById('mo-n')?.value?.trim();
   var amount = parseFloat(document.getElementById('mo-am')?.value)||0;
-  var dueDate=(document.getElementById('mo-due')||{}).value||'';
+  var duVal=(document.getElementById('mo-due')||{}).value||''; var dueDate=/^\d{4}-\d{2}-\d{2}$/.test(duVal.trim())?duVal.trim():'';
   if(!name||!amount){toast('أدخل الاسم والمبلغ','error');return;}
   var selBtns=document.querySelectorAll('.mo-unit-btn.sel');
   var apt=selBtns.length===0?'عام':selBtns.length===1?selBtns[0].dataset.t:Array.from(selBtns).map(function(b){return b.dataset.t;}).join(',');
@@ -4515,7 +4511,7 @@ async function loadFromSupabase() {
       DB.unitTypes = {};
       units.forEach(function(u){if(u.type) DB.unitTypes[u.name]=u.type;});
     }
-    if(monthly.length) DB.monthly = monthly.map(function(m){return {id:m.id,name:m.name,amount:m.amount,apt:m.apt};});
+    if(monthly.length) DB.monthly = monthly.map(function(m){var loc=(DB.monthly||[]).find(function(x){return x.id===m.id;});return {id:m.id,name:m.name,amount:m.amount,apt:m.apt,dueDate:m.due_date||(loc?loc.dueDate:'')};});
     if(expenses.length) DB.expenses = expenses.map(function(e){return {id:e.id,type:e.type,amount:e.amount,date:e.date,notes:e.notes,apt:e.apt};});
     if(sales.length) DB.sales = sales.map(function(s){return {id:s.id,description:s.description,amount:s.amount,date:s.date,apt:s.apt};});
     
@@ -4710,7 +4706,7 @@ async function loadFromSupabaseAuto(){
       changed = true;
     }
     if(monthly&&monthly.length){
-      DB.monthly=monthly.map(function(m){return{id:m.id,name:m.name,amount:m.amount,apt:m.apt||''};});
+      DB.monthly=monthly.map(function(m){var loc=(DB.monthly||[]).find(function(x){return x.id===m.id;});return{id:m.id,name:m.name,amount:m.amount,apt:m.apt||'',dueDate:m.due_date||(loc?loc.dueDate:'')};});
       changed=true;
     }
     if(foundation&&foundation.length){
@@ -4748,7 +4744,7 @@ async function loadFromSupabaseAuto(){
     
     if(changed){
       try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-      renderAll();
+      if(!document.querySelector('.sheet-overlay.open')) renderAll();
     }
     showSyncStatus('✅ متزامن', true);
   }catch(e){
@@ -4953,11 +4949,11 @@ function handleRealtimeChange(table, payload){
       } else if(evt === 'INSERT'){
         if(rec && rec.id){
           var exists = (DB.monthly||[]).find(function(m){return m.id===rec.id;});
-          if(!exists) DB.monthly = (DB.monthly||[]).concat([{id:rec.id,name:rec.name,amount:rec.amount,apt:rec.apt||''}]);
+          if(!exists) DB.monthly = (DB.monthly||[]).concat([{id:rec.id,name:rec.name,amount:rec.amount,apt:rec.apt||'',dueDate:rec.due_date||''}]);
         }
       } else if(evt === 'UPDATE'){
         if(rec && rec.id){
-          DB.monthly = (DB.monthly||[]).map(function(m){return m.id===rec.id?Object.assign({},m,{name:rec.name,amount:rec.amount,apt:rec.apt||''}):m;});
+          DB.monthly = (DB.monthly||[]).map(function(m){return m.id===rec.id?Object.assign({},m,{name:rec.name,amount:rec.amount,apt:rec.apt||'',dueDate:rec.due_date||m.dueDate||''}):m;});
         }
       }
     } else if(table === 'foundation_costs'){
