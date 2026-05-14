@@ -73,7 +73,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: auto;
     padding-bottom: calc(160px + env(safe-area-inset-bottom, 16px));
   }
 }
@@ -448,7 +448,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
   z-index: 9100;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: auto;
   background: var(--bg);
   box-sizing: border-box;
 }
@@ -1158,7 +1158,7 @@ document.addEventListener('DOMContentLoaded', function(){
     </div>
 
     <!-- SETTINGS -->
-    <div id="page-settings" class="page">
+    <div id="page-settings" class="page" style="padding-bottom:180px;">
       <div class="topbar">
         <div>
           <div class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
