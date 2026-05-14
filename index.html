@@ -1029,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <div id="page-calbooking" class="page">
       <div class="topbar">
         <div>
-          <div class="biz-label" class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
+          <div class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
           <div class="page-title" id="calbooking-title">التقويم</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
@@ -1060,7 +1060,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <div id="page-revenue" class="page">
       <div class="topbar">
         <div>
-          <div class="biz-label" class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
+          <div class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
           <div class="page-title">الإيرادات</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
@@ -1818,7 +1818,7 @@ function renderOwnerRevenue(){
       +'</div>'
     +'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">'
-      +['basic','pro','enterprise'].map(function(p){
+      +['free','pro','all'].map(function(p){
         var count = approved.filter(function(r){return r.pkg===p;}).length;
         var pkg = PKG_PRICES[p];
         return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;">'
@@ -1851,7 +1851,7 @@ function renderOwnerSettings(){
     +'</div>'
     +'<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;">'
       +'<div style="font-size:13px;font-weight:800;margin-bottom:14px;">💰 أسعار الباقات</div>'
-      +['basic','pro','enterprise'].map(function(p){
+      +['free','pro','all'].map(function(p){
         var pkg = PKG_PRICES[p];
         return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">'
           +'<div style="font-size:13px;font-weight:700;">'+pkg.label+'</div>'
@@ -2288,7 +2288,7 @@ function buildBookingForm(pre){
     <div class="form-group"><label class="form-label">تاريخ الدخول</label><input type="date" lang="en" id="b-ci" class="fi" value="${f.checkin}" onchange="autoCheckout();chkC();calcN()"></div>
     <div class="form-group"><label class="form-label">تاريخ الخروج</label><input type="date" lang="en" id="b-co" class="fi" value="${f.checkout}" onchange="chkC();calcN()"></div>
     <div id="cfb" class="conflict-box">️ هذه الوحدة محجوزة في هذه الفترة!</div>
-    <div class="form-group"><label class="form-label">السعر / ليلة (ر.س)</label><input type="number" id="b-p" class="fi" placeholder="0" value="${f.price||''}" oninput="calcN()"></div>
+    <div class="form-group"><label class="form-label">السعر / ليلة (ر.س)</label><input id="b-p" class="fi" placeholder="0" value="${f.price||''}" oninput="calcN()"></div>
     <div id="b-calc" class="calc-box"></div>
     <div class="form-group"><label class="form-label">ملاحظات</label><input id="b-n" class="fi" placeholder="أي ملاحظات..." value="${f.notes||''}"></div>
     <button class="btn btn-primary btn-full" onclick="savB()">${pre?'حفظ التعديل':'حفظ الحجز'}</button>`;
@@ -2391,7 +2391,7 @@ function openPE(id){
     +'<div style="font-size:11px;color:var(--text3);margin-top:3px;">'+b.nights+' ليلة</div>'
     +'</div>'
     +'<div class="form-group"><label class="form-label">السعر / ليلة (ر.س)</label>'
-    +'<input type="number" id="pr" class="fi" placeholder="0" value="'+(b.price||'')+'" oninput="pCalc('+b.nights+')"></div>'
+    +'<input id="pr" class="fi" placeholder="0" value="'+(b.price||'')+'" oninput="pCalc('+b.nights+')"></div>'
     +'<div id="pr-c" class="calc-box" style="display:none;"></div>'
     +'<button class="btn btn-primary btn-full" onclick="savP()">حفظ السعر</button>';
   document.getElementById('sheet-booking').classList.add('open');
@@ -2610,7 +2610,7 @@ function buildSaleForm(pre){
     '<div class="form-group"><label class="form-label">الوصف</label><input id="sl-d" class="fi" placeholder="مثال: إيراد شهر مايو..." value="'+(pre?pre.desc:'')+'"></div>'
     +'<div class="form-row"><div class="form-group"><label class="form-label">التاريخ</label><input type="date" lang="en" id="sl-dt" class="fi" value="'+(pre?pre.date:toDay())+'"></div>'
     +'<div class="form-group"><label class="form-label">الوحدة</label><select id="sl-a" class="fi"><option value="عام">عام</option>'+(DB.units||[]).map(function(u){return'<option'+(pre&&pre.apt===u?' selected':'')+'>'+u+'</option>';}).join('')+'</select></div></div>'
-    +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input type="number" id="sl-am" class="fi" placeholder="0" value="'+(pre?pre.amount:'')+'"></div>'
+    +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="sl-am" class="fi" placeholder="0" value="'+(pre?pre.amount:'')+'"></div>'
     +'<div class="form-group"><label class="form-label">ملاحظات</label><input id="sl-n" class="fi" placeholder="اختياري" value="'+(pre?pre.notes||'':'')+'"></div>'
     +'<button class="btn btn-primary btn-full" onclick="saveSale()">'+(pre?'حفظ التعديل':'حفظ')+'</button>';
 }
@@ -3677,27 +3677,40 @@ function renderSettings(){
 // ══ MONTHLY/FOUNDATION/EMPLOYEE/UNIT FORMS ══
 function buildMonthlyForm(pre){
   var id = pre ? pre.id : null;
+  var unitsHtml = '<div class="exp-opt'+(!pre||(pre.apt||'عام')==='عام'?' sel':'')+' mo-unit-btn" data-t="عام" onclick="selMoUnit(this)">عام (كل)</div>';
+  (DB.units||[]).forEach(function(u){
+    var sel = pre&&pre.apt&&pre.apt.split(',').indexOf(u)>=0?' sel':'';
+    unitsHtml += '<div class="exp-opt'+sel+' mo-unit-btn" data-t="'+u+'" onclick="selMoUnit(this)">'+u+'</div>';
+  });
+
   document.getElementById('mo-body').innerHTML =
-    '<div class="form-group"><label class="form-label">اسم التكلفة <span style="color:var(--red);">*</span></label>'
-    +'<input id="mo-n" class="fi" placeholder="مثال: إيجار، كهرباء، نظافة" value="'+(pre?pre.name:'')+'"></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
-      +'<div class="form-group"><label class="form-label">المبلغ الشهري (ر.س) <span style="color:var(--red);">*</span></label>'
+    '<div class="form-group">'
+      +'<label class="form-label">اسم التكلفة <span style="color:var(--red)">*</span></label>'
+      +'<input id="mo-n" class="fi" placeholder="مثال: إيجار، كهرباء" value="'+(pre?pre.name:'')+'"></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">'
+      +'<div class="form-group" style="margin:0">'
+        +'<label class="form-label">المبلغ الشهري (ر.س) <span style="color:var(--red)">*</span></label>'
         +'<input id="mo-am" class="fi" placeholder="0" value="'+(pre?pre.amount:'')+'"></div>'
-      +'<div class="form-group"><label class="form-label">تاريخ الاستحقاق <span style="font-size:10px;color:var(--text3);">(أول دفعة)</span></label>'
-        +'<input type="date" lang="en" id="mo-due" class="fi" style="font-size:13px;"></div>'
+      +'<div class="form-group" style="margin:0">'
+        +'<label class="form-label">تاريخ الاستحقاق</label>'
+        +'<input type="date" id="mo-due" class="fi" style="font-size:13px;direction:ltr;"></div>'
     +'</div>'
-    +'<div class="form-group"><label class="form-label">الوحدة / الفئة</label>'
-    +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'
-    +'<div class="exp-opt'+(!pre||(pre.apt||'عام')==='عام'?' sel':'')+' mo-unit-btn" data-t="عام" onclick="selMoUnit(this)">عام (كل)</div>'
-    +(DB.units||[]).map(function(u){
-      var apts = pre&&pre.apt ? pre.apt.split(',') : [];
-      return '<div class="exp-opt'+(apts.includes(u)?' sel':'')+' mo-unit-btn" data-t="'+u+'" onclick="selMoUnit(this)">'+u+'</div>';
-    }).join('')
-    +'</div></div>'
-    +'<button class="btn btn-primary btn-full" onclick="saveMo(\''+id+'\')">'+(pre?'حفظ التعديل':'إضافة')+'</button>';
-  // Set date value via JS for cross-browser reliability
-  var dueEl = document.getElementById('mo-due');
-  if(dueEl && pre && pre.dueDate) dueEl.value = pre.dueDate;
+    +'<div class="form-group">'
+      +'<label class="form-label">الوحدة / الفئة</label>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'+unitsHtml+'</div>'
+    +'</div>'
+    +'<button class="btn btn-primary btn-full" onclick="saveMo(this.dataset.id)" data-id="'+id+'">'+(pre?'حفظ التعديل':'إضافة')+'</button>';
+
+  // Set date using valueAsDate - most reliable cross-browser/iOS method
+  if(pre && pre.dueDate && /^\d{4}-\d{2}-\d{2}$/.test(pre.dueDate)){
+    var el = document.getElementById('mo-due');
+    if(el){
+      try{
+        var parts = pre.dueDate.split('-');
+        el.valueAsDate = new Date(Date.UTC(+parts[0], +parts[1]-1, +parts[2]));
+      }catch(e){ el.value = pre.dueDate; }
+    }
+  }
 }
 function openEditMo(id){var m=(DB.monthly||[]).find(function(x){return x.id===id;});if(m){buildMonthlyForm(m);document.getElementById('sheet-monthly').classList.add('open');}}
 function selExUnit(el){
@@ -3730,7 +3743,20 @@ function selMoUnit(el){
 function saveMo(editId){
   var name   = document.getElementById('mo-n')?.value?.trim();
   var amount = parseFloat(document.getElementById('mo-am')?.value)||0;
-  var dueDate = document.getElementById('mo-due')?.value?.trim() || '';
+  // Read date reliably - valueAsDate always returns ISO format
+  var duEl = document.getElementById('mo-due');
+  var dueDate = '';
+  if(duEl){
+    if(duEl.valueAsDate){
+      // valueAsDate is always UTC ISO - format to YYYY-MM-DD
+      var vd = duEl.valueAsDate;
+      dueDate = vd.getUTCFullYear()+'-'
+        +String(vd.getUTCMonth()+1).padStart(2,'0')+'-'
+        +String(vd.getUTCDate()).padStart(2,'0');
+    } else if(duEl.value && /^\d{4}-\d{2}-\d{2}$/.test(duEl.value)){
+      dueDate = duEl.value;
+    }
+  }
   if(!name||!amount){toast('أدخل الاسم والمبلغ','error');return;}
   var selBtns=document.querySelectorAll('.mo-unit-btn.sel');
   var apt=selBtns.length===0?'عام':selBtns.length===1?selBtns[0].dataset.t:Array.from(selBtns).map(function(b){return b.dataset.t;}).join(',');
