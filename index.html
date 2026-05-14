@@ -47,10 +47,16 @@ input[type="tel"] {
 }
 input[type="date"] {
   direction: ltr;
-  text-align: right;
-  unicode-bidi: embed;
+  text-align: left;
   font-variant-numeric: lining-nums;
+  -webkit-locale: "en-US";
+  font-family: 'Segoe UI', Arial, sans-serif !important;
 }
+input[type="date"]::-webkit-datetime-edit { font-family: 'Segoe UI', Arial, sans-serif; }
+input[type="date"]::-webkit-datetime-edit-fields-wrapper { direction: ltr; }
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field { font-family: 'Segoe UI', Arial, sans-serif; }
 input,select,button,textarea{font-family:'Cairo',sans-serif;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
@@ -719,8 +725,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
   <!-- ── HEADER ── -->
   <div style="padding:0 16px 24px;">
-    <!-- زر الدخول - صف منفصل -->
-    <div style="display:flex;justify-content:flex-end;padding:16px 0 20px;">
+    <!-- زر رجوع + زر دخول -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0 20px;">
+      <button onclick="showLoginScreen()" style="display:flex;align-items:center;gap:5px;background:none;border:none;color:var(--text3);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;padding:0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>رجوع</button>
       <div style="display:flex;align-items:center;gap:8px;">
         <span style="font-size:12px;color:var(--text3);">لديك حساب؟</span>
         <button onclick="showLoginScreen()" style="background:var(--card);border:1px solid var(--border);color:var(--accent);font-size:12px;font-weight:800;padding:7px 16px;border-radius:10px;cursor:pointer;font-family:inherit;">دخول</button>
@@ -766,7 +773,7 @@ document.addEventListener('DOMContentLoaded', function(){
       <div id="pkg-free" onclick="selectPkg('free')" style="background:var(--card);border:2px solid var(--border);border-radius:16px;padding:16px;cursor:pointer;transition:all .2s;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:38px;height:38px;border-radius:10px;background:rgba(52,211,153,.1);display:flex;align-items:center;justify-content:center;font-size:19px;">🆓</div>
+            <div style="width:38px;height:38px;border-radius:10px;background:rgba(52,211,153,.1);display:flex;align-items:center;justify-content:center;font-size:19px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
             <div>
               <div style="font-size:15px;font-weight:800;color:var(--text);">ابدأ مجاناً</div>
               <div style="font-size:11px;color:var(--text3);">جرّب بدون أي التزام</div>
@@ -822,7 +829,7 @@ document.addEventListener('DOMContentLoaded', function(){
         <div style="position:absolute;top:-11px;right:14px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-size:10px;font-weight:900;padding:3px 12px;border-radius:20px;">💎 الشاملة</div>
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:38px;height:38px;border-radius:10px;background:rgba(124,58,237,.1);display:flex;align-items:center;justify-content:center;font-size:19px;">🏨</div>
+            <div style="width:38px;height:38px;border-radius:10px;background:rgba(124,58,237,.1);display:flex;align-items:center;justify-content:center;font-size:19px;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
             <div>
               <div style="font-size:15px;font-weight:800;color:var(--text);">الشاملة</div>
               <div style="font-size:11px;color:var(--text3);">بلا حدود</div>
@@ -866,7 +873,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:14px;">
       <div style="padding:16px 16px 4px;">
-        <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:2px;margin-bottom:14px;">👤 المعلومات الشخصية</div>
+        <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:2px;margin-bottom:14px;">المعلومات الشخصية</div>
         <div class="form-group"><label class="form-label">الاسم الكامل <span style="color:var(--red);">*</span></label><input id="j-name" class="fi" placeholder="محمد العمري"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           <div class="form-group"><label class="form-label">رقم الجوال <span style="color:var(--red);">*</span></label><input id="j-phone" class="fi" type="tel" placeholder="05xxxxxxxx"></div>
@@ -875,7 +882,7 @@ document.addEventListener('DOMContentLoaded', function(){
       </div>
       <div style="height:1px;background:var(--border);"></div>
       <div style="padding:16px 16px 4px;">
-        <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:2px;margin-bottom:14px;">🏢 بيانات النشاط</div>
+        <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:2px;margin-bottom:14px;">بيانات النشاط</div>
         <div class="form-group"><label class="form-label">اسم النشاط <span style="color:var(--red);">*</span></label><input id="j-biz" class="fi" placeholder="شقق الورود الفندقية"></div>
         <div class="form-group"><label class="form-label">نوع النشاط</label>
           <select id="j-biztype" class="fi" style="font-size:12px;">
@@ -890,11 +897,11 @@ document.addEventListener('DOMContentLoaded', function(){
       </div>
       <div style="height:1px;background:var(--border);"></div>
       <div style="padding:16px;">
-        <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:2px;margin-bottom:14px;">🔐 بيانات الحساب</div>
+        <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:2px;margin-bottom:14px;">بيانات الحساب</div>
         <div class="form-group"><label class="form-label">كلمة المرور <span style="color:var(--red);">*</span></label>
           <div style="position:relative;">
             <input id="j-pass" class="fi" type="password" placeholder="6 أحرف على الأقل" style="padding-left:44px;">
-            <button onclick="toggleJoinPass()" type="button" id="j-pass-eye" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;">👁</button>
+            <button onclick="toggleJoinPass()" type="button" id="j-pass-eye" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
         </div>
         <div class="form-group" style="margin-bottom:0;"><label class="form-label">تأكيد كلمة المرور <span style="color:var(--red);">*</span></label>
@@ -904,7 +911,7 @@ document.addEventListener('DOMContentLoaded', function(){
     </div>
 
     <div style="border:1px dashed rgba(200,169,110,.35);border-radius:12px;padding:13px 14px;margin-bottom:18px;display:flex;align-items:center;gap:10px;">
-      <span style="font-size:20px;flex-shrink:0;">💳</span>
+      <span style="font-size:20px;flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
       <div>
         <div style="font-size:12px;font-weight:800;color:var(--text);" id="payment-label">الدفع عند التفعيل</div>
         <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="payment-desc">سيتواصل فريق BODO خلال 24 ساعة لإتمام الدفع وتفعيل حسابك</div>
@@ -929,7 +936,7 @@ document.addEventListener('DOMContentLoaded', function(){
   <div id="owner-login" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 16px;">
     <div style="width:100%;max-width:360px;">
       <div style="text-align:center;margin-bottom:32px;">
-        <div style="font-size:32px;margin-bottom:8px;">🔐</div>
+        <div style="font-size:32px;margin-bottom:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
         <div style="font-family:Georgia,serif;font-size:28px;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,#c8a96e,#e8c98e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">BODO</div>
         <div style="font-size:11px;color:var(--text3);letter-spacing:3px;margin-top:4px;">OWNER PANEL</div>
       </div>
@@ -949,16 +956,16 @@ document.addEventListener('DOMContentLoaded', function(){
         <div style="font-size:10px;color:var(--text3);letter-spacing:2px;">OWNER PANEL</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <button onclick="toggleTheme()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:14px;width:32px;height:32px;border-radius:8px;cursor:pointer;" id="owner-theme-btn">🌙</button>
+        <button onclick="toggleTheme()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:14px;width:32px;height:32px;border-radius:8px;cursor:pointer;" id="owner-theme-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
         <button onclick="ownerLogout()" style="background:var(--bg3);border:1px solid var(--border);color:var(--red);font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;cursor:pointer;">خروج</button>
       </div>
     </div>
     <!-- Tabs -->
     <div style="display:flex;border-bottom:1px solid var(--border);background:var(--card);overflow-x:auto;">
       <button class="owner-tab active" id="otab-1" onclick="showOwnerTab(1)" style="padding:12px 18px;border:none;background:none;font-size:13px;font-weight:700;color:var(--accent);border-bottom:2px solid var(--accent);cursor:pointer;white-space:nowrap;font-family:inherit;">📋 الطلبات</button>
-      <button class="owner-tab" id="otab-2" onclick="showOwnerTab(2)" style="padding:12px 18px;border:none;background:none;font-size:13px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;font-family:inherit;">👥 المشتركون</button>
+      <button class="owner-tab" id="otab-2" onclick="showOwnerTab(2)" style="padding:12px 18px;border:none;background:none;font-size:13px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;font-family:inherit;">المشتركون</button>
       <button class="owner-tab" id="otab-3" onclick="showOwnerTab(3)" style="padding:12px 18px;border:none;background:none;font-size:13px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;font-family:inherit;">💰 الإيرادات</button>
-      <button class="owner-tab" id="otab-4" onclick="showOwnerTab(4)" style="padding:12px 18px;border:none;background:none;font-size:13px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;font-family:inherit;">⚙️ الإعدادات</button>
+      <button class="owner-tab" id="otab-4" onclick="showOwnerTab(4)" style="padding:12px 18px;border:none;background:none;font-size:13px;font-weight:700;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;font-family:inherit;">الإعدادات</button>
     </div>
     <!-- Content -->
     <div style="padding:16px;" id="owner-content"></div>
@@ -1166,7 +1173,7 @@ document.addEventListener('DOMContentLoaded', function(){
           <div class="page-title">الإعدادات</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <button onclick="toggleTheme()" id="theme-btn" style="background:var(--card2);border:1px solid var(--border);color:var(--text2);font-size:16px;width:34px;height:34px;border-radius:10px;cursor:pointer;">🌙</button>
+          <button onclick="toggleTheme()" id="theme-btn" style="background:var(--card2);border:1px solid var(--border);color:var(--text2);font-size:16px;width:34px;height:34px;border-radius:10px;cursor:pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
           
           <button class="notif-bell-btn" onclick="openNotifications()" style="position:relative;background:var(--bg3);border:1px solid var(--border);color:var(--text2);width:34px;height:34px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -1180,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', function(){
         <!-- ══ حسابي ══ -->
         <div style="margin-bottom:20px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-            <div style="width:28px;height:28px;border-radius:8px;background:rgba(200,169,110,.15);display:flex;align-items:center;justify-content:center;font-size:13px;">👤</div>
+            <div style="width:28px;height:28px;border-radius:8px;background:rgba(200,169,110,.15);display:flex;align-items:center;justify-content:center;font-size:13px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
             <div style="font-size:14px;font-weight:800;color:var(--text);">حسابي</div>
           </div>
 
@@ -1199,7 +1206,7 @@ document.addEventListener('DOMContentLoaded', function(){
         <div style="margin-bottom:20px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
             <div style="display:flex;align-items:center;gap:8px;">
-              <div style="width:28px;height:28px;border-radius:8px;background:rgba(37,99,235,.12);display:flex;align-items:center;justify-content:center;font-size:13px;">🏠</div>
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(37,99,235,.12);display:flex;align-items:center;justify-content:center;font-size:13px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
               <div style="font-size:14px;font-weight:800;color:var(--text);">الوحدات</div>
             </div>
             <button class="btn btn-primary btn-sm" onclick="openSheet('unit')">+ إضافة</button>
@@ -1211,7 +1218,7 @@ document.addEventListener('DOMContentLoaded', function(){
         <div style="margin-bottom:20px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
             <div style="display:flex;align-items:center;gap:8px;">
-              <div style="width:28px;height:28px;border-radius:8px;background:rgba(124,58,237,.12);display:flex;align-items:center;justify-content:center;font-size:13px;">👥</div>
+              <div style="width:28px;height:28px;border-radius:8px;background:rgba(124,58,237,.12);display:flex;align-items:center;justify-content:center;font-size:13px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
               <div style="font-size:14px;font-weight:800;color:var(--text);">الموظفون</div>
             </div>
             <button class="btn btn-primary btn-sm" onclick="openSheet('employee')">+ إضافة</button>
@@ -1250,6 +1257,17 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <div id="toast"></div>
 
+
+<!-- SVG Icon Templates -->
+<div id="icons" style="display:none;">
+  <span id="ic-home"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+  <span id="ic-tag"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span>
+  <span id="ic-user"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+  <span id="ic-phone"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></span>
+  <span id="ic-mail"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+  <span id="ic-lock"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+</div>
+
 <script>
 
 
@@ -1263,8 +1281,8 @@ const SRC={
   manual:{label:'يدوي',cls:'b-manual',bg:'rgba(251,191,36,.15)',color:'#fbbf24',icon:''}
 };
 const ST={confirmed:{label:'مؤكد',cls:'b-confirmed'},pending:{label:'معلق',cls:'b-pending'},cancelled:{label:'ملغي',cls:'b-cancelled'},blocked:{label:'موقوف',cls:'b-blocked'}};
-const EXP_TYPES=[{t:'صيانة',i:'🔧'},{t:'تنظيف',i:'🧹'},{t:'كهرباء',i:'⚡'},{t:'ماء',i:'💧'},{t:'لوازم',i:'🛒'},{t:'راتب',i:'👤'},{t:'أخرى',i:'📌'}];
-const EI={صيانة:'🔧',تنظيف:'🧹',كهرباء:'⚡',ماء:'💧',لوازم:'🛒',راتب:'👤',أخرى:'📌'};
+const EXP_TYPES=[{t:'صيانة',i:'🔧'},{t:'تنظيف',i:'🧹'},{t:'كهرباء',i:'⚡'},{t:'ماء',i:'💧'},{t:'لوازم',i:'🛒'},{t:'راتب',i:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'},{t:'أخرى',i:'📌'}];
+const EI={صيانة:'🔧',تنظيف:'🧹',كهرباء:'⚡',ماء:'💧',لوازم:'🛒',راتب:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',أخرى:'📌'};
 const PERM_LABELS={calendars:'التقويم',bookings:'الحجوزات',revenue:'الإيرادات',expenses:'المصروفات',settings:'الإعدادات'};
 const PERMS_DEFAULT={calendars:true,bookings:true,revenue:false,expenses:false,settings:false};
 var ADMIN={username:'Kaled',password:'123123'};
@@ -1355,12 +1373,12 @@ function toggleTheme(){
     document.body.classList.remove('dark-mode');
     localStorage.setItem('kaya_theme','light');
     var btn=document.getElementById('theme-btn');
-    if(btn)btn.textContent='🌙';
+    if(btn)btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
   } else {
     document.body.classList.add('dark-mode');
     localStorage.setItem('kaya_theme','dark');
     var btn=document.getElementById('theme-btn');
-    if(btn)btn.textContent='☀️';
+    if(btn)btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
   }
 }
 function loadTheme(){
@@ -1368,9 +1386,9 @@ function loadTheme(){
   var btn=document.getElementById('theme-btn');
   if(t==='dark'){
     document.body.classList.add('dark-mode');
-    if(btn)btn.textContent='☀️';
+    if(btn)btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
   } else {
-    if(btn)btn.textContent='🌙';
+    if(btn)btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
   }
 }
 function toggleRemember(val){
@@ -1458,7 +1476,7 @@ function checkEmployeeLimit(){
 function showUpgradePrompt(type,current,limit){
   var sub = DB.subscriberInfo||{};
   showConfirm(
-    '⚠️ وصلت للحد الأقصى',
+    'وصلت للحد الأقصى',
     'باقة '+(sub.pkgLabel||'الحالية')+' تسمح بـ '+limit+' '+type+' فقط.\nلإضافة المزيد رقِّ باقتك.',
     function(){},
     {okText:'حسناً',okColor:'var(--accent)'}
@@ -1568,7 +1586,7 @@ function toggleJoinPass(){
   if(!el) return;
   var show = el.type === 'password';
   el.type = show ? 'text' : 'password';
-  if(eye) eye.textContent = show ? '🙈' : '👁';
+  if(eye) eye.innerHTML = show ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 }
 
 // ── Submit ──
@@ -2684,7 +2702,7 @@ function renderExpensesList(){
         +'<button class="btn btn-xs btn-success" onclick="openEditExp(this.dataset.id)" data-id="'+e.id+'">تعديل</button>'
         +'<button class="btn btn-xs btn-danger" onclick="delE(this.dataset.id)" data-id="'+e.id+'">حذف</button>'
       +'</div></div>';
-  }).join(''):'<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">لا توجد مصروفات فعلية</div></div>';
+  }).join(''):'<div class="empty"><div class="empty-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="empty-text">لا توجد مصروفات فعلية</div></div>';
 }
 
 // ══ NOTIFICATIONS SYSTEM ══
@@ -2712,7 +2730,7 @@ function getNotifications(){
     if(daysUntil <= 7){
       notes.push({
         id:'due_'+m.id, type:'due',
-        title: daysUntil<0?'🔴 متأخر: '+m.name : daysUntil===0?'💸 مستحق اليوم: '+m.name : '💸 مستحق خلال '+daysUntil+' أيام: '+m.name,
+        title: daysUntil<0?'متأخر: '+m.name : daysUntil===0?'مستحق اليوم: '+m.name : 'مستحق خلال '+daysUntil+' أيام: '+m.name,
         body: fmtM(m.amount)+' ر.س · '+fmtDate(nextDueStr),
         amount:m.amount, monthlyId:m.id, monthlyName:m.name,
         urgent: daysUntil<=0
@@ -2727,7 +2745,7 @@ function getNotifications(){
     if(daysLeft<=7){
       notes.push({
         id:'sub_expiry', type:'subscription',
-        title: daysLeft<=0?'🔴 انتهى اشتراكك':'⚠️ الاشتراك ينتهي خلال '+daysLeft+' أيام',
+        title: daysLeft<=0?'انتهى اشتراكك':'الاشتراك ينتهي خلال '+daysLeft+' أيام',
         body: 'باقة '+(sub.pkgLabel||'')+(daysLeft>0?' — جدّد الآن':''),
         urgent: daysLeft<=0
       });
@@ -2851,7 +2869,7 @@ function openNotifications(){
 
   box.innerHTML =
     '<div style="padding:16px 16px 0;display:flex;justify-content:space-between;align-items:center;">'
-      +'<div style="font-size:16px;font-weight:900;">🔔 التنبيهات</div>'
+      +'<div style="font-size:16px;font-weight:900;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> التنبيهات</div>'
       +'<div style="display:flex;gap:8px;align-items:center;">'
         +(unread.length?'<button onclick="_markAllRead();openNotifications();" style="font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;">قراءة الكل</button>':'')
         +'<button onclick="document.getElementById(\'notif-overlay\').style.display=\'none\'" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;">✕</button>'
@@ -2908,13 +2926,13 @@ function renderFixedCosts(){
   var mcEl=document.getElementById('monthly-list-costs');
   if(mcEl){
     mcEl.innerHTML=(DB.monthly||[]).length?(DB.monthly||[]).map(function(m){
-      return row(rowHd('<div><div style="font-weight:700;font-size:13px;">'+m.name+'</div><div style="font-size:11px;color:var(--text3);">'+(m.apt||'عام')+' · شهري</div></div>','<div style="font-weight:900;color:var(--yellow);">'+fmtM(m.amount)+' ر.س</div>')+rowActs(editBtn('openEditMo',m.id)+delBtn('delMo',m.id)));
+      var dueStr=m.dueDate?'<span style="color:var(--accent);font-size:10px;font-weight:700;margin-right:4px;">📅 '+fmtDate(m.dueDate)+'</span>':'';return row(rowHd('<div><div style="font-weight:700;font-size:13px;">'+m.name+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">'+(m.apt||'عام')+' · شهري '+dueStr+'</div></div>','<div style="font-weight:900;color:var(--yellow);">'+fmtM(m.amount)+' ر.س</div>')+rowActs(editBtn('openEditMo',m.id)+delBtn('delMo',m.id)));
     }).join(''):'<div class="empty" style="padding:20px;"><div class="empty-text">لا توجد تكاليف شهرية — اضغط "+ تكلفة شهرية"</div></div>';
   }
   var emEl=document.getElementById('employees-costs-list');
   if(emEl){
     emEl.innerHTML=(DB.employees||[]).length?(DB.employees||[]).map(function(e){
-      return row(rowHd('<div style="display:flex;align-items:center;gap:10px;"><div style="width:40px;height:40px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div><div><div style="font-weight:700;font-size:13px;">'+e.name+'</div><div style="font-size:11px;color:var(--text3);">'+e.role+'</div></div></div>','<div style="font-weight:900;color:var(--accent);">'+fmtM(e.salary)+' ر.س/شهر</div>'));
+      return row(rowHd('<div style="display:flex;align-items:center;gap:10px;"><div style="width:40px;height:40px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div><div style="font-weight:700;font-size:13px;">'+e.name+'</div><div style="font-size:11px;color:var(--text3);">'+e.role+'</div></div></div>','<div style="font-weight:900;color:var(--accent);">'+fmtM(e.salary)+' ر.س/شهر</div>'));
     }).join(''):'<div class="empty" style="padding:20px;"><div class="empty-text">لا يوجد موظفون</div></div>';
   }
 }
@@ -2990,7 +3008,7 @@ function renderCostAnalysis(){
       +card('var(--purple)','رأس المال التأسيسي',fmtM(foT)+' ر.س','إجمالي')
       +card(netProfit>=0?'var(--green)':'var(--red)','صافي الربح',fmtM(netProfit)+' ر.س',margin+'% هامش')
     +'</div>'
-    +section('📊 ملخص التكاليف',
+    +section('ملخص التكاليف',
       row2('إجمالي الإيرادات',fmtM(rev)+' ر.س','var(--accent)')
       +row2('التكاليف الثابتة الشهرية',fmtM(totalFixed)+' ر.س','var(--red)')
       +row2('المصروفات المتغيرة الفعلية',fmtM(expT)+' ر.س','var(--yellow)')
@@ -3000,7 +3018,7 @@ function renderCostAnalysis(){
         +'<span style="font-size:15px;font-weight:900;color:'+(netProfit>=0?'var(--green)':'var(--red)')+';">'+(netProfit>=0?'+ ':'')+fmtM(netProfit)+' ر.س</span>'
       +'</div>'
     )
-    +section('🔍 توزيع المصروفات المتغيرة', expBreakdown);
+    +section('توزيع المصروفات المتغيرة', expBreakdown);
 }
 
 // ══ EXPENSES ══
@@ -3308,6 +3326,14 @@ function showAccTab(n){
   if(n===2) renderSecurityFields();
 }
 
+
+
+
+function _ic(name){
+  var el = document.getElementById('ic-'+name);
+  return el ? el.innerHTML : '';
+}
+
 function _profileField(id, label, value, icon, opts){
   var type     = (opts&&opts.type)     ? opts.type     : 'text';
   var readonly = (opts&&opts.readonly) ? true          : false;
@@ -3429,12 +3455,12 @@ function renderProfileFields(){
   var typeMap = {hotel:'🏨 فندق',apartments:'🏠 شقق مفروشة',chalets:'🌴 شاليهات',villas:'🏡 فيلل',mixed:'🏢 متنوع'};
 
   el.innerHTML =
-    _profileField('biz-name',   'اسم النشاط ⚡',     DB.bizName||'',                                           '🏢', {})
-   +_profileField('biz-type-ro','نوع النشاط',         typeMap[sub.bizType||DB.bizType]||(sub.bizType||DB.bizType||'—'), '🏷️', {readonly:true})
-   +_profileField('acc-name',   'الاسم الكامل',       sub.name||(currentUser&&currentUser.fullname)||'',         '👤', {})
-   +_profileField('acc-phone',  'رقم الجوال',         sub.phone||'',                                            '📱', {type:'tel'})
-   +_profileField('acc-email',  'البريد الإلكتروني',  sub.email||'',                                            '✉️', {type:'email'})
-   +_profileField('acc-pass',   'كلمة المرور',        '••••••••',                                               '🔐', {type:'password', isPass:true});
+    _profileField('biz-name',   'اسم النشاط',     DB.bizName||'',         _ic('home'), {})
+   +_profileField('biz-type-ro','نوع النشاط',         typeMap[sub.bizType||DB.bizType]||(sub.bizType||DB.bizType||'—'), _ic('tag'), {readonly:true})
+   +_profileField('acc-name',   'الاسم الكامل',       sub.name||(currentUser&&currentUser.fullname)||'',         _ic('user'), {})
+   +_profileField('acc-phone',  'رقم الجوال',         sub.phone||'',                                            _ic('phone'), {type:'tel'})
+   +_profileField('acc-email',  'البريد الإلكتروني',  sub.email||'',                                            _ic('mail'), {type:'email'})
+   +_profileField('acc-pass',   'كلمة المرور',        '••••••••',                                               _ic('lock'), {type:'password', isPass:true});
 }
 
 // Remove old tab functions (replaced by single view)
@@ -3478,7 +3504,7 @@ function renderSubscriberInfo(){
   if(!pkg){
     el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(200,169,110,.1),rgba(200,169,110,.04));border:1px solid var(--goldb);border-radius:14px;padding:16px;margin-bottom:4px;display:flex;align-items:center;gap:12px;">'
       +'<div style="flex:1;">'
-        +'<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:3px;">🎯 اشترك في BODO</div>'
+        +'<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:3px;">اشترك في BODO</div>'
         +'<div style="font-size:11px;color:var(--text3);">اختر الباقة المناسبة لنشاطك</div>'
       +'</div>'
       +'<button onclick="showJoinScreen()" class="btn btn-primary btn-sm">اشترك الآن</button>'
@@ -3518,9 +3544,9 @@ function renderSubscriberInfo(){
       +'<span style="font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;background:rgba(0,0,0,.06);color:'+st.c+';">'+st.l+'</span>'
     +'</div>'
     +'<div style="padding:6px 16px 14px;">'
-      +iRow("📅 تاريخ الاشتراك", sub.date||"—")
-      +(sub.expiryDate?iRow("⏳ ينتهي في", sub.expiryDate+(daysLeft&&daysLeft>0?" · "+daysLeft+" يوم":"")):"")
-      +(sub.bizType?iRow("🏢 نوع النشاط", typeMap[sub.bizType]||sub.bizType):"")
+      +iRow("تاريخ الاشتراك", sub.date||"—")
+      +(sub.expiryDate?iRow("تاريخ الانتهاء", sub.expiryDate+(daysLeft&&daysLeft>0?" · "+daysLeft+" يوم":"")):"")
+      +(sub.bizType?iRow("نوع النشاط", typeMap[sub.bizType]||sub.bizType):"")
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">'
         +'<div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center;">'
           +'<div style="font-size:18px;font-weight:900;color:var(--accent);">'+(pkg.units===999?"∞":pkg.units)+'</div>'
@@ -3542,7 +3568,7 @@ function renderAdminQuickActions(){
   if(!el) return;
   if(isAdmin()){ el.innerHTML=''; return; }
   var perms = currentUser?(currentUser.perms||{}):{};
-  var names = {calendars:"📅 التقويم",bookings:"🛏 الحجوزات",revenue:"💰 الإيرادات",expenses:"📊 التكاليف",settings:"⚙️ الإعدادات"};
+  var names = {calendars:"التقويم",bookings:"الحجوزات",revenue:"الإيرادات",expenses:"التكاليف",settings:"الإعدادات"};
   var allowed=Object.keys(names).filter(function(k){return perms[k];});
   var denied=Object.keys(names).filter(function(k){return !perms[k];});
   el.innerHTML='<div style="margin-top:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;">'
@@ -3852,12 +3878,12 @@ function saveMo(editId){
   if(editId&&editId!=='null'){
     DB.monthly=DB.monthly.map(function(m){if(m.id===editId){rec=Object.assign({},m,{name:name,apt:apt,amount:amount,dueDate:dueDate});return rec;}return m;});
     toast('✅ تم التعديل','success');
-    sbFetch('monthly_costs','PATCH',{name:name,apt:apt,amount:amount},'?id=eq.'+editId).catch(function(){});
+    sbFetch('monthly_costs','PATCH',{name:name,apt:apt,amount:amount,due_date:dueDate||null},'?id=eq.'+editId).catch(function(){});
   } else {
     rec={id:uid(),name:name,apt:apt,amount:amount,dueDate:dueDate};
     DB.monthly.push(rec);
     toast('✅ تم الحفظ','success');
-    sbFetch('monthly_costs','POST',{id:rec.id,name:rec.name,apt:rec.apt,amount:rec.amount},'?on_conflict=id').catch(function(){});
+    sbFetch('monthly_costs','POST',{id:rec.id,name:rec.name,apt:rec.apt,amount:rec.amount,due_date:rec.dueDate||null},'?on_conflict=id').catch(function(){});
   }
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('monthly');
@@ -3937,7 +3963,7 @@ function buildEmployeeForm(pre){
     +'<div style="background:var(--bg3);border-radius:14px;padding:14px;margin-bottom:16px;">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">'
       +'<div>'
-        +'<div style="font-size:13px;font-weight:800;color:var(--text);">🔐 دخول التطبيق</div>'
+        +'<div style="font-size:13px;font-weight:800;color:var(--text);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> دخول التطبيق</div>'
         +'<div style="font-size:11px;color:var(--text3);margin-top:2px;">امنح الموظف حساباً للدخول</div>'
       +'</div>'
       +'<div onclick="toggleEmpAccess()" id="emp-acc-toggle" style="width:48px;height:26px;background:'+(hasAccess?'rgba(200,169,110,.3)':'var(--border)')+';border-radius:13px;cursor:pointer;position:relative;transition:background .3s;flex-shrink:0;">'
@@ -3952,12 +3978,12 @@ function buildEmployeeForm(pre){
         +'<label class="form-label" style="margin-bottom:8px;">الدور في التطبيق</label>'
         +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
           +'<div id="role-btn-staff" onclick="selectEmpRole(\'staff\')" style="padding:10px;border-radius:10px;border:2px solid '+(acc&&acc.role==='admin'?'var(--border)':'var(--accent)')+';background:'+(acc&&acc.role==='admin'?'var(--card)':'rgba(200,169,110,.08)')+';cursor:pointer;text-align:center;">'
-            +'<div style="font-size:16px;margin-bottom:4px;">👤</div>'
+            +'<div style="font-size:16px;margin-bottom:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'
             +'<div style="font-size:12px;font-weight:800;color:var(--text);">موظف</div>'
             +'<div style="font-size:10px;color:var(--text3);">صلاحيات محددة</div>'
           +'</div>'
           +'<div id="role-btn-admin" onclick="selectEmpRole(\'admin\')" style="padding:10px;border-radius:10px;border:2px solid '+(acc&&acc.role==='admin'?'var(--accent)':'var(--border)')+';background:'+(acc&&acc.role==='admin'?'rgba(200,169,110,.08)':'var(--card)')+';cursor:pointer;text-align:center;">'
-            +'<div style="font-size:16px;margin-bottom:4px;">👑</div>'
+            +'<div style="margin-bottom:4px;display:flex;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>'
             +'<div style="font-size:12px;font-weight:800;color:var(--text);">مدير</div>'
             +'<div style="font-size:10px;color:var(--text3);">كل الصلاحيات</div>'
           +'</div>'
@@ -3974,11 +4000,11 @@ function buildEmployeeForm(pre){
       +'<div id="emp-perms-section" style="display:'+(acc&&acc.role==='admin'?'none':'block')+'">'
         +'<div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:10px;letter-spacing:.5px;">الصلاحيات</div>'
         +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;" id="emp-perms">'
-          +_permToggle('ep-cal','calendars','📅 التقويم',acc)
-          +_permToggle('ep-bk','bookings','🛏 الحجوزات',acc)
-          +_permToggle('ep-rv','revenue','💰 الإيرادات',acc)
-          +_permToggle('ep-ex','expenses','📊 التكاليف',acc)
-          +_permToggle('ep-st','settings','⚙️ الإعدادات',acc)
+          +_permToggle('ep-cal','calendars','<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> التقويم',acc)
+          +_permToggle('ep-bk','bookings','<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg> الحجوزات',acc)
+          +_permToggle('ep-rv','revenue','<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> الإيرادات',acc)
+          +_permToggle('ep-ex','expenses','<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> التكاليف',acc)
+          +_permToggle('ep-st','settings','<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> الإعدادات',acc)
         +'</div>'
       +'</div>'
     +'</div>'
@@ -4567,7 +4593,7 @@ async function syncToSupabase() {
     // Sync monthly costs
     for(var m of (DB.monthly||[])) {
       await sbFetch('monthly_costs', 'POST', {
-        id: m.id, name: m.name, amount: m.amount, apt: m.apt||''
+        id: m.id, name: m.name, amount: m.amount, apt: m.apt||'', due_date: m.dueDate||null
       }, '?on_conflict=id');
     }
     
@@ -4595,7 +4621,7 @@ async function loadFromSupabase() {
     var [bookings, units, monthly, expenses, sales] = await Promise.all([
       sbFetch('bookings', 'GET', null, '?select=*&order=checkin.desc'),
       sbFetch('units', 'GET', null, '?select=*'),
-      sbFetch('monthly_costs', 'GET', null, '?select=*'),
+      sbFetch('monthly_costs', 'GET', null, '?select=id,name,amount,apt,due_date'),
       sbFetch('expenses', 'GET', null, '?select=*&order=created_at.desc'),
       sbFetch('sales', 'GET', null, '?select=*&order=created_at.desc'),
     ]);
@@ -4606,7 +4632,7 @@ async function loadFromSupabase() {
       DB.unitTypes = {};
       units.forEach(function(u){if(u.type) DB.unitTypes[u.name]=u.type;});
     }
-    if(monthly.length) DB.monthly = monthly.map(function(m){var loc=(DB.monthly||[]).find(function(x){return x.id===m.id;});return {id:m.id,name:m.name,amount:m.amount,apt:m.apt,dueDate:m.due_date||(loc?loc.dueDate:'')};});
+    if(monthly.length) DB.monthly = monthly.map(function(m){var loc=(DB.monthly||[]).find(function(x){return x.id===m.id;});return {id:m.id,name:m.name,amount:m.amount,apt:m.apt||'',dueDate:m.due_date||m.dueDate||(loc?loc.dueDate:'')};});
     if(expenses.length) DB.expenses = expenses.map(function(e){return {id:e.id,type:e.type,amount:e.amount,date:e.date,notes:e.notes,apt:e.apt};});
     if(sales.length) DB.sales = sales.map(function(s){return {id:s.id,description:s.description,amount:s.amount,date:s.date,apt:s.apt};});
     
@@ -4777,7 +4803,7 @@ async function loadFromSupabaseAuto(){
     var [bookings, expenses, monthly, foundation, employees, units, sales, appCfg] = await Promise.all([
       sbFetch('bookings','GET',null,'?select=id,apt,guest,phone,source,checkin,checkout,nights,price,total,status,notes,code&order=checkin.desc'),
       sbFetch('expenses','GET',null,'?select=id,type,amount,date,notes,apt,desc'),
-      sbFetch('monthly_costs','GET',null,'?select=id,name,amount,apt'),
+      sbFetch('monthly_costs','GET',null,'?select=id,name,amount,apt,due_date'),
       sbFetch('foundation_costs','GET',null,'?select=id,name,amount,date'),
       sbFetch('employees','GET',null,'?select=id,name,role,salary'),
       sbFetch('units','GET',null,'?select=id,name,type'),
@@ -4801,7 +4827,7 @@ async function loadFromSupabaseAuto(){
       changed = true;
     }
     if(monthly&&monthly.length){
-      DB.monthly=monthly.map(function(m){var loc=(DB.monthly||[]).find(function(x){return x.id===m.id;});return{id:m.id,name:m.name,amount:m.amount,apt:m.apt||'',dueDate:m.due_date||(loc?loc.dueDate:'')};});
+      DB.monthly=monthly.map(function(m){var loc=(DB.monthly||[]).find(function(x){return x.id===m.id;});return{id:m.id,name:m.name,amount:m.amount,apt:m.apt||'',dueDate:m.due_date||m.dueDate||(loc?loc.dueDate:'')};});
       changed=true;
     }
     if(foundation&&foundation.length){
