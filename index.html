@@ -63,64 +63,99 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 
-/* APP LAYOUT */
-/* Mobile layout */
+/* ════════════════════════════════
+   APP LAYOUT — Responsive
+   ════════════════════════════════ */
+
+/* ── Base: html/body ── */
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* ── Mobile (iPhone/Android) ── */
 @media (max-width: 1023px) {
   #app {
-    height: 100dvh;
+    position: fixed;
+    inset: 0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    position: relative;
-    overscroll-behavior: none;
+    /* Safe area for notch devices */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
   }
   #content {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: auto;
-    padding-bottom: calc(160px + env(safe-area-inset-bottom, 16px));
+    /* Space for bottom nav + home indicator */
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 20px) + 60px);
   }
+  #nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    /* Account for home indicator on iPhone */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    z-index: 100;
+  }
+  /* Hide desktop-only elements on mobile */
+  .bodo-mobile-logo { display: block !important; }
+  .bodo-mobile-sub  { display: block !important; }
+  #nav-biz-label    { display: none !important; }
 }
-/* Desktop layout */
+
+/* ── Desktop (Laptop/Mac) ── */
 @media (min-width: 1024px) {
   #app {
     display: flex !important;
     flex-direction: row !important;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    position: fixed !important;
+    inset: 0 !important;
+    overflow: hidden !important;
   }
   #content {
     flex: 1 1 0 !important;
     min-width: 0 !important;
-    height: 100vh !important;
+    height: 100% !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    padding-bottom: 0 !important;
+    padding-bottom: 40px !important;
   }
   #nav {
     flex: 0 0 220px !important;
     width: 220px !important;
-    height: 100vh !important;
+    height: 100% !important;
     position: static !important;
     display: flex !important;
     flex-direction: column !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     border-right: 1px solid var(--border) !important;
-    border-top: none !important;
-    border-bottom: none !important;
-    border-left: none !important;
     background: var(--bg2) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
     padding: 0 0 24px !important;
     z-index: 10 !important;
   }
+  /* Hide mobile-only elements on desktop */
+  .bodo-mobile-logo { display: none !important; }
+  .bodo-mobile-sub  { display: none !important; }
+  #nav-biz-label    { display: block !important; }
+  /* No topbar padding needed on desktop - no notch */
+  .topbar { padding-top: 16px !important; }
+}
+
+/* ── Settings page extra bottom space ── */
+#page-settings.page.active { padding-bottom: 160px; }
   #nav::before {
     content: 'BODO';
     display: block;
@@ -270,7 +305,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 
 /* TOPBAR */
 .topbar{
-  padding-top: max(env(safe-area-inset-top), 14px);
+  padding-top: max(env(safe-area-inset-top, 0px), 12px);
   padding-right: 16px;
   padding-bottom: 10px;
   padding-left: 16px;
@@ -278,6 +313,10 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg);
 }
 .page-title{font-size:22px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 
@@ -2930,7 +2969,30 @@ function renderFixedCosts(){
   var mcEl=document.getElementById('monthly-list-costs');
   if(mcEl){
     mcEl.innerHTML=(DB.monthly||[]).length?(DB.monthly||[]).map(function(m){
-      var dueStr=m.dueDate?'<span style="color:var(--accent);font-size:10px;font-weight:700;margin-right:4px;">📅 '+fmtDate(m.dueDate)+'</span>':'';return row(rowHd('<div><div style="font-weight:700;font-size:13px;">'+m.name+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px;">'+(m.apt||'عام')+' · شهري '+dueStr+'</div></div>','<div style="font-weight:900;color:var(--yellow);">'+fmtM(m.amount)+' ر.س</div>')+rowActs(editBtn('openEditMo',m.id)+delBtn('delMo',m.id)));
+      var aptLabel = m.apt&&m.apt!=='عام' ? m.apt : 'عام';
+      var dueLabel = m.dueDate
+        ? '<div style="display:flex;align-items:center;gap:4px;margin-top:4px;">'
+          +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+          +'<span style="font-size:10px;color:var(--accent);font-weight:700;">'+fmtDate(m.dueDate)+'</span>'
+          +'</div>'
+        : '';
+      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">'
+        +'<div style="flex:1;min-width:0;">'
+          +'<div style="font-size:13px;font-weight:800;color:var(--text);">'+m.name+'</div>'
+          +'<div style="display:flex;align-items:center;gap:6px;margin-top:3px;">'
+            +'<span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:1px 7px;border-radius:20px;">'+aptLabel+'</span>'
+          +'</div>'
+          +dueLabel
+        +'</div>'
+        +'<div style="text-align:left;flex-shrink:0;">'
+          +'<div style="font-size:14px;font-weight:900;color:var(--accent);">'+fmtM(m.amount)+'</div>'
+          +'<div style="font-size:10px;color:var(--text3);text-align:center;">ر.س</div>'
+        +'</div>'
+        +'<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">'
+          +'<button class="btn btn-xs btn-success" onclick="openEditMo(\''+m.id+'\')">تعديل</button>'
+          +'<button class="btn btn-xs btn-danger"  onclick="delMo(\''+m.id+'\')">حذف</button>'
+        +'</div>'
+      +'</div>';
     }).join(''):'<div class="empty" style="padding:20px;"><div class="empty-text">لا توجد تكاليف شهرية — اضغط "+ تكلفة شهرية"</div></div>';
   }
   var emEl=document.getElementById('employees-costs-list');
