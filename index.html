@@ -74,7 +74,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
-    padding-bottom: calc(72px + env(safe-area-inset-bottom, 16px));
+    padding-bottom: calc(120px + env(safe-area-inset-bottom, 16px));
   }
 }
 /* Desktop layout */
@@ -179,7 +179,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
   #nav .nav-item { font-size: 14px !important; }
   #nav .nav-label { font-size: 14px !important; }
   #employees-list { display:flex; flex-direction:column; gap:8px; }
-  #units-list { display:flex; flex-direction:column; gap:8px; }
+  #units-list { display:flex !important; flex-direction:column !important; gap:8px; width:100%; }
   .sheet-overlay {
     align-items: center !important;
     justify-content: center !important;
@@ -3655,7 +3655,7 @@ function renderSettings(){
       var typeIcons = {شقة:'🏠',استديو:'🛋',غرفة:'🚪',فيلا:'🏡',شاليه:'🌴'};
       var icon = typeIcons[type] || '🏠';
       var today = toDay();
-      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;">'
+      return '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;width:100%;box-sizing:border-box;">'
         +'<div style="width:36px;height:36px;border-radius:9px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;">'+icon+'</div>'
         +'<div style="flex:1;min-width:0;">'
           +'<div style="font-size:13px;font-weight:800;color:var(--text);">'+u+'</div>'
@@ -3718,7 +3718,7 @@ function buildMonthlyForm(pre){
       +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'+uHtml+'</div>'
     +'</div>'
     +'<button class="btn btn-primary btn-full" onclick="saveMo(this.dataset.id)" data-id="'+id+'">'+(pre?'حفظ التعديل':'إضافة')+'</button>';
-  if(pre&&pre.dueDate){var el=document.getElementById('mo-due');if(el)el.value=pre.dueDate;}
+  if(pre&&pre.dueDate){setTimeout(function(){var el=document.getElementById('mo-due');if(el)el.value=pre.dueDate;},100);}
 }
 function openEditMo(id){var m=(DB.monthly||[]).find(function(x){return x.id===id;});if(m){buildMonthlyForm(m);document.getElementById('sheet-monthly').classList.add('open');}}
 function selExUnit(el){
@@ -4857,7 +4857,7 @@ async function _pollChanges(){
     if(_lastKnown._pollCount % 4 === 0){
       var [expenses, monthly, foundation, employees, sales, appCfg] = await Promise.all([
         sbFetch('expenses','GET',null,'?select=id,type,amount,date,apt,desc,notes').catch(function(){return null;}),
-        sbFetch('monthly_costs','GET',null,'?select=id,name,amount,apt').catch(function(){return null;}),
+        sbFetch('monthly_costs','GET',null,'?select=id,name,amount,apt,due_date').catch(function(){return null;}),
         sbFetch('foundation_costs','GET',null,'?select=id,name,amount,date').catch(function(){return null;}),
         sbFetch('employees','GET',null,'?select=id,name,role,salary').catch(function(){return null;}),
         sbFetch('sales','GET',null,'?select=id,desc,description,amount,date,apt,notes').catch(function(){return null;}),
@@ -4871,7 +4871,11 @@ async function _pollChanges(){
         if(JSON.stringify(newExp) !== JSON.stringify(DB.expenses||[])){ DB.expenses=newExp; changed=true; }
       }
       if(monthly && Array.isArray(monthly) && monthly.length){
-        var newMo = monthly.map(function(m){return {id:m.id,name:m.name,amount:m.amount,apt:m.apt||''};});
+        var newMo = monthly.map(function(m){
+          // Preserve local dueDate since server may not have due_date column yet
+          var local = (DB.monthly||[]).find(function(x){return x.id===m.id;});
+          return {id:m.id,name:m.name,amount:m.amount,apt:m.apt||'',dueDate:m.due_date||( local?local.dueDate:'')};
+        });
         if(JSON.stringify(newMo) !== JSON.stringify(DB.monthly||[])){ DB.monthly=newMo; changed=true; }
       }
       if(foundation && Array.isArray(foundation) && foundation.length){
@@ -4898,7 +4902,8 @@ async function _pollChanges(){
 
     if(changed){
       try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-      renderAll();
+      // Skip re-render if a sheet is open (prevents resetting form inputs)
+      if(!document.querySelector('.sheet-overlay.open')) renderAll();
     }
 
   } catch(e){
