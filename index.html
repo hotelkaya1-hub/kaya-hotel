@@ -2818,8 +2818,8 @@ function openNotifications(){
   var unread = _notifHistory.filter(function(n){ return !n.read; });
   var read   = _notifHistory.filter(function(n){ return  n.read; });
 
-  var ov  = document.getElementById('confirm-overlay');
-  var box = document.getElementById('confirm-box');
+  var ov  = document.getElementById('notif-overlay');
+  var box = document.getElementById('notif-panel');
   if(!ov||!box) return;
 
   function noteCard(n, isUnread){
@@ -2844,7 +2844,7 @@ function openNotifications(){
       +'<div style="font-size:16px;font-weight:900;">🔔 التنبيهات</div>'
       +'<div style="display:flex;gap:8px;align-items:center;">'
         +(unread.length?'<button onclick="_markAllRead();openNotifications();" style="font-size:11px;color:var(--accent);background:none;border:none;cursor:pointer;font-family:inherit;">قراءة الكل</button>':'')
-        +'<button onclick="document.getElementById(\'confirm-overlay\').style.display=\'none\'" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;">✕</button>'
+        +'<button onclick="document.getElementById(\'notif-overlay\').style.display=\'none\'" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:6px 12px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;">✕</button>'
       +'</div>'
     +'</div>'
     // Tabs
@@ -5006,6 +5006,12 @@ try{
 }
 
 </script>
+
+<!-- NOTIFICATIONS PANEL -->
+<div id="notif-overlay" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div id="notif-panel" style="background:var(--card);border-radius:18px;width:90%;max-width:440px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,.3);">
+  </div>
+</div>
 
 <!-- CONFIRM DIALOG -->
 <div id="confirm-overlay">
