@@ -68,9 +68,11 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 #content { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; }
 
 /* ── Desktop ── */
+/* ═══ DESKTOP (≥1024px) ═══ */
 @media (min-width: 1024px) {
+  /* Layout: sidebar on RIGHT for Arabic */
   #app {
-    flex-direction: row-reverse !important;
+    flex-direction: row !important;
     height: 100vh;
     overflow: hidden;
   }
@@ -79,51 +81,79 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     height: 100vh;
     overflow-y: auto;
     padding-bottom: 40px !important;
+    order: 2;
   }
   #nav {
-    flex: 0 0 220px;
+    flex: 0 0 240px;
+    width: 240px;
     height: 100vh;
     overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     position: static !important;
     flex-direction: column !important;
-    border-left: 1px solid var(--border);
+    display: flex !important;
+    border-right: 1px solid var(--border);
     border-top: none !important;
     background: var(--bg2) !important;
-    padding-bottom: 20px !important;
+    padding: 0 !important;
+    order: 1;
   }
-}
+  #nav::-webkit-scrollbar { display: none; }
 
-/* ── Mobile ── */
-@media (max-width: 1023px) {
-  #content { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
-}
-
-/* ── Desktop nav BODO header ── */
-@media (min-width: 1024px) {
+  /* BODO logo in sidebar */
   #nav::before {
     content: 'BODO';
     display: block;
     font-family: Georgia, serif;
-    font-size: 14px;
+    font-size: 20px;
     font-weight: 900;
-    letter-spacing: 5px;
+    letter-spacing: 6px;
     color: var(--accent);
-    padding: 24px 16px 4px;
+    padding: 28px 20px 20px;
     text-align: center;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
   }
   .bodo-mobile-logo, .bodo-mobile-sub { display: none !important; }
   #nav-biz-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     color: var(--text3);
-    padding: 4px 16px 12px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 4px;
+    padding: 10px 20px 12px;
     text-align: center;
     display: block;
+    border-bottom: 1px solid var(--border);
   }
-}
-@media (min-width: 1024px) {
+
+  /* Nav items */
+  .nav-item {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 10px !important;
+    padding: 14px 20px !important;
+    height: auto !important;
+    width: 100% !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box;
+    font-family: 'Cairo', sans-serif;
+    transition: background .15s;
+  }
+  .nav-item:hover { background: var(--bg3) !important; }
+  .nav-item.active {
+    background: var(--gold) !important;
+    border-right: 3px solid var(--accent) !important;
+    color: var(--accent) !important;
+  }
+  .nav-item.active::before { display: none !important; }
+  .nav-icon { font-size: 17px !important; order: 2; }
+  .nav-label { font-size: 13px !important; font-weight: 700; order: 1; }
+  .nav-badge { top: 50%; transform: translateY(-50%); right: auto; left: 10px; }
+
+  /* Sheets as modals */
   .sheet-overlay {
     align-items: center !important;
     justify-content: center !important;
@@ -142,6 +172,11 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     animation: fadeUp .25s ease !important;
   }
   .sheet-handle { display: none !important; }
+}
+
+/* ── Mobile ── */
+@media (max-width: 1023px) {
+  #content { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
 }
 /* Mobile nav - bottom bar */
 @media (max-width: 1023px) {
