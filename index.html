@@ -1713,51 +1713,56 @@ function submitJoin(){
   var billing= _billingYearly ? 'سنوي' : 'شهري';
 
   var bizId = email.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  var reqId = bizId+'_'+Date.now();
   var req = {
-    id:email+Date.now(), name:name, phone:phone, city:city, email:email,
-    biz:biz, bizType:btype, approxUnits:units,
-    pkg:_selectedPkg, pkgLabel:pkg.label,
+    id:reqId, name:name, phone:phone, city:city||'', email:email,
+    biz:biz, biz_name:biz, biztype:btype, units:units,
+    pkg:_selectedPkg, pkg_label:pkg.label,
     price:price, billing:billing,
-    status:'pending', date:toDay(), pass:pass, biz_id:bizId
+    status:'pending', date:toDay(), pass:pass||''
   };
 
-  sbFetch('join_requests','POST',req,'?on_conflict=id').catch(function(){});
-  if(!DB.joinRequests) DB.joinRequests=[];
-  DB.joinRequests.push(req);
-  // Generate unique biz_id from email (unique per subscriber)
-  var bizId = email.toLowerCase().replace(/[^a-z0-9]/g,'_');
-  DB.subscriberInfo = {
-    name:name, email:email, phone:phone, city:city,
-    biz:biz, bizType:btype,
-    pkg:_selectedPkg, pkgLabel:pkg.label,
-    price:price, billing:billing,
-    date:toDay(), status:'pending',
-    bizId: bizId
-  };
-  // Pre-fill bizName
-  if(!DB.bizName){ DB.bizName=biz; updateBizLabels(); }
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  // Save to Supabase first
+  var btn=document.querySelector('#join-step-2 .btn-primary');
+  if(btn){btn.textContent='جارٍ الإرسال...';btn.disabled=true;}
+  sbFetch('join_requests','POST',req,'?on_conflict=id').then(function(){
+    if(!DB.joinRequests) DB.joinRequests=[];
+    DB.joinRequests.push(req);
+    DB.subscriberInfo = {
+      name:name, email:email, phone:phone, city:city,
+      biz:biz, bizType:btype,
+      pkg:_selectedPkg, pkgLabel:pkg.label,
+      price:price, billing:billing,
+      date:toDay(), status:'pending', bizId:bizId
+    };
+    if(!DB.bizName){ DB.bizName=biz; updateBizLabels(); }
+    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
 
-  // Success screen
-  _showJoinStep(3);
-  var js = document.getElementById('join-screen');
-  if(js) js.scrollTop=0;
-  var pad = js ? js.querySelector('#join-step-1')?.parentElement : null;
-  if(pad){
-    pad.innerHTML=
-      '<div style="padding:32px 24px 48px;text-align:center;">'
-        +'<div style="width:72px;height:72px;border-radius:50%;background:rgba(52,211,153,.15);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px;">✅</div>'
-        +'<div style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px;">تم إرسال طلبك!</div>'
-        +'<div style="font-size:13px;color:var(--text3);line-height:1.8;margin-bottom:28px;">سيتواصل معك فريق BODO على<br><strong style="color:var(--accent);">'+phone+'</strong><br>خلال 24 ساعة لتفعيل حسابك</div>'
-        +'<div style="background:var(--card);border:1px solid var(--goldb);border-radius:16px;padding:16px;margin-bottom:28px;width:100%;text-align:right;">'
-          +'<div style="font-size:11px;color:var(--text3);margin-bottom:10px;text-align:center;letter-spacing:1px;">ملخص الطلب</div>'
-          +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text3);">الاسم</span><span style="font-size:12px;font-weight:700;">'+name+'</span></div>'
-          +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text3);">النشاط</span><span style="font-size:12px;font-weight:700;">'+biz+'</span></div>'
-          +'<div style="display:flex;justify-content:space-between;padding:7px 0;"><span style="font-size:12px;color:var(--text3);">الباقة</span><span style="font-size:13px;font-weight:900;color:var(--accent);">'+pkg.label+' · '+price+' ر.س/'+billing+'</span></div>'
-        +'</div>'
-        +'<button onclick="showLoginScreen()" class="btn btn-primary btn-full" style="height:50px;font-size:15px;font-weight:800;width:100%;">العودة لتسجيل الدخول</button>'
-      +'</div>';
-  }
+    // Success screen
+    _showJoinStep(3);
+    var js = document.getElementById('join-screen');
+    if(js) js.scrollTop=0;
+    var pad = js ? js.querySelector('#join-step-1')?.parentElement : null;
+    if(pad){
+      pad.innerHTML=
+        '<div style="padding:32px 24px 48px;text-align:center;">'
+          +'<div style="width:72px;height:72px;border-radius:50%;background:rgba(52,211,153,.15);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px;">✅</div>'
+          +'<div style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px;">تم إرسال طلبك!</div>'
+          +'<div style="font-size:13px;color:var(--text3);line-height:1.8;margin-bottom:28px;">سيتواصل معك فريق BODO على<br><strong style="color:var(--accent);">'+phone+'</strong><br>خلال 24 ساعة لتفعيل حسابك</div>'
+          +'<div style="background:var(--card);border:1px solid var(--goldb);border-radius:16px;padding:16px;margin-bottom:28px;width:100%;text-align:right;">'
+            +'<div style="font-size:11px;color:var(--text3);margin-bottom:10px;text-align:center;letter-spacing:1px;">ملخص الطلب</div>'
+            +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text3);">الاسم</span><span style="font-size:12px;font-weight:700;">'+name+'</span></div>'
+            +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text3);">النشاط</span><span style="font-size:12px;font-weight:700;">'+biz+'</span></div>'
+            +'<div style="display:flex;justify-content:space-between;padding:7px 0;"><span style="font-size:12px;color:var(--text3);">الباقة</span><span style="font-size:13px;font-weight:900;color:var(--accent);">'+pkg.label+' · '+price+' ر.س/'+billing+'</span></div>'
+          +'</div>'
+          +'<button onclick="showLoginScreen()" class="btn btn-primary btn-full" style="height:50px;font-size:15px;font-weight:800;width:100%;">العودة لتسجيل الدخول</button>'
+        +'</div>';
+    }
+  }).catch(function(err){
+    var btn=document.querySelector('.btn-primary[disabled]');
+    if(btn){btn.textContent='إرسال الطلب';btn.disabled=false;}
+    toast('فشل الإرسال — تحقق من الاتصال وحاول مرة ثانية','error');
+  });
 }
 
 // ── Owner Panel ──
@@ -2942,7 +2947,7 @@ function savExp(){
   if(!DB.expenses)DB.expenses=[];
   var exp={id:uid(),type:type,apt:apt,date:date,desc:desc,amount:amount,salaryRef:salaryRef,salaryMonth:salaryMonth,biz_id:getBizId()};
   DB.expenses.push(exp);
-  sbFetch('expenses','POST',{id:exp.id,type:exp.type,amount:exp.amount,date:exp.date,apt:exp.apt,desc:exp.desc,notes:exp.desc,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
+  sbFetch('expenses','POST',{id:exp.id,type:exp.type,amount:exp.amount,date:exp.date,apt:exp.apt,description:exp.desc,notes:exp.desc,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('expense');toast('✅ تم حفظ المصروف','success');renderExpenses();renderDashboard();
 }
@@ -3150,7 +3155,7 @@ function saveSale(){
     sbFetch('sales','PATCH',{desc:desc,date:date,apt:apt,amount:amount,notes:notes,description:desc},'?id=eq.'+_saleId).catch(function(){});
   } else {
     DB.sales.push(entry);
-    sbFetch('sales','POST',{id:entry.id,desc:desc,description:desc,date:date,apt:apt,amount:amount,notes:notes,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
+    sbFetch('sales','POST',{id:entry.id,description:desc,date:date,apt:apt,amount:amount,notes:notes,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
   }
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('sale');toast(_saleId?'✅ تم التعديل':'✅ تم الحفظ','success');renderRevenue();renderDashboard();
@@ -5424,70 +5429,77 @@ var _syncInProgress = false;
 // Load from Supabase on startup
 async function loadFromSupabaseAuto(){
   try{
-    // Parallel fetch - fastest possible
+    var bizId=getBizId();
+    var q='&biz_id=eq.'+bizId;
     var [bookings, expenses, monthly, foundation, employees, units, sales, appCfg] = await Promise.all([
-      sbFetch('bookings','GET',null,'?select=id,apt,guest,phone,source,checkin,checkout,nights,price,total,status,notes,code&order=checkin.desc'),
-      sbFetch('expenses','GET',null,'?select=id,type,amount,date,notes,apt,desc,salary_ref,salary_month&biz_id=eq.'+getBizId()),
-      sbFetch('monthly_costs','GET',null,'?select=id,name,amount,apt,due_date&biz_id=eq.'+getBizId()),
-      sbFetch('foundation_costs','GET',null,'?select=id,name,amount,date&biz_id=eq.'+getBizId()),
-      sbFetch('employees','GET',null,'?select=id,name,role,salary&biz_id=eq.'+getBizId()),
-      sbFetch('units','GET',null,'?select=id,name,type&biz_id=eq.'+getBizId()),
-      sbFetch('sales','GET',null,'?select=id,desc,description,amount,date,apt,notes&biz_id=eq.'+getBizId()),
-      sbFetch('app_config','GET',null,'?select=key,value').catch(function(){return[];}),
+      sbFetch('bookings','GET',null,'?select=*&biz_id=eq.'+bizId+'&order=checkin.desc'),
+      sbFetch('expenses','GET',null,'?select=*&biz_id=eq.'+bizId+'&order=created_at.desc'),
+      sbFetch('monthly_costs','GET',null,'?select=*&biz_id=eq.'+bizId),
+      sbFetch('foundation_costs','GET',null,'?select=*&biz_id=eq.'+bizId),
+      sbFetch('employees','GET',null,'?select=*&biz_id=eq.'+bizId),
+      sbFetch('units','GET',null,'?select=*&biz_id=eq.'+bizId),
+      sbFetch('sales','GET',null,'?select=*&biz_id=eq.'+bizId+'&order=created_at.desc'),
+      sbFetch('app_config','GET',null,'?select=key,value&biz_id=eq.'+bizId).catch(function(){return[];}),
     ]);
-    
+
     var changed = false;
-    
+
     if(bookings&&Array.isArray(bookings)){
-      var deleted = DB._deleted||{};
-      var filtered = bookings.filter(function(b){return !deleted['booking_'+b.id];});
-      DB.bookings = filtered;
+      DB.bookings = bookings.map(function(b){
+        return{id:b.id,apt:b.apt||'',guest:b.guest||'',phone:b.phone||'',source:b.source||'direct',
+          checkin:b.checkin||'',checkout:b.checkout||'',nights:b.nights||1,
+          price:b.price||0,total:b.total||0,status:b.status||'confirmed',notes:b.notes||''};
+      });
       changed = true;
     }
     if(expenses&&Array.isArray(expenses)){
-      var deleted = DB._deleted||{};
-      DB.expenses = expenses.filter(function(e){return !deleted['expense_'+e.id];}).map(function(e){
-        return{id:e.id,type:e.type,amount:e.amount,date:e.date,desc:e.desc||e.notes||e.type,apt:e.apt||'عام',salaryRef:e.salary_ref||'',salaryMonth:e.salary_month||''};
+      DB.expenses = expenses.map(function(e){
+        return{id:e.id,type:e.type||'أخرى',amount:e.amount||0,date:e.date||'',
+          desc:e.description||e.notes||e.type||'',apt:e.apt||'عام',
+          salaryRef:e.salary_ref||'',salaryMonth:e.salary_month||''};
       });
       changed = true;
     }
-    if(monthly&&monthly.length){
-      DB.monthly=monthly.map(function(m){var loc=(DB.monthly||[]).find(function(x){return x.id===m.id;});return{id:m.id,name:m.name,amount:m.amount,apt:m.apt||'',dueDate:m.due_date||m.dueDate||(loc?loc.dueDate:'')};});
-      changed=true;
-    }
-    if(foundation&&foundation.length){
-      DB.foundation=foundation.map(function(f){return{id:f.id,name:f.name,amount:f.amount,date:f.date||''};});
-      changed=true;
-    }
-    if(employees&&employees.length){
-      DB.employees=employees.map(function(e){return{id:e.id,name:e.name,role:e.role,salary:e.salary};});
-      changed=true;
-    }
-    if(units&&units.length){
-      var existingUnits=DB.units||[];
-      units.forEach(function(u){
-        if(!existingUnits.includes(u.name)) existingUnits.push(u.name);
-        if(u.type){if(!DB.unitTypes)DB.unitTypes={};DB.unitTypes[u.name]=u.type;}
+    if(monthly&&Array.isArray(monthly)){
+      DB.monthly=monthly.map(function(m){
+        return{id:m.id,name:m.name,amount:m.amount||0,apt:m.apt||'عام',dueDate:m.due_date||''};
       });
-      DB.units=existingUnits;
+      changed=true;
+    }
+    if(foundation&&Array.isArray(foundation)){
+      DB.foundation=foundation.map(function(f){
+        return{id:f.id,name:f.name,amount:f.amount||0,date:f.date||''};
+      });
+      changed=true;
+    }
+    if(employees&&Array.isArray(employees)){
+      DB.employees=employees.map(function(e){
+        return{id:e.id,name:e.name,role:e.role||'',salary:e.salary||0,hireDate:e.hire_date||''};
+      });
+      changed=true;
+    }
+    if(units&&Array.isArray(units)&&units.length){
+      DB.units=units.map(function(u){return u.name;});
+      if(!DB.unitTypes) DB.unitTypes={};
+      units.forEach(function(u){if(u.type) DB.unitTypes[u.name]=u.type;});
       changed=true;
     }
     if(sales&&Array.isArray(sales)){
-      DB.sales = sales.map(function(s){return{id:s.id,desc:s.desc||s.description||'',amount:s.amount,date:s.date,apt:s.apt||'عام',notes:s.notes||''};});
-      changed = true;
+      DB.sales=sales.map(function(s){
+        return{id:s.id,desc:s.description||s.notes||'',amount:s.amount||0,date:s.date||'',apt:s.apt||'عام',notes:s.notes||''};
+      });
+      changed=true;
     }
-    // Sync biz name from cloud
     if(appCfg&&Array.isArray(appCfg)){
       var bn=appCfg.find(function(c){return c.key==='biz_name';});
       if(bn&&bn.value&&bn.value!==DB.bizName){
-        DB.bizName=bn.value;
-        updateBizLabels();
+        DB.bizName=bn.value; updateBizLabels();
         var cn=document.getElementById('current-biz-name');
         if(cn) cn.textContent=bn.value;
         changed=true;
       }
     }
-    
+
     if(changed){
       try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
       if(!document.querySelector('.sheet-overlay.open')) renderAll();
