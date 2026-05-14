@@ -7,7 +7,9 @@
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Bodo</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23c8a96e'/><text x='16' y='23' font-family='Georgia,serif' font-size='22' font-weight='900' text-anchor='middle' fill='%231a0f00'>B</text></svg>">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231a1a2e'/><text x='16' y='24' font-family='Georgia,serif' font-size='24' font-weight='900' text-anchor='middle' fill='%23c8a96e'>B</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%231a1a2e'/><text x='90' y='135' font-family='Georgia,serif' font-size='130' font-weight='900' text-anchor='middle' fill='%23c8a96e'>B</text></svg>">
+<meta name="apple-mobile-web-app-title" content="Bodo">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f0f4f8;--bg2:#ffffff;--bg3:#e8eef6;--card:#ffffff;--card2:#f5f8fc;--border:#dde4ef;--border2:#b0bdd0;--text:#111827;--text2:#374151;--text3:#6b7280;--green:#059669;--yellow:#d97706;--red:#dc2626;--blue:#2563eb;--purple:#7c3aed;--accent:#b8943a;--accent2:#c9a84c;--gold:rgba(184,148,58,.12);--goldb:rgba(184,148,58,.35);
@@ -177,7 +179,12 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 
 /* ── Mobile ── */
 @media (max-width: 1023px) {
-  #content { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+  #content {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .page.active {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
 }
 /* Mobile nav - bottom bar */
 @media (max-width: 1023px) {
@@ -914,7 +921,7 @@ document.addEventListener('DOMContentLoaded', function(){
 <!-- OWNER PANEL -->
 <div id="owner-screen" style="display:none;min-height:100vh;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;">
   <!-- Owner Login -->
-  <div id="owner-login" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 16px;">
+  <div id="owner-login" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:max(env(safe-area-inset-top,20px),40px) 16px max(env(safe-area-inset-bottom,20px),32px);">
     <div style="width:100%;max-width:360px;">
       <div style="text-align:center;margin-bottom:32px;">
         <div style="width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,#1a1a2e,#0f0f1a);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 32px rgba(0,0,0,.4);">
@@ -932,7 +939,7 @@ document.addEventListener('DOMContentLoaded', function(){
   <!-- Owner Dashboard -->
   <div id="owner-dashboard" style="display:none;">
     <!-- Topbar -->
-    <div style="background:var(--card);border-bottom:1px solid var(--border);padding:16px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;">
+    <div style="background:var(--card);border-bottom:1px solid var(--border);padding:max(env(safe-area-inset-top,0px),12px) 18px 12px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;">
       <div style="display:flex;align-items:center;gap:12px;">
         <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#1a1a2e,#0f0f1a);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3);">
           <span style="font-family:Georgia,serif;font-size:20px;font-weight:900;background:linear-gradient(135deg,#c8a96e,#f0d99a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;">B</span>
@@ -2121,7 +2128,9 @@ function showApp(){
   if(!DB.appUsers)DB.appUsers=[];
   document.getElementById('login-screen').style.display='none';
   var app=document.getElementById('app');
-  app.style.display='flex';app.style.flexDirection='column';app.style.height='100vh';app.style.overflow='hidden';
+  app.style.display='flex';app.style.flexDirection='column';app.style.height='100dvh';app.style.overflow='hidden';
+  var contentEl=document.getElementById('content');
+  if(contentEl){contentEl.style.flex='1';contentEl.style.overflowY='auto';contentEl.style.minHeight='0';}
   var uname=currentUser.fullname||currentUser.username||'';
   var h=new Date().getHours();
   var greetTxt=h<12?'صباح الخير':h<17?'مرحباً':'أهلاً';
