@@ -164,6 +164,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
   #nav .nav-icon { font-size: 17px; flex-shrink: 0; }
   #nav .nav-label { display: block; font-size: 13px; }
   .page.active { padding-bottom: 40px; }
+#page-settings.page.active { padding-bottom: 160px; }
   .stat-grid { grid-template-columns: repeat(4, 1fr) !important; }
   /* Desktop typography - 16px base (WCAG standard) */
   body { font-size: 16px !important; line-height: 1.65 !important; }
@@ -1158,7 +1159,7 @@ document.addEventListener('DOMContentLoaded', function(){
     </div>
 
     <!-- SETTINGS -->
-    <div id="page-settings" class="page" style="padding-bottom:180px;">
+    <div id="page-settings" class="page">
       <div class="topbar">
         <div>
           <div class="biz-label" style="font-size:9px;color:var(--text3);letter-spacing:3px;font-weight:600;margin-bottom:3px;"></div>
@@ -3472,7 +3473,18 @@ function renderSubscriberInfo(){
   if(!el) return;
   var sub = DB.subscriberInfo || {};
   var pkg = sub.pkg ? PKG_PRICES[sub.pkg] : null;
-  if(!pkg){ el.innerHTML=''; return; }
+
+  // If no subscription yet - show prompt
+  if(!pkg){
+    el.innerHTML = '<div style="background:linear-gradient(135deg,rgba(200,169,110,.1),rgba(200,169,110,.04));border:1px solid var(--goldb);border-radius:14px;padding:16px;margin-bottom:4px;display:flex;align-items:center;gap:12px;">'
+      +'<div style="flex:1;">'
+        +'<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:3px;">🎯 اشترك في BODO</div>'
+        +'<div style="font-size:11px;color:var(--text3);">اختر الباقة المناسبة لنشاطك</div>'
+      +'</div>'
+      +'<button onclick="showJoinScreen()" class="btn btn-primary btn-sm">اشترك الآن</button>'
+    +'</div>';
+    return;
+  }
 
   var daysLeft = null;
   var expiryWarning = '';
