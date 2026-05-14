@@ -49,113 +49,36 @@ input[type="date"] {
   direction: ltr;
   text-align: center;
   font-family: 'Cairo', sans-serif;
-  -webkit-locale: "ar";
+  -webkit-locale: "en-US";
+  color-scheme: light dark;
+  min-height: 44px;
 }
-input[type="date"]::-webkit-datetime-edit { direction: ltr; padding: 0 4px; }
+input[type="date"]::-webkit-datetime-edit { direction: ltr; }
 input[type="date"]::-webkit-datetime-edit-fields-wrapper { direction: ltr; }
-input[type="date"]::-webkit-datetime-edit-year-field,
-input[type="date"]::-webkit-datetime-edit-month-field,
-input[type="date"]::-webkit-datetime-edit-day-field,
-input[type="date"]::-webkit-datetime-edit-text { font-family: 'Cairo', sans-serif; color: var(--text); }
+input[type="date"]::-webkit-date-and-time-value { text-align: center; }
 input,select,button,textarea{font-family:'Cairo',sans-serif;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 
-/* ════════════════════════════════
-   APP LAYOUT — Responsive
-   ════════════════════════════════ */
+/* ── App Layout Base ── */
+#app { display:flex; flex-direction:column; height:100vh; overflow:hidden; position:fixed; inset:0; }
+#content { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; }
 
-/* ── Base: html/body ── */
-html, body {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  overscroll-behavior: none;
-}
-
-/* ── Mobile (iPhone/Android) ── */
-@media (max-width: 1023px) {
-  #app {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    /* Safe area for notch devices */
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-left: env(safe-area-inset-left, 0px);
-    padding-right: env(safe-area-inset-right, 0px);
-  }
-  #content {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: auto;
-    /* Space for bottom nav + home indicator */
-    padding-bottom: calc(72px + env(safe-area-inset-bottom, 20px) + 60px);
-  }
-  #nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    /* Account for home indicator on iPhone */
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    z-index: 100;
-  }
-  /* Hide desktop-only elements on mobile */
-  .bodo-mobile-logo { display: block !important; }
-  .bodo-mobile-sub  { display: block !important; }
-  #nav-biz-label    { display: none !important; }
-}
-
-/* ── Desktop (Laptop/Mac) ── */
+/* ── Desktop ── */
 @media (min-width: 1024px) {
-  #app {
-    display: flex !important;
-    flex-direction: row !important;
-    position: fixed !important;
-    inset: 0 !important;
-    overflow: hidden !important;
-  }
-  #content {
-    flex: 1 1 0 !important;
-    min-width: 0 !important;
-    height: 100% !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    padding-bottom: 40px !important;
-  }
-  #nav {
-    flex: 0 0 220px !important;
-    width: 220px !important;
-    height: 100% !important;
-    position: static !important;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    border-right: 1px solid var(--border) !important;
-    background: var(--bg2) !important;
-    padding: 0 0 24px !important;
-    z-index: 10 !important;
-  }
-  /* Hide mobile-only elements on desktop */
-  .bodo-mobile-logo { display: none !important; }
-  .bodo-mobile-sub  { display: none !important; }
-  #nav-biz-label    { display: block !important; }
-  /* No topbar padding needed on desktop - no notch */
-  .topbar { padding-top: 16px !important; }
+  #app { flex-direction:row-reverse !important; }
+  #content { padding-bottom:40px !important; }
 }
 
-/* ── Settings page extra bottom space ── */
-#page-settings.page.active { padding-bottom: 160px; }
+/* ── Mobile ── */
+@media (max-width: 1023px) {
+  #content { padding-bottom:calc(160px + env(safe-area-inset-bottom,0px)); }
+}
+
+/* ── Desktop nav BODO header ── */
+@media (min-width: 1024px) {
   #nav::before {
     content: 'BODO';
     display: block;
@@ -167,8 +90,6 @@ html, body {
     padding: 24px 16px 4px;
     text-align: center;
   }
-
-  /* biz name in nav sidebar - desktop only */
   .bodo-mobile-logo, .bodo-mobile-sub { display: none !important; }
   #nav-biz-label {
     font-size: 12px;
@@ -180,64 +101,16 @@ html, body {
     text-align: center;
     display: block;
   }
-  #nav .nav-item {
-    all: unset;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    width: 200px;
-    height: 44px;
-    padding: 0 14px;
-    margin: 2px 10px;
-    gap: 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    color: var(--text3);
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
-    transition: all .15s;
-  }
-  #nav .nav-item:hover { background: var(--bg3); color: var(--text); }
-  #nav .nav-item.active { background: var(--gold); color: var(--accent); font-weight: 800; }
-  #nav .nav-item.active::before { display: none; }
-  #nav .nav-icon { font-size: 17px; flex-shrink: 0; }
-  #nav .nav-label { display: block; font-size: 13px; }
-  .page.active { padding-bottom: 40px; }
-#page-settings.page.active { padding-bottom: 160px; }
-  .stat-grid { grid-template-columns: repeat(4, 1fr) !important; }
-  /* Desktop typography - 16px base (WCAG standard) */
-  body { font-size: 16px !important; line-height: 1.65 !important; }
-  .page-title { font-size: 24px !important; font-weight: 900 !important; }
-  .s-value { font-size: 22px !important; }
-  .s-label { font-size: 13px !important; }
-  .form-label { font-size: 14px !important; }
-  .fi { font-size: 15px !important; padding: 12px 14px !important; }
-  .topbar { padding-top: 26px !important; }
-  .btn { font-size: 14px !important; }
-  .btn-sm { min-height: 36px !important; padding: 0 18px !important; font-size: 14px !important; }
-  .btn-xs { min-height: 32px !important; padding: 0 14px !important; font-size: 13px !important; }
-  #nav .nav-item { font-size: 14px !important; }
-  #nav .nav-label { font-size: 14px !important; }
-  #employees-list { display:flex; flex-direction:column; gap:8px; }
-  #units-list { display:block; width:100%; }
+}
+@media (min-width: 1024px) {
   .sheet-overlay {
     align-items: center !important;
     justify-content: center !important;
     background: rgba(0,0,0,.45) !important;
     backdrop-filter: blur(6px) !important;
   }
-  .sheet-overlay.open {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
-  .sheet-bg {
-    background: transparent !important;
-    backdrop-filter: none !important;
-  }
+  .sheet-overlay.open { display: flex !important; }
+  .sheet-bg { background: transparent !important; backdrop-filter: none !important; }
   .sheet-box {
     border-radius: 20px !important;
     max-width: 520px !important;
@@ -251,6 +124,7 @@ html, body {
 }
 /* Mobile nav - bottom bar */
 @media (max-width: 1023px) {
+  #cals-container { display:block !important; }
   #nav-biz-label { display: none !important; }
   .bodo-mobile-logo, .bodo-mobile-sub { display: block; }
   #nav {
@@ -313,10 +187,6 @@ html, body {
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: var(--bg);
 }
 .page-title{font-size:22px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 
@@ -401,7 +271,7 @@ html, body {
 .cal-dh{display:grid;grid-template-columns:repeat(7,1fr);padding:7px 12px 3px;}
 .cal-dl{text-align:center;font-size:9px;color:var(--text3);font-weight:700;}
 .cal-days{display:grid;grid-template-columns:repeat(7,1fr);padding:0 12px 12px;gap:2px;}
-.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--text2);border-radius:6px;position:relative;cursor:default;}
+.cal-day{height:36px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:var(--text2);border-radius:6px;position:relative;cursor:default;}
 .cal-day.today{color:var(--accent);font-weight:900;}
 .cal-day.today::after{content:'';position:absolute;bottom:2px;width:4px;height:4px;border-radius:50%;background:var(--accent);}
 .cal-day.b-airbnb{background:rgba(255,90,95,.2);color:#ff5a5f;}
@@ -552,6 +422,9 @@ html, body {
   /* ── Page padding: no mobile nav offset on desktop ── */
   #content { padding-bottom: 0 !important; }
   .page.active { padding-bottom: 40px; }
+  /* Calendar on desktop - proper sizing */
+  #cals-container { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .cal-day { height:40px !important; }
 
   /* ── Login screen: centered card ── */
   #login-screen {
@@ -1312,7 +1185,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
 // ══ CONSTANTS ══
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-const DAYS=['أح','إث','ثل','أر','خم','جم','سب'];
+const DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 const SRC={
   airbnb:{label:'Airbnb',cls:'b-airbnb',bg:'rgba(255,90,95,.15)',color:'#ff5a5f',icon:''},
   gathern:{label:'جاذر إن',cls:'b-gathern',bg:'rgba(112,40,228,.15)',color:'#7028e4',icon:''},
@@ -1320,8 +1193,8 @@ const SRC={
   manual:{label:'يدوي',cls:'b-manual',bg:'rgba(251,191,36,.15)',color:'#fbbf24',icon:''}
 };
 const ST={confirmed:{label:'مؤكد',cls:'b-confirmed'},pending:{label:'معلق',cls:'b-pending'},cancelled:{label:'ملغي',cls:'b-cancelled'},blocked:{label:'موقوف',cls:'b-blocked'}};
-const EXP_TYPES=[{t:'صيانة',i:'🔧'},{t:'تنظيف',i:'🧹'},{t:'كهرباء',i:'⚡'},{t:'ماء',i:'💧'},{t:'لوازم',i:'🛒'},{t:'راتب',i:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'},{t:'أخرى',i:'📌'}];
-const EI={صيانة:'🔧',تنظيف:'🧹',كهرباء:'⚡',ماء:'💧',لوازم:'🛒',راتب:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',أخرى:'📌'};
+const EXP_TYPES=[{t:'صيانة',i:'🔧'},{t:'تنظيف',i:'🧹'},{t:'كهرباء',i:'⚡'},{t:'ماء',i:'💧'},{t:'لوازم',i:'🛒'},{t:'راتب',i:'👤'},{t:'أخرى',i:'📌'}];
+const EI={صيانة:'🔧',تنظيف:'🧹',كهرباء:'⚡',ماء:'💧',لوازم:'🛒',راتب:'👤',أخرى:'📌'};
 const PERM_LABELS={calendars:'التقويم',bookings:'الحجوزات',revenue:'الإيرادات',expenses:'المصروفات',settings:'الإعدادات'};
 const PERMS_DEFAULT={calendars:true,bookings:true,revenue:false,expenses:false,settings:false};
 var ADMIN={username:'Kaled',password:'123123'};
@@ -2295,7 +2168,7 @@ function buildCal(apt){
   var typTag=(DB.unitTypes&&DB.unitTypes[apt])?'<span style="font-size:10px;color:var(--text3);margin-right:6px;">'+DB.unitTypes[apt]+'</span>':'';
   return'<div class="cal-card"><div class="cal-head"><div><div class="cal-name">'+apt+'</div>'+(typTag?'<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+typTag+'</div>':'')+'</div></div>'
     +'<div class="cal-nav"><button class="cal-nav-btn" onclick="calMove(\''+apt+'\',-1)">›</button><span style="font-weight:700;font-size:13px;">'+MONTHS[m]+' '+y+'</span><button class="cal-nav-btn" onclick="calMove(\''+apt+'\',1)">‹</button></div>'
-    +'<div class="cal-dh">'+DAYS.map(function(d){return'<div class="cal-dl">'+d+'</div>';}).join('')+'</div>'
+    +'<div class="cal-dh">'+DAYS.map(function(d){return'<div class="cal-dl" style="font-size:9px;">'+d+'</div>';}).join('')+'</div>'
     +'<div class="cal-days">'+cells+'</div>'+upH+'</div>';
 }
 function calMove(apt,dir){var cs=getCalSt(apt);var y=cs.y,m=cs.m;m+=dir;if(m<0){m=11;y--;}if(m>11){m=0;y++;}DB.calState[apt]={y:y,m:m};save();renderCalendars();}
@@ -2330,6 +2203,132 @@ function renderBookings(){
 
 // ══ BOOKING FORM ══
 var _eid=null,_cs='airbnb';
+
+// ── Calendar Functions ──
+// ── Calendar Globals ──
+var _CAL_M = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+var _CAL = {yr:0, mo:0};
+
+function _fmtCalDate(d){
+  if(!d||!/^\d{4}-\d{2}-\d{2}$/.test(d)) return '';
+  var p=d.split('-');
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+
+// Active calendar field tracking
+var _calActiveField = 'mo-due';
+var _calActiveBtnId = 'mo-cal-btn';
+
+function calOpenField(fieldId){
+  _calActiveField = fieldId;
+  _calActiveBtnId = fieldId + '-btn';
+  var hid = document.getElementById(fieldId);
+  var val = hid ? hid.value : '';
+  var t = new Date();
+  _CAL.yr = val ? +val.slice(0,4) : t.getFullYear();
+  _CAL.mo = val ? +val.slice(5,7) : t.getMonth()+1;
+  _renderCal();
+  var ov = document.getElementById('cal-ov');
+  if(ov) ov.style.display='flex';
+}
+
+function openCal(){ calOpenField('mo-due'); }
+
+function closeCal(){
+  var ov = document.getElementById('cal-ov');
+  if(ov) ov.style.display='none';
+}
+
+function _calNav(d){
+  _CAL.mo += d;
+  if(_CAL.mo>12){_CAL.mo=1;_CAL.yr++;}
+  if(_CAL.mo<1){_CAL.mo=12;_CAL.yr--;}
+  _renderCal();
+}
+
+function _renderCal(){
+  var inner = document.getElementById('cal-inner');
+  if(!inner) return;
+  var hid = document.getElementById(_calActiveField);
+  var sel = hid ? hid.value : '';
+  var t=new Date(); var tY=t.getFullYear(),tM=t.getMonth()+1,tD=t.getDate();
+  var first=new Date(_CAL.yr,_CAL.mo-1,1).getDay();
+  var days=new Date(_CAL.yr,_CAL.mo,0).getDate();
+  var DOW=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+  var g=DOW.map(function(d){return'<div style="font-size:9px;font-weight:700;color:var(--text3);text-align:center;padding:4px 0;">'+d+'</div>';}).join('');
+  for(var i=0;i<first;i++) g+='<div></div>';
+  for(var day=1;day<=days;day++){
+    var ds=_CAL.yr+'-'+String(_CAL.mo).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    var isToday=(day===tD&&_CAL.mo===tM&&_CAL.yr===tY);
+    var isSel=(sel===ds);
+    var bg=isSel?'var(--accent)':isToday?'rgba(200,169,110,.15)':'transparent';
+    var col=isSel?'#1a0f00':isToday?'var(--accent)':'var(--text2)';
+    var fw=isSel||isToday?'900':'400';
+    g+='<div onclick="_calPick(\''+ds+'\')" style="text-align:center;padding:8px 2px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:'+fw+';color:'+col+';background:'+bg+';">'+day+'</div>';
+  }
+  var hid2=document.getElementById(_calActiveField);
+  var selVal=hid2?hid2.value:'';
+  inner.innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">'
+      +'<button onclick="_calNav(-1)" style="background:var(--bg3);border:1px solid var(--border);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:20px;color:var(--text2);">‹</button>'
+      +'<span style="font-size:15px;font-weight:800;color:var(--text);">'+_CAL_M[_CAL.mo-1]+' '+_CAL.yr+'</span>'
+      +'<button onclick="_calNav(1)" style="background:var(--bg3);border:1px solid var(--border);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:20px;color:var(--text2);">›</button>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;">'+g+'</div>'
+    +(selVal
+      ? '<button onclick="closeCal()" style="display:block;width:100%;margin-top:10px;padding:11px;background:var(--accent);color:#1a0f00;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">تأكيد</button>'
+      : '')
+    +'<button onclick="_calClear()" style="display:block;width:100%;margin-top:6px;padding:9px;background:none;border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:inherit;">✕ مسح التاريخ</button>';
+}
+
+function _calPick(ds){
+  var hid=document.getElementById(_calActiveField);
+  var btn=document.getElementById(_calActiveBtnId);
+  if(hid) hid.value=ds;
+  if(btn){
+    btn.innerHTML=_fmtCalDate(ds);
+    btn.style.color='var(--text)';
+    btn.style.borderColor='var(--accent)';
+  }
+  _renderCal(); // refresh to show selected + update confirm button
+}
+
+function _calClear(){
+  var hid=document.getElementById(_calActiveField);
+  var btn=document.getElementById(_calActiveBtnId);
+  if(hid) hid.value='';
+  if(btn){ btn.textContent='اختر تاريخ'; btn.style.color='var(--text3)'; btn.style.borderColor='var(--border)'; }
+  closeCal();
+}
+// ═══ END CALENDAR ═══
+
+function buildMonthlyForm(pre){
+  var id = pre ? pre.id : null;
+  var saved = (pre && pre.dueDate) ? pre.dueDate : '';
+  var uHtml = '<div class="exp-opt'+(!pre||(pre.apt||'عام')==='عام'?' sel':'')+' mo-unit-btn" data-t="عام" onclick="selMoUnit(this)">عام (كل)</div>';
+  (DB.units||[]).forEach(function(u){
+    var apts = pre&&pre.apt ? pre.apt.split(',') : [];
+    uHtml += '<div class="exp-opt'+(apts.includes(u)?' sel':'')+' mo-unit-btn" data-t="'+u+'" onclick="selMoUnit(this)">'+u+'</div>';
+  });
+  var lbl = saved ? _fmtCalDate(saved) : 'اختر تاريخ الاستحقاق';
+  document.getElementById('mo-body').innerHTML =
+    '<div class="form-group"><label class="form-label">اسم التكلفة <span style="color:var(--red)">*</span></label>'
+    +'<input id="mo-n" class="fi" placeholder="مثال: إيجار، كهرباء" value="'+(pre?pre.name:'')+'"></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+      +'<div class="form-group" style="margin:0"><label class="form-label">المبلغ (ر.س) <span style="color:var(--red)">*</span></label>'
+        +'<input id="mo-am" class="fi" placeholder="0" value="'+(pre?pre.amount:'')+'"></div>'
+      +'<div class="form-group" style="margin:0"><label class="form-label">تاريخ الاستحقاق</label>'
+        +'<button type="button" data-fid="mo-due" onclick="calOpenField(this.dataset.fid)" id="mo-cal-btn" class="fi" style="text-align:right;cursor:pointer;color:'+(saved?'var(--text)':'var(--text3)')+';font-size:13px;background:var(--bg3);border:1.5px solid '+(saved?'var(--accent)':'var(--border)')+';">'+lbl+'</button>'
+        +'<input type="hidden" id="mo-due" value="'+saved+'">'
+      +'</div>'
+    +'</div>'
+    +'<div class="form-group"><label class="form-label">الوحدة / الفئة</label>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'+uHtml+'</div></div>'
+    +'<button class="btn btn-primary btn-full" onclick="saveMo(this.dataset.id)" data-id="'+id+'">'+(pre?'حفظ التعديل':'إضافة')+'</button>';
+}
+
+function openEditMo(id){var m=(DB.monthly||[]).find(function(x){return x.id===id;});if(m){buildMonthlyForm(m);document.getElementById('sheet-monthly').classList.add('open');}}
+
 function buildBookingForm(pre){
   _eid=pre?pre.id:null;_cs=pre?pre.source:'airbnb';
   var f=pre||{apt:(DB.units||[''])[0],guest:'',source:'airbnb',checkin:toDay(),checkout:addD(toDay(),1),price:'',status:'confirmed',notes:''};
@@ -2491,7 +2490,7 @@ function buildExpenseForm(){
   document.getElementById('exp-body').innerHTML=
     '<div class="form-group"><label class="form-label">النوع</label><div class="exp-grid">'+EXP_TYPES.map(function(x,i){return'<div class="exp-opt'+(x.t==='صيانة'?' sel':'')+'" onclick="sExp('+i+',this)">'+x.i+' '+x.t+'</div>';}).join('')+'</div><input type="hidden" id="e-t" value="صيانة"></div>'
     +'<div id="ew" style="display:none;" class="form-group"><label class="form-label">الموظف</label><select id="e-em" class="fi" onchange="fSal()">'+(DB.employees||[]).map(function(e){return'<option value="'+e.salary+'">'+e.name+' ('+fmtM(e.salary)+' ر.س)</option>';}).join('')+'</select></div>'
-    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام">عام</option>'+(DB.units||[]).map(function(u){return'<option>'+u+'</option>';}).join('')+'</select></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" id="e-d" class="fi" value="'+toDay()+'"></div></div>'
+    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام">عام</option>'+(DB.units||[]).map(function(u){return'<option>'+u+'</option>';}).join('')+'</select></div><div class="form-group"><label class="form-label">التاريخ</label><button type="button" id="e-d-btn" data-fid="e-d" onclick="calOpenField(this.dataset.fid)" class="fi" style="text-align:right;cursor:pointer;font-size:13px;">'+(_fmtCalDate(toDay())||'اختر تاريخ')+'</button><input type="hidden" id="e-d" value="'+(toDay()||'')+'"></div></div>'
     +'<div class="form-group"><label class="form-label">الوصف</label><input id="e-ds" class="fi" placeholder="وصف المصروف"></div>'
     +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="e-am" class="fi" placeholder="0"></div>'
     +'<button class="btn btn-primary btn-full" onclick="savExp()">حفظ</button>';
@@ -2500,7 +2499,7 @@ function sExp(i,el){_et=EXP_TYPES[i].t;document.getElementById('e-t').value=_et;
 function fSal(){var sel=document.getElementById('e-em');var el=document.getElementById('e-am');if(sel&&el)el.value=sel.value;}
 function savExp(){
   var type=document.getElementById('e-t')?.value||'أخرى';var apt=document.getElementById('e-a')?.value||'عام';
-  var date=(document.getElementById('e-d')||{}).value||toDay();var amount=parseFloat(document.getElementById('e-am')?.value)||0;
+  var date=_readCal('e-d')||toDay();var amount=parseFloat(document.getElementById('e-am')?.value)||0;
   if(!amount){toast('أدخل المبلغ','error');return;}
   var desc=document.getElementById('e-ds')?.value||type;
   if(type==='راتب'){var s=document.getElementById('e-em');if(s){var nm=s.options[s.selectedIndex]?.text?.split('(')[0]?.trim();if(nm)desc='راتب: '+nm;}}
@@ -2672,7 +2671,7 @@ function buildSaleForm(pre){
  document.getElementById('sale-title').textContent=pre?'تعديل إيراد':' إضافة إيراد';
   document.getElementById('sale-body').innerHTML=
     '<div class="form-group"><label class="form-label">الوصف</label><input id="sl-d" class="fi" placeholder="مثال: إيراد شهر مايو..." value="'+(pre?pre.desc:'')+'"></div>'
-    +'<div class="form-row"><div class="form-group"><label class="form-label">التاريخ</label><input type="date" id="sl-dt" class="fi" value="'+(pre?pre.date:toDay())+'"></div>'
+    +'<div class="form-row"><div class="form-group"><label class="form-label">التاريخ</label><button type="button" id="sl-dt-btn" data-fid="sl-dt" onclick="calOpenField(this.dataset.fid)" class="fi" style="text-align:right;cursor:pointer;font-size:13px;">'+(_fmtCalDate(pre?pre.date:toDay())||'اختر تاريخ')+'</button><input type="hidden" id="sl-dt" value="'+(pre?pre.date:toDay()||'')+'"></div>'
     +'<div class="form-group"><label class="form-label">الوحدة</label><select id="sl-a" class="fi"><option value="عام">عام</option>'+(DB.units||[]).map(function(u){return'<option'+(pre&&pre.apt===u?' selected':'')+'>'+u+'</option>';}).join('')+'</select></div></div>'
     +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="sl-am" class="fi" placeholder="0" value="'+(pre?pre.amount:'')+'"></div>'
     +'<div class="form-group"><label class="form-label">ملاحظات</label><input id="sl-n" class="fi" placeholder="اختياري" value="'+(pre?pre.notes||'':'')+'"></div>'
@@ -3125,7 +3124,7 @@ function openEditExp(id){
   document.getElementById('sheet-expense').querySelector('.sheet-title').textContent='تعديل مصروف';
   document.getElementById('exp-body').innerHTML=
     '<div class="form-group"><label class="form-label">النوع</label><div class="exp-grid">'+EXP_TYPES.map(function(x,i){return'<div class="exp-opt'+(x.t===e.type?' sel':'')+'" onclick="sExp('+i+',this)">'+x.i+' '+x.t+'</div>';}).join('')+'</div><input type="hidden" id="e-t" value="'+(e.type||'صيانة')+'"></div>'
-    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام"'+(e.apt==='عام'?' selected':'')+'>عام</option>'+(DB.units||[]).map(function(u){return'<option'+(u===e.apt?' selected':'')+'>'+u+'</option>';}).join('')+'</select></div><div class="form-group"><label class="form-label">التاريخ</label><input type="date" id="e-d" class="fi" value="'+(e.date||toDay())+'"></div></div>'
+    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام"'+(e.apt==='عام'?' selected':'')+'>عام</option>'+(DB.units||[]).map(function(u){return'<option'+(u===e.apt?' selected':'')+'>'+u+'</option>';}).join('')+'</select></div><div class="form-group"><label class="form-label">التاريخ</label></div></div>'
     +'<div class="form-group"><label class="form-label">الوصف</label><input id="e-ds" class="fi" value="'+(e.desc||'')+'"></div>'
     +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="e-am" class="fi" value="'+(e.amount||'')+'"></div>'
     +'<button class="btn btn-primary btn-full" onclick="savExpEdit()">حفظ التعديل</button>';
@@ -3133,7 +3132,7 @@ function openEditExp(id){
 }
 function savExpEdit(){
   var type=document.getElementById('e-t')?.value||'أخرى';var apt=document.getElementById('e-a')?.value||'عام';
-  var date=(document.getElementById('e-d')||{}).value||toDay();var desc=document.getElementById('e-ds')?.value||type;
+  var date=_readCal('e-d')||toDay();var desc=document.getElementById('e-ds')?.value||type;
   var amount=parseFloat(document.getElementById('e-am')?.value)||0;
   if(!amount){toast('أدخل المبلغ','error');return;}
   DB.expenses=(DB.expenses||[]).map(function(e){return e.id===_expId?Object.assign({},e,{type:type,apt:apt,date:date,desc:desc,amount:amount}):e;});
@@ -3531,9 +3530,7 @@ function renderProfileFields(){
    +_profileField('acc-pass',   'كلمة المرور',        '••••••••',                                               _ic('lock'), {type:'password', isPass:true});
 }
 
-// Remove old tab functions (replaced by single view)
-function showAccTab(n){ renderProfileFields(); }
-function renderSecurityFields(){ renderProfileFields(); }
+// Remove old tab functions (replaced by single view)function renderSecurityFields(){ renderProfileFields(); }
 
 
 
@@ -3775,155 +3772,6 @@ function renderSettings(){
   var uSec=document.getElementById('users-section');if(uSec)uSec.style.display='none';
 }
 
-
-// ── Date Select Helpers ──
-function _dayOpts(val){
-  var d=val?val.slice(8,10):''; var h='';
-  for(var i=1;i<=31;i++){var v=String(i).padStart(2,'0');h+='<option value="'+v+'"'+(d===v?' selected':'')+'>'+i+'</option>';}
-  return h;
-}
-function _monOpts(val){
-  var mn=val?val.slice(5,7):'';
-  var M=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-  return M.map(function(m,i){var v=String(i+1).padStart(2,'0');return'<option value="'+v+'"'+(mn===v?' selected':'')+'>'+m+'</option>';}).join('');
-}
-function _yrOpts(val){
-  var y=val?val.slice(0,4):''; var h=''; var cur=new Date().getFullYear();
-  for(var i=cur-1;i<=cur+5;i++){h+='<option value="'+i+'"'+(y===String(i)?' selected':'')+'>'+i+'</option>';}
-  return h;
-}
-function _readDate(prefix){
-  var d=document.getElementById(prefix+'-d'), m=document.getElementById(prefix+'-m'), y=document.getElementById(prefix+'-y');
-  return (y&&y.value&&m&&m.value&&d&&d.value)?(y.value+'-'+m.value+'-'+d.value):'';
-}
-
-// ══ MONTHLY/FOUNDATION/EMPLOYEE/UNIT FORMS ══
-function buildMonthlyForm(pre){
-  var id = pre ? pre.id : null;
-  var saved = (pre && pre.dueDate) ? pre.dueDate : '';
-  var uHtml = '<div class="exp-opt'+(!pre||(pre.apt||'عام')==='عام'?' sel':'')+' mo-unit-btn" data-t="عام" onclick="selMoUnit(this)">عام (كل)</div>';
-  (DB.units||[]).forEach(function(u){
-    var s2 = pre&&pre.apt&&pre.apt.split(',').indexOf(u)>=0?' sel':'';
-    uHtml += '<div class="exp-opt'+s2+' mo-unit-btn" data-t="'+u+'" onclick="selMoUnit(this)">'+u+'</div>';
-  });
-  var lbl = saved ? _fmtCalDate(saved) : 'اختر تاريخ الاستحقاق';
-  document.getElementById('mo-body').innerHTML =
-    '<div class="form-group"><label class="form-label">اسم التكلفة <span style="color:var(--red)">*</span></label>'
-    +'<input id="mo-n" class="fi" placeholder="مثال: إيجار، كهرباء" value="'+(pre?pre.name:'')+'"></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
-      +'<div class="form-group" style="margin:0"><label class="form-label">المبلغ (ر.س) <span style="color:var(--red)">*</span></label>'
-        +'<input id="mo-am" class="fi" placeholder="0" value="'+(pre?pre.amount:'')+'"></div>'
-      +'<div class="form-group" style="margin:0"><label class="form-label">تاريخ الاستحقاق</label>'
-        +'<button type="button" id="mo-cal-btn" onclick="openCal()" class="fi" style="text-align:right;cursor:pointer;color:'+(saved?'var(--text)':'var(--text3)')+';font-size:13px;background:var(--bg3);border:1.5px solid '+(saved?'var(--accent)':'var(--border)')+';">'+lbl+'</button>'
-        +'<input type="hidden" id="mo-due" value="'+saved+'">'
-      +'</div>'
-    +'</div>'
-    +'<div class="form-group"><label class="form-label">الوحدة / الفئة</label>'
-      +'<div style="display:flex;flex-wrap:wrap;gap:8px;">'+uHtml+'</div></div>'
-    +'<button class="btn btn-primary btn-full" onclick="saveMo(this.dataset.id)" data-id="'+id+'">'+(pre?'حفظ التعديل':'إضافة')+'</button>';
-}
-function openEditMo(id){var m=(DB.monthly||[]).find(function(x){return x.id===id;});if(m){buildMonthlyForm(m);document.getElementById('sheet-monthly').classList.add('open');}}
-function selExUnit(el){
-  var t=el.dataset.t;
-  if(t===''){
-    document.querySelectorAll('.ex-unit-btn').forEach(function(x){x.classList.remove('sel');});
-    el.classList.add('sel');
-  } else {
-    document.querySelectorAll('.ex-unit-btn[data-t=""]').forEach(function(x){x.classList.remove('sel');});
-    el.classList.toggle('sel');
-    if(!document.querySelector('.ex-unit-btn.sel')){document.querySelector('.ex-unit-btn[data-t=""]').classList.add('sel');}
-  }
-}
-
-// ═══ CALENDAR SYSTEM ═══
-var _CAL = {yr:0, mo:0};
-var _CAL_M = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-
-function _fmtCalDate(d){
-  if(!d||!/^\d{4}-\d{2}-\d{2}$/.test(d)) return '';
-  var p=d.split('-');
-  return parseInt(p[2])+' '+_CAL_M[parseInt(p[1])-1]+' '+p[0];
-}
-
-// Active calendar field tracking
-var _calActiveField = 'mo-due';
-var _calActiveBtnId = 'mo-cal-btn';
-
-function calOpenField(fieldId){
-  _calActiveField = fieldId;
-  _calActiveBtnId = fieldId + '-btn';
-  var hid = document.getElementById(fieldId);
-  var val = hid ? hid.value : '';
-  var t = new Date();
-  _CAL.yr = val ? +val.slice(0,4) : t.getFullYear();
-  _CAL.mo = val ? +val.slice(5,7) : t.getMonth()+1;
-  _renderCal();
-  var ov = document.getElementById('cal-ov');
-  if(ov) ov.style.display='flex';
-}
-
-function openCal(){ calOpenField('mo-due'); }
-
-function closeCal(){
-  var ov = document.getElementById('cal-ov');
-  if(ov) ov.style.display='none';
-}
-
-function _calNav(d){
-  _CAL.mo += d;
-  if(_CAL.mo>12){_CAL.mo=1;_CAL.yr++;}
-  if(_CAL.mo<1){_CAL.mo=12;_CAL.yr--;}
-  _renderCal();
-}
-
-function _renderCal(){
-  var inner = document.getElementById('cal-inner');
-  if(!inner) return;
-  var hid = document.getElementById(_calActiveField);
-  var sel = hid ? hid.value : '';
-  var t=new Date(); var tY=t.getFullYear(),tM=t.getMonth()+1,tD=t.getDate();
-  var first=new Date(_CAL.yr,_CAL.mo-1,1).getDay();
-  var days=new Date(_CAL.yr,_CAL.mo,0).getDate();
-  var DOW=['أح','إث','ثل','أر','خم','جم','سب'];
-  var g=DOW.map(function(d){return'<div style="font-size:11px;font-weight:700;color:var(--text3);text-align:center;padding:6px 0;">'+d+'</div>';}).join('');
-  for(var i=0;i<first;i++) g+='<div></div>';
-  for(var day=1;day<=days;day++){
-    var ds=_CAL.yr+'-'+String(_CAL.mo).padStart(2,'0')+'-'+String(day).padStart(2,'0');
-    var isToday=(day===tD&&_CAL.mo===tM&&_CAL.yr===tY);
-    var isSel=(sel===ds);
-    var bg=isSel?'var(--accent)':isToday?'rgba(200,169,110,.15)':'transparent';
-    var col=isSel?'#1a0f00':isToday?'var(--accent)':'var(--text2)';
-    var fw=isSel||isToday?'900':'400';
-    g+='<div onclick="_calPick(\''+ds+'\')" style="text-align:center;padding:8px 2px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:'+fw+';color:'+col+';background:'+bg+';">'+day+'</div>';
-  }
-  inner.innerHTML=
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">'
-      +'<button onclick="_calNav(-1)" style="background:var(--bg3);border:1px solid var(--border);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:20px;color:var(--text2);">‹</button>'
-      +'<span style="font-size:15px;font-weight:800;color:var(--text);">'+_CAL_M[_CAL.mo-1]+' '+_CAL.yr+'</span>'
-      +'<button onclick="_calNav(1)" style="background:var(--bg3);border:1px solid var(--border);width:36px;height:36px;border-radius:10px;cursor:pointer;font-size:20px;color:var(--text2);">›</button>'
-    +'</div>'
-    +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;">'+g+'</div>'
-    +'<button onclick="_calClear()" style="display:block;width:100%;margin-top:12px;padding:9px;background:none;border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--text3);cursor:pointer;font-family:inherit;">✕ مسح التاريخ</button>';
-}
-
-function _calPick(ds){
-  var hid=document.getElementById(_calActiveField);
-  var btn=document.getElementById(_calActiveBtnId);
-  if(hid) hid.value=ds;
-  if(btn){ btn.textContent=_fmtCalDate(ds); btn.style.color='var(--text)'; btn.style.borderColor='var(--accent)'; }
-  _renderCal();
-  setTimeout(closeCal, 200);
-}
-
-function _calClear(){
-  var hid=document.getElementById(_calActiveField);
-  var btn=document.getElementById(_calActiveBtnId);
-  if(hid) hid.value='';
-  if(btn){ btn.textContent='اختر تاريخ'; btn.style.color='var(--text3)'; btn.style.borderColor='var(--border)'; }
-  closeCal();
-}
-// ═══ END CALENDAR ═══
-
 function selMoUnit(el){
   var t=el.dataset.t;
   if(t==='عام'){
@@ -3978,7 +3826,7 @@ function buildFoundationForm(pre){
   var id=pre?pre.id:null;
   document.getElementById('fo-body').innerHTML=
     '<div class="form-group"><label class="form-label">اسم التكلفة</label><input id="fo-n" class="fi" placeholder="مثال: فرش، أجهزة" value="'+(pre?pre.name:'')+'"></div>'
-    +'<div class="form-row"><div class="form-group"><label class="form-label">التاريخ</label><input type="date" id="fo-d" class="fi" value="'+(pre?pre.date:toDay())+'"></div>'
+    +'<div class="form-row"><div class="form-group"><label class="form-label">التاريخ</label><button type="button" id="fo-d-btn" data-fid="fo-d" onclick="calOpenField(this.dataset.fid)" class="fi" style="text-align:right;cursor:pointer;font-size:13px;">'+(_fmtCalDate(pre?pre.date:toDay())||'اختر تاريخ')+'</button><input type="hidden" id="fo-d" value="'+(pre?pre.date:toDay()||'')+'"></div>'
     +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="fo-am" class="fi" placeholder="0" value="'+(pre?pre.amount:'')+'"></div></div>'
     +'<button class="btn btn-primary btn-full" onclick="saveFo(\''+id+'\')">'+(pre?'حفظ التعديل':'حفظ')+'</button>';
 }
@@ -4278,11 +4126,7 @@ function renderEmployeesList(){
   }).join('');
 }
 
-// ── إخفاء sheet-adduser (لم نعد نحتاجه منفصلاً) ──
-function buildAddUserForm(pre){ buildEmployeeForm(pre); }
-function renderUsersList(){ renderEmployeesList(); }
-function saveUser(){ saveEm(); }
-function delUser(id){ delEm(id); }
+// ── إخفاء sheet-adduser (لم نعد نحتاجه منفصلاً) ──function renderUsersList(){ renderEmployeesList(); }function delUser(id){ delEm(id); }
 
 // ── تعديل بيانات الأدمن ──
 
@@ -5244,13 +5088,6 @@ function handleRealtimeChange(table, payload){
 }
 
 
-window.onerror = function(msg,src,line,col,err){
-  if(!msg||msg==='Script error.'||msg==='Script error') return true;
-  return false;
-};
-window.addEventListener('unhandledrejection',function(e){
-  if(e&&e.reason&&e.reason.message&&e.reason.message.indexOf('Load failed')>=0) e.preventDefault();
-});
 
 loadTheme();
 try{
