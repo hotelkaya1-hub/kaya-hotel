@@ -2225,21 +2225,23 @@ function renderBookingsList(){
       var si=SRC[b.source]||{};
       var statusBadge='<span class="badge '+(ST[b.status]?.cls||'')+'">● '+(ST[b.status]?.label||b.status)+'</span>';
       var srcBadge='<span class="badge '+(si.cls||'')+'">'+srcIcon(b.source,12)+' '+(si.label||b.source)+'</span>';
-      var acts='<div style="display:flex;gap:6px;justify-content:flex-end;">'
+      var acts='<div style="display:flex;gap:6px;">'
         +(b.total===0?'<button class="btn btn-xs btn-gold" onclick="openPE(this.dataset.id)" data-id="'+b.id+'">سعر</button>':'')
         +'<button class="btn btn-xs btn-success" onclick="openEB(this.dataset.id)" data-id="'+b.id+'">تعديل</button>'
         +'<button class="btn btn-xs btn-danger" onclick="delB(this.dataset.id)" data-id="'+b.id+'">حذف</button>'
         +'</div>';
       return[
-        '<span style="font-size:13px;font-weight:700;color:var(--text);">'+b.guest+'</span><div style="font-size:11px;color:var(--text3);">'+b.apt+'</div>',
+        '<span style="font-size:13px;font-weight:700;">'+b.guest+'</span><div style="font-size:11px;color:var(--text3);">'+b.apt+'</div>',
         srcBadge,
         statusBadge,
-        '<span style="font-size:12px;color:var(--text2);">'+fmtRange(b.checkin,b.checkout)+'</span><div style="font-size:11px;color:var(--text3);">'+b.nights+' ليلة</div>',
-        b.total>0?'<span style="font-size:14px;font-weight:900;color:var(--accent);">'+fmtM(b.total)+' ر.س</span>':'—',
+        '<span style="font-size:12px;">'+fmtD(b.checkin)+'</span>',
+        '<span style="font-size:12px;">'+fmtD(b.checkout)+'</span>',
+        '<span style="font-size:13px;font-weight:700;color:var(--text2);">'+b.nights+'</span>',
+        b.total>0?'<span style="font-size:14px;font-weight:900;color:var(--accent);">'+fmtM(b.total)+' ر.س</span>':'<span style="color:var(--text3);">—</span>',
         acts
       ];
     });
-    el.innerHTML=_tbl(['الضيف','المصدر','الحالة','التواريخ','المبلغ','إجراء'],rows);
+    el.innerHTML=_tbl(['الضيف','المصدر','الحالة','الدخول','الخروج','الليالي','المبلغ','إجراء'],rows);
     updateBadge();return;
   }
   el.innerHTML=list.map(function(b){
@@ -2974,19 +2976,18 @@ function showCostTab(n){
 function _tbl(headers, rows){
   if(!rows.length) return null;
   var ths=headers.map(function(h){
-    return '<th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text3);font-weight:700;white-space:nowrap;">'+h+'</th>';
+    return '<th style="padding:12px 16px;text-align:right;font-size:12px;color:var(--text3);font-weight:700;white-space:nowrap;border-bottom:2px solid var(--border);">'+h+'</th>';
   }).join('');
   var trs=rows.map(function(r,i){
-    var bg=i%2===0?'var(--bg2)':'var(--card)';
-    var tds=r.map(function(td,j){
-      var align=j===r.length-2?'text-align:left;':'text-align:right;';
-      return '<td style="padding:12px 16px;'+align+'vertical-align:middle;">'+td+'</td>';
+    var bg=i%2===0?'var(--card)':'var(--bg2)';
+    var tds=r.map(function(td){
+      return '<td style="padding:12px 16px;text-align:right;vertical-align:middle;border-bottom:1px solid var(--border);">'+td+'</td>';
     }).join('');
-    return '<tr style="background:'+bg+';border-bottom:1px solid var(--border);">'+tds+'</tr>';
+    return '<tr style="background:'+bg+';">'+tds+'</tr>';
   }).join('');
   return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">'
     +'<table style="width:100%;border-collapse:collapse;font-family:Cairo,sans-serif;">'
-    +'<thead><tr style="background:var(--bg3);border-bottom:2px solid var(--border);">'+ths+'</tr></thead>'
+    +'<thead><tr style="background:var(--bg3);">'+ths+'</tr></thead>'
     +'<tbody>'+trs+'</tbody></table></div>';
 }
 function renderExpensesList(){
