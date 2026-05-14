@@ -3150,7 +3150,7 @@ function saveSale(){
     sbFetch('sales','PATCH',{desc:desc,date:date,apt:apt,amount:amount,notes:notes,description:desc},'?id=eq.'+_saleId).catch(function(){});
   } else {
     DB.sales.push(entry);
-    sbFetch('sales','POST',{id:entry.id,desc:desc,description:desc,date:date,apt:apt,amount:amount,notes:notes},'?on_conflict=id').catch(function(){});
+    sbFetch('sales','POST',{id:entry.id,desc:desc,description:desc,date:date,apt:apt,amount:amount,notes:notes,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
   }
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('sale');toast(_saleId?'✅ تم التعديل':'✅ تم الحفظ','success');renderRevenue();renderDashboard();
@@ -3355,7 +3355,7 @@ function payDueCost(monthlyId){
   sbFetch('expenses','POST',{
     id:exp.id, type:exp.type, desc:exp.desc,
     amount:exp.amount, apt:exp.apt, date:exp.date,
-    notes:exp.desc
+    notes:exp.desc, biz_id:getBizId()
   },'?on_conflict=id').catch(function(){});
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   toast('✅ تم تسجيل دفع '+m.name,'success');
@@ -4467,7 +4467,7 @@ function saveFo(editId){
   } else {
     var rec={id:uid(),name:name,date:date,amount:amount};
     DB.foundation.push(rec);
-    sbFetch('foundation_costs','POST',{id:rec.id,name:rec.name,date:rec.date,amount:rec.amount},'?on_conflict=id').catch(function(){});
+    sbFetch('foundation_costs','POST',{id:rec.id,name:rec.name,date:rec.date,amount:rec.amount,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
     toast('✅ تم الحفظ','success');
   }
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
@@ -4800,7 +4800,7 @@ function confirmPaySalary(empId){
   var rec={
     id:uid(),type:'راتب',amount:amount,date:toDay(),apt:'عام',
     desc:'راتب '+e.name+' — '+mLabel,notes:'',
-    salaryRef:empId,salaryMonth:salaryMonth,biz_id:getBizId()
+    salary_ref:empId,salary_month:salaryMonth,biz_id:getBizId()
   };
   if(!DB.expenses) DB.expenses=[];
   DB.expenses.push(rec);
@@ -4884,7 +4884,7 @@ function saveU(){
     DB.unitTypes[name] = type;
     DB.unitData[name]  = {persons:persons, city:city, district:district};
     sbFetch('units','DELETE',null,'?id=eq.'+encodeURIComponent(_uEditOld)).catch(function(){});
-    sbFetch('units','POST',{id:name,name:name,type:type,persons:persons,city:city,district:district},'?on_conflict=id').catch(function(){});
+    sbFetch('units','POST',{id:name,name:name,type:type,persons:persons,city:city,district:district,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
     toast('✅ تم التعديل','success');
   } else {
     if(DB.units.includes(name)){toast('الوحدة موجودة بالفعل','error');return;}
@@ -4892,7 +4892,7 @@ function saveU(){
     DB.units.push(name);
     DB.unitTypes[name] = type;
     DB.unitData[name]  = {persons:persons, city:city, district:district};
-    sbFetch('units','POST',{id:name,name:name,type:type,persons:persons,city:city,district:district},'?on_conflict=id').catch(function(){});
+    sbFetch('units','POST',{id:name,name:name,type:type,persons:persons,city:city,district:district,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
     toast('✅ تم الإضافة','success');
   }
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
@@ -5341,6 +5341,8 @@ document.addEventListener('touchend', function(){
   if(!_ptrOn) return;
   _ptrOn = false;
   var ind = document.getElementById('ptr-indicator');
+  var spinner = document.getElementById('ptr-spinner');
+  var txt = document.getElementById('ptr-text');
   if(_ptrDone){
     if(spinner) spinner.classList.add('spinning');
     if(txt) txt.textContent = 'جارٍ التحديث...';
@@ -5425,7 +5427,7 @@ async function loadFromSupabaseAuto(){
     // Parallel fetch - fastest possible
     var [bookings, expenses, monthly, foundation, employees, units, sales, appCfg] = await Promise.all([
       sbFetch('bookings','GET',null,'?select=id,apt,guest,phone,source,checkin,checkout,nights,price,total,status,notes,code&order=checkin.desc'),
-      sbFetch('expenses','GET',null,'?select=id,type,amount,date,notes,apt,desc,salaryRef,salaryMonth&biz_id=eq.'+getBizId()),
+      sbFetch('expenses','GET',null,'?select=id,type,amount,date,notes,apt,desc,salary_ref,salary_month&biz_id=eq.'+getBizId()),
       sbFetch('monthly_costs','GET',null,'?select=id,name,amount,apt,due_date&biz_id=eq.'+getBizId()),
       sbFetch('foundation_costs','GET',null,'?select=id,name,amount,date&biz_id=eq.'+getBizId()),
       sbFetch('employees','GET',null,'?select=id,name,role,salary&biz_id=eq.'+getBizId()),
@@ -5445,7 +5447,7 @@ async function loadFromSupabaseAuto(){
     if(expenses&&Array.isArray(expenses)){
       var deleted = DB._deleted||{};
       DB.expenses = expenses.filter(function(e){return !deleted['expense_'+e.id];}).map(function(e){
-        return{id:e.id,type:e.type,amount:e.amount,date:e.date,desc:e.desc||e.notes||e.type,apt:e.apt||'عام',salaryRef:e.salaryRef||e.salary_ref||'',salaryMonth:e.salaryMonth||e.salary_month||''};
+        return{id:e.id,type:e.type,amount:e.amount,date:e.date,desc:e.desc||e.notes||e.type,apt:e.apt||'عام',salaryRef:e.salary_ref||'',salaryMonth:e.salary_month||''};
       });
       changed = true;
     }
