@@ -6,7 +6,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Bodo Management</title>
+<title>Bodo</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23c8a96e'/><text x='16' y='23' font-family='Georgia,serif' font-size='22' font-weight='900' text-anchor='middle' fill='%231a0f00'>B</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f0f4f8;--bg2:#ffffff;--bg3:#e8eef6;--card:#ffffff;--card2:#f5f8fc;--border:#dde4ef;--border2:#b0bdd0;--text:#111827;--text2:#374151;--text3:#6b7280;--green:#059669;--yellow:#d97706;--red:#dc2626;--blue:#2563eb;--purple:#7c3aed;--accent:#b8943a;--accent2:#c9a84c;--gold:rgba(184,148,58,.12);--goldb:rgba(184,148,58,.35);
@@ -615,14 +616,14 @@ document.addEventListener('DOMContentLoaded', function(){
   <!-- LOGIN CARD -->
   <div class="login-card" id="card-login">
     <div style="font-size:22px;font-weight:900;margin-bottom:20px;text-align:center;color:var(--text);">تسجيل الدخول</div>
-    <div class="login-err" id="login-err">اسم المستخدم أو كلمة المرور غير صحيحة</div>
-    <div class="form-group"><label class="form-label">اسم المستخدم</label><input id="login-user" class="fi" placeholder="اسم المستخدم" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus();"></div>
+    <div class="login-err" id="login-err">البريد الإلكتروني أو كلمة المرور غير صحيحة</div>
+    <div class="form-group"><label class="form-label">البريد الإلكتروني</label><input id="login-user" class="fi" placeholder="example@email.com" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus();" style="direction:ltr;text-align:right;"></div>
     <div class="form-group"><label class="form-label">كلمة المرور</label><input id="login-pass" class="fi" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin();"></div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
       <input type="checkbox" id="remember-me" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer;" onchange="toggleRemember(this.checked)">
       <label for="remember-me" style="font-size:13px;color:var(--text);font-weight:600;cursor:pointer;">تذكرني دائماً</label>
     </div>
-    <button class="btn btn-primary btn-full" style="height:50px;font-size:16px;" onclick="doLogin()">تسجيل الدخول</button>
+    <button id="login-btn" class="btn btn-primary btn-full" style="height:50px;font-size:16px;" onclick="doLogin()">تسجيل الدخول</button>
     <!-- Join link -->
     <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);">
       <span style="font-size:13px;color:var(--text3);">ليس لديك حساب؟ </span>
@@ -809,15 +810,9 @@ document.addEventListener('DOMContentLoaded', function(){
       </div>
       <div style="height:1px;background:var(--border);"></div>
       <div style="padding:16px;">
-        <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:2px;margin-bottom:14px;">بيانات الحساب</div>
-        <div class="form-group"><label class="form-label">كلمة المرور <span style="color:var(--red);">*</span></label>
-          <div style="position:relative;">
-            <input id="j-pass" class="fi" type="password" placeholder="6 أحرف على الأقل" style="padding-left:44px;">
-            <button onclick="toggleJoinPass()" type="button" id="j-pass-eye" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:0;"><label class="form-label">تأكيد كلمة المرور <span style="color:var(--red);">*</span></label>
-          <input id="j-pass2" class="fi" type="password" placeholder="أعد كتابة كلمة المرور">
+        <div style="display:flex;align-items:center;gap:8px;background:rgba(200,169,110,.08);border:1px solid rgba(200,169,110,.2);border-radius:10px;padding:10px 14px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <div style="font-size:11px;color:var(--text3);">ستصلك بيانات دخول نشاطك عبر واتساب بعد قبول طلبك</div>
         </div>
       </div>
     </div>
@@ -1241,8 +1236,8 @@ var nts=function(a,b){return Math.max(0,Math.round((new Date(b)-new Date(a))/864
 var fmtD=function(s){
   if(!s)return'—';
   var d=new Date(s+'T12:00:00');
-  var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return d.getDate()+' '+months[d.getMonth()];
+  var months=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
 };
 function fmtRange(ci,co){
   if(!ci||!co)return'—';
@@ -1275,7 +1270,7 @@ function hasConflict(apt,cin,cout,exId){
 
 // ══ TOAST ══
 var _tt;
-function toast(msg,type){type=type||'info';var el=document.getElementById('toast');el.textContent=msg;el.className='show t-'+type;clearTimeout(_tt);_tt=setTimeout(function(){el.className='';},3500);}
+function toast(msg,type){type=type||'info';var el=document.getElementById('toast');if(!el)return;el.textContent=msg;el.className='show t-'+type;if(typeof clearTimeout!=='undefined')clearTimeout(_tt);_tt=setTimeout(function(){el.className='';},3500);}
 var showToast=toast;
 
 // ══ AUTH ══
@@ -1517,9 +1512,6 @@ function submitJoin(){
   if(!phone) { toast('أدخل رقم الجوال','error');     return; }
   if(!email) { toast('أدخل البريد الإلكتروني','error'); return; }
   if(!biz)   { toast('أدخل اسم النشاط','error');     return; }
-  if(!pass)  { toast('أدخل كلمة المرور','error');    return; }
-  if(pass.length < 6){ toast('كلمة المرور 6 أحرف على الأقل','error'); return; }
-  if(pass !== pass2) { toast('كلمتا المرور غير متطابقتين','error'); return; }
 
   var pkg    = PKG_PRICES[_selectedPkg];
   var price  = _billingYearly ? pkg.yearly  : pkg.monthly;
@@ -1689,15 +1681,59 @@ function renderOwnerRequests(){
     +(!reqs.length ? '<div style="text-align:center;padding:40px;color:var(--text3);">لا توجد طلبات بعد</div>' : '');
 }
 
+
+function _genTempPass(){
+  var chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!';
+  var pass='';
+  for(var i=0;i<10;i++) pass+=chars[Math.floor(Math.random()*chars.length)];
+  return pass;
+}
 function approveRequest(id){
   if(!DB.joinRequests) return;
-  DB.joinRequests = DB.joinRequests.map(function(r){
-    return r.id===id ? Object.assign({},r,{status:'approved'}) : r;
-  });
+  var req=DB.joinRequests.find(function(r){return r.id===id;});
+  if(!req) return;
+  DB.joinRequests=DB.joinRequests.map(function(r){return r.id===id?Object.assign({},r,{status:'approved'}):r;});
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   sbFetch('join_requests','PATCH',{status:'approved'},'?id=eq.'+id).catch(function(){});
-  toast('✅ تم قبول الطلب','success');
+  // Create biz_account
+  var bizId=req.email?req.email.toLowerCase().replace(/[^a-z0-9]/g,'_'):(req.biz_id||id);
+  var tempPass=_genTempPass();
+  var acct={id:bizId,email:req.email,password:tempPass,biz_name:req.biz||req.name,biz_type:req.bizType||req.biz_type||'',owner_name:req.name,phone:req.phone,pkg:req.pkg||'free',status:'active',created_at:new Date().toISOString()};
+  sbFetch('biz_accounts','POST',acct,'?on_conflict=id').catch(function(){});
+  // Show WhatsApp button
+  _sendWhatsApp(req, tempPass);
   renderOwnerRequests();
+}
+
+function _sendWhatsApp(req,tempPass){
+  if(!tempPass) tempPass=req._tempPass||req.pass||'—';
+  var phone=(req.phone||'').replace(/[^0-9]/g,'');
+  if(phone.startsWith('0')) phone='966'+phone.slice(1);
+  var appUrl='https://ya-hotel.vercel.app';
+  var msg='مرحباً '+req.name+' 👋\n\n'
+    +'تم قبول طلب انضمامك في منصة BODO ✅\n\n'
+    +'*بيانات دخول نشاطك:*\n'
+    +'🔗 الرابط: '+appUrl+'\n'
+    +'📧 الإيميل: '+req.email+'\n'
+    +'🔑 كلمة المرور المؤقتة: '+tempPass+'\n'+'(يُنصح بتغييرها بعد أول دخول)\n\n'
+    +'يمكنك تغيير كلمة المرور بعد الدخول من الإعدادات.\n\n'
+    +'أهلاً وسهلاً بك في BODO 🎉';
+  var url='https://wa.me/'+phone+'?text='+encodeURIComponent(msg);
+  // Save tempPass to req for WhatsApp
+  req._tempPass=tempPass;
+  // Show confirm dialog with WhatsApp link
+  showConfirm(
+    '✅ تم القبول',
+    '<div style="text-align:center;padding:8px 0;">'
+      +'<div style="font-size:13px;margin-bottom:12px;">تم إنشاء حساب <strong>'+req.name+'</strong></div>'
+      +'<a href="'+url+'" target="_blank" style="display:inline-flex;align-items:center;gap:8px;background:#25d366;color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:800;text-decoration:none;">'
+        +'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>'
+        +' إرسال بيانات الدخول عبر واتساب'
+      +'</a>'
+    +'</div>',
+    function(){},
+    {okText:'إغلاق',okColor:'var(--bg3)'}
+  );
 }
 
 function rejectRequest(id){
@@ -1723,10 +1759,14 @@ function renderOwnerSubscribers(){
           +'<div style="font-size:11px;color:var(--text3);">'+r.name+' · '+r.phone+'</div>'
           +'<div style="font-size:11px;color:var(--accent);font-weight:700;margin-top:2px;">باقة '+r.pkgLabel+'</div>'
         +'</div>'
-        +'<div style="text-align:left;">'
+        +'<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">'
           +'<div style="font-size:14px;font-weight:900;color:var(--accent);">'+r.price+' ر.س</div>'
           +'<div style="font-size:10px;color:var(--text3);">'+r.billing+'</div>'
           +'<div style="font-size:10px;color:var(--text3);">منذ '+r.date+'</div>'
+          +'<button onclick="_sendWhatsApp(DB.joinRequests.find(function(x){return x.id===\''+r.id+'\'}))" style="margin-top:4px;display:flex;align-items:center;gap:4px;background:#25d366;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">'
+            +'<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>'
+            +' إرسال البيانات'
+          +'</button>'
         +'</div>'
       +'</div>';
     }).join('')
@@ -1867,11 +1907,14 @@ function doLogin(){
   var u=document.getElementById('login-user').value.trim();
   var p=document.getElementById('login-pass').value.trim();
   var err=document.getElementById('login-err');
+  if(!u||!p){err.style.display='block';return;}
+  // 1. Admin check
   if(u===ADMIN.username&&p===ADMIN.password){
     currentUser={username:u,role:'admin'};
     localStorage.setItem('kaya_session',JSON.stringify(currentUser));
     showApp();return;
   }
+  // 2. Staff/employee check (local)
   var found=(DB.appUsers||[]).find(function(x){return x.username===u&&x.password===p;});
   if(found){
     var uRole=found.role||'staff';
@@ -1879,8 +1922,33 @@ function doLogin(){
     localStorage.setItem('kaya_session',JSON.stringify(currentUser));
     showApp();return;
   }
-  err.style.display='block';
-  setTimeout(function(){err.style.display='none';},3000);
+  // 3. Subscriber (biz_account) check via Supabase
+  var btn=document.getElementById('login-btn');
+  if(btn){btn.textContent='جاري التحقق...';btn.disabled=true;}
+  var emailQ=encodeURIComponent(u.toLowerCase());
+  sbFetch('biz_accounts','GET',null,'?email=eq.'+emailQ+'&select=*').then(function(res){
+    if(btn){btn.textContent='دخول';btn.disabled=false;}
+    if(!res||!res.length){err.style.display='block';setTimeout(function(){err.style.display='none';},3000);return;}
+    var acct=res[0];
+    if(acct.password!==p){err.style.display='block';setTimeout(function(){err.style.display='none';},3000);return;}
+    if(acct.status!=='active'){
+      var errMsg=document.getElementById('login-err');
+      if(errMsg){errMsg.textContent='الحساب غير مفعّل بعد';errMsg.style.display='block';setTimeout(function(){errMsg.style.display='none';errMsg.textContent='بيانات الدخول غير صحيحة';},4000);}
+      return;
+    }
+    // Login as subscriber
+    var bizId=acct.id||acct.email.toLowerCase().replace(/[^a-z0-9]/g,'_');
+    currentUser={username:acct.email,role:'subscriber',fullname:acct.owner_name,bizId:bizId,bizName:acct.biz_name,pkg:acct.pkg};
+    localStorage.setItem('kaya_session',JSON.stringify(currentUser));
+    // Set subscriberInfo
+    DB.subscriberInfo={email:acct.email,name:acct.owner_name,bizName:acct.biz_name,bizType:acct.biz_type,pkg:acct.pkg,status:'active',bizId:bizId};
+    DB.bizName=acct.biz_name;
+    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    showApp();
+  }).catch(function(){
+    if(btn){btn.textContent='دخول';btn.disabled=false;}
+    err.style.display='block';setTimeout(function(){err.style.display='none';},3000);
+  });
 }
 function showApp(){
   // Reload DB fresh to avoid stale data between sessions
@@ -2297,7 +2365,7 @@ function _calClear(){
   var hid=document.getElementById(_calActiveField);
   var btn=document.getElementById(_calActiveBtnId);
   if(hid) hid.value='';
-  if(btn){ btn.textContent='اختر تاريخ'; btn.style.color='var(--text3)'; btn.style.borderColor='var(--border)'; }
+  if(btn){ btn.innerHTML='اختر تاريخ'; btn.style.color='var(--text3)'; btn.style.borderColor='var(--border)'; }
   closeCal();
 }
 // ═══ END CALENDAR ═══
@@ -2318,7 +2386,7 @@ function buildMonthlyForm(pre){
       +'<div class="form-group" style="margin:0"><label class="form-label">المبلغ (ر.س) <span style="color:var(--red)">*</span></label>'
         +'<input id="mo-am" class="fi" placeholder="0" value="'+(pre?pre.amount:'')+'"></div>'
       +'<div class="form-group" style="margin:0"><label class="form-label">تاريخ الاستحقاق</label>'
-        +'<button type="button" data-fid="mo-due" onclick="calOpenField(this.dataset.fid)" id="mo-cal-btn" class="fi" style="text-align:right;cursor:pointer;color:'+(saved?'var(--text)':'var(--text3)')+';font-size:13px;background:var(--bg3);border:1.5px solid '+(saved?'var(--accent)':'var(--border)')+';">'+lbl+'</button>'
+        +'<button type="button" data-fid="mo-due" onclick="calOpenField(this.dataset.fid)" id="mo-due-btn" class="fi" style="text-align:right;cursor:pointer;color:'+(saved?'var(--text)':'var(--text3)')+';font-size:13px;background:var(--bg3);border:1.5px solid '+(saved?'var(--accent)':'var(--border)')+';">'+lbl+'</button>'
         +'<input type="hidden" id="mo-due" value="'+saved+'">'
       +'</div>'
     +'</div>'
@@ -2487,30 +2555,102 @@ function openDetail(id){
 var _et='صيانة';
 function buildExpenseForm(){
   _et='صيانة';
+  var MONTHS_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var nowY=new Date().getFullYear(), nowM=new Date().getMonth()+1;
+  var monthOpts=''; for(var i=1;i<=12;i++){monthOpts+='<option value="'+String(i).padStart(2,'0')+'"'+(i===nowM?' selected':'')+'>'+MONTHS_AR[i-1]+'</option>';}
+  var yearOpts=''; for(var y=nowY-3;y<=nowY+1;y++){yearOpts+='<option value="'+y+'"'+(y===nowY?' selected':'')+'>'+y+'</option>';}
+  var empOpts=(DB.employees||[]).map(function(e){return'<option value="'+e.salary+'" data-empid="'+e.id+'" data-name="'+e.name+'">'+e.name+'</option>';}).join('');
+
   document.getElementById('exp-body').innerHTML=
-    '<div class="form-group"><label class="form-label">النوع</label><div class="exp-grid">'+EXP_TYPES.map(function(x,i){return'<div class="exp-opt'+(x.t==='صيانة'?' sel':'')+'" onclick="sExp('+i+',this)">'+x.i+' '+x.t+'</div>';}).join('')+'</div><input type="hidden" id="e-t" value="صيانة"></div>'
-    +'<div id="ew" style="display:none;" class="form-group"><label class="form-label">الموظف</label><select id="e-em" class="fi" onchange="fSal()">'+(DB.employees||[]).map(function(e){return'<option value="'+e.salary+'">'+e.name+' ('+fmtM(e.salary)+' ر.س)</option>';}).join('')+'</select></div>'
-    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام">عام</option>'+(DB.units||[]).map(function(u){return'<option>'+u+'</option>';}).join('')+'</select></div><div class="form-group"><label class="form-label">التاريخ</label><button type="button" id="e-d-btn" data-fid="e-d" onclick="calOpenField(this.dataset.fid)" class="fi" style="text-align:right;cursor:pointer;font-size:13px;">'+(_fmtCalDate(toDay())||'اختر تاريخ')+'</button><input type="hidden" id="e-d" value="'+(toDay()||'')+'"></div></div>'
-    +'<div class="form-group"><label class="form-label">الوصف</label><input id="e-ds" class="fi" placeholder="وصف المصروف"></div>'
-    +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="e-am" class="fi" placeholder="0"></div>'
+    // نوع المصروف
+    '<div class="form-group"><label class="form-label">النوع</label>'
+      +'<div class="exp-grid">'+EXP_TYPES.map(function(x,i){return'<div class="exp-opt'+(x.t==='صيانة'?' sel':'')+'" onclick="sExp('+i+',this)">'+x.i+' '+x.t+'</div>';}).join('')+'</div>'
+      +'<input type="hidden" id="e-t" value="صيانة">'
+    +'</div>'
+    // قسم الراتب (يظهر فقط عند اختيار راتب)
+    +'<div id="ew" style="display:none;">'
+      +'<div class="form-group"><label class="form-label">الموظف</label>'
+        +'<select id="e-em" class="fi" onchange="fSal()">'+(empOpts||'<option value="">لا يوجد موظفون</option>')+'</select>'
+      +'</div>'
+      +'<div class="form-row">'
+        +'<div class="form-group"><label class="form-label">الشهر</label><select id="e-sal-m" class="fi">'+monthOpts+'</select></div>'
+        +'<div class="form-group"><label class="form-label">السنة</label><select id="e-sal-y" class="fi">'+yearOpts+'</select></div>'
+      +'</div>'
+    +'</div>'
+    // الوحدة والتاريخ (يظهران فقط لغير الراتب)
+    +'<div id="e-date-row" class="form-row">'
+      +'<div class="form-group"><label class="form-label">الوحدة</label>'
+        +'<select id="e-a" class="fi"><option value="عام">عام</option>'+(DB.units||[]).map(function(u){return'<option>'+u+'</option>';}).join('')+'</select>'
+      +'</div>'
+      +'<div class="form-group"><label class="form-label">التاريخ</label>'
+        +'<button type="button" id="e-d-btn" data-fid="e-d" onclick="calOpenField(this.dataset.fid)" class="fi" style="text-align:right;cursor:pointer;font-size:13px;">'+(_fmtCalDate(toDay())||'اختر تاريخ')+'</button>'
+        +'<input type="hidden" id="e-d" value="'+(toDay()||'')+'">'
+      +'</div>'
+    +'</div>'
+    // الوصف - يُخفى للراتب لأنه يُبنى تلقائياً
+    +'<div id="e-desc-row" class="form-group"><label class="form-label">الوصف</label><input id="e-ds" class="fi" placeholder="وصف المصروف"></div>'
+    // المبلغ
+    +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="e-am" class="fi" placeholder="0" type="number"></div>'
     +'<button class="btn btn-primary btn-full" onclick="savExp()">حفظ</button>';
 }
-function sExp(i,el){_et=EXP_TYPES[i].t;document.getElementById('e-t').value=_et;document.querySelectorAll('.exp-opt').forEach(function(x){x.classList.remove('sel');});el.classList.add('sel');var w=document.getElementById('ew');if(w)w.style.display=_et==='راتب'&&(DB.employees||[]).length?'block':'none';if(_et==='راتب')fSal();}
-function fSal(){var sel=document.getElementById('e-em');var el=document.getElementById('e-am');if(sel&&el)el.value=sel.value;}
+
+function sExp(i,el){
+  _et=EXP_TYPES[i].t;
+  document.getElementById('e-t').value=_et;
+  document.querySelectorAll('.exp-opt').forEach(function(x){x.classList.remove('sel');});
+  el.classList.add('sel');
+  var isSalary=_et==='راتب'&&(DB.employees||[]).length;
+  var ew=document.getElementById('ew');
+  var dr=document.getElementById('e-date-row');
+  var dsc=document.getElementById('e-desc-row');
+  if(ew)  ew.style.display  = isSalary?'block':'none';
+  if(dr)  dr.style.display  = isSalary?'none':'grid';
+  if(dsc) dsc.style.display = isSalary?'none':'block';
+  if(isSalary) fSal();
+}
+
+function fSal(){
+  var sel=document.getElementById('e-em');
+  var am=document.getElementById('e-am');
+  if(sel&&am){
+    var opt=sel.options[sel.selectedIndex];
+    if(opt) am.value=opt.value;
+  }
+}
 function savExp(){
-  var type=document.getElementById('e-t')?.value||'أخرى';var apt=document.getElementById('e-a')?.value||'عام';
-  var date=_readCal('e-d')||toDay();var amount=parseFloat(document.getElementById('e-am')?.value)||0;
+  var type=document.getElementById('e-t')?.value||'أخرى';
+  var isSalary=type==='راتب';
+  var apt=document.getElementById('e-a')?.value||'عام';
+  var date=isSalary?toDay():(_readCal('e-d')||toDay());
+  var amount=parseFloat(document.getElementById('e-am')?.value)||0;
   if(!amount){toast('أدخل المبلغ','error');return;}
   var desc=document.getElementById('e-ds')?.value||type;
-  if(type==='راتب'){var s=document.getElementById('e-em');if(s){var nm=s.options[s.selectedIndex]?.text?.split('(')[0]?.trim();if(nm)desc='راتب: '+nm;}}
+  var salaryRef=null, salaryMonth=null;
+  if(type==='راتب'){
+    var sel=document.getElementById('e-em');
+    if(sel){
+      var idx=sel.selectedIndex>=0?sel.selectedIndex:0;
+      var opt=sel.options[idx];
+      var empId=opt?opt.getAttribute('data-empid'):'';
+      var empName=opt?opt.getAttribute('data-name'):'';
+      var salM=document.getElementById('e-sal-m')?.value||String(new Date().getMonth()+1).padStart(2,'0');
+      var salY=document.getElementById('e-sal-y')?.value||String(new Date().getFullYear());
+      salaryMonth=salY+'-'+salM;
+      salaryRef=empId;
+      var already=(DB.expenses||[]).some(function(x){return x.salaryRef===empId&&x.salaryMonth===salaryMonth;});
+      if(already){
+        var MONTHS_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+        toast('تم صرف راتب '+empName+' لشهر '+MONTHS_AR[parseInt(salM)-1]+' '+salY+' مسبقاً','error');
+        return;
+      }
+      var MONTHS_AR2=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+      desc='راتب '+empName+' — '+MONTHS_AR2[parseInt(salM)-1]+' '+salY;
+    }
+  }
   if(!DB.expenses)DB.expenses=[];
-  var exp={id:uid(),type:type,apt:apt,date:date,desc:desc,amount:amount};
+  var exp={id:uid(),type:type,apt:apt,date:date,desc:desc,amount:amount,salaryRef:salaryRef,salaryMonth:salaryMonth,biz_id:getBizId()};
   DB.expenses.push(exp);
-  // ── حفظ فوري في Supabase ──
-  sbFetch('expenses','POST',{
-    id:exp.id,type:exp.type,amount:exp.amount,date:exp.date,
-    apt:exp.apt,desc:exp.desc,notes:exp.desc
-  },'?on_conflict=id').catch(function(){});
+  sbFetch('expenses','POST',{id:exp.id,type:exp.type,amount:exp.amount,date:exp.date,apt:exp.apt,desc:exp.desc,notes:exp.desc,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('expense');toast('✅ تم حفظ المصروف','success');renderExpenses();renderDashboard();
 }
@@ -2734,10 +2874,25 @@ function renderExpensesList(){
   var sorted=[].concat(DB.expenses||[]).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
   var el=document.getElementById('expenses-list');if(!el)return;
   el.innerHTML=sorted.length?sorted.map(function(e){
+    var isSalary=e.type==='راتب'&&e.salaryRef;
+    var emp=isSalary?(DB.employees||[]).find(function(x){return x.id===e.salaryRef;}):null;
+    var MONTHS_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    var mainTitle = isSalary
+      ? 'راتب '+(emp?emp.name:(e.desc||'').replace(/^راتب\s*/,'').split(' — ')[0])
+      : e.desc;
+    var subLine = isSalary && e.salaryMonth
+      ? (function(){var p=e.salaryMonth.split('-');return MONTHS_AR[parseInt(p[1])-1]+' '+p[0];}())
+      : e.type+' · '+fmtD(e.date);
+    var dateAdded = isSalary ? 'أُضيف: '+fmtD(e.date) : '';
+    var aptLabel = e.apt&&e.apt!=='عام' ? ' · '+e.apt : '';
     return'<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">'
       +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">'
         +'<div style="width:42px;height:42px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">'+(EI[e.type]||'📌')+'</div>'
-        +'<div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:13px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+e.desc+' <span style="color:var(--accent);">· '+e.apt+'</span></div><div style="font-size:11px;color:var(--text3);">'+fmtD(e.date)+' · '+e.type+'</div></div>'
+        +'<div style="flex:1;min-width:0;">'
+          +'<div style="font-weight:700;font-size:13px;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+mainTitle+'<span style="color:var(--accent);">'+aptLabel+'</span></div>'
+          +'<div style="font-size:11px;color:var(--text3);">'+subLine+'</div>'
+          +(dateAdded?'<div style="font-size:10px;color:var(--text3);margin-top:1px;">'+dateAdded+'</div>':'')
+        +'</div>'
         +'<div style="font-weight:900;font-size:15px;color:var(--red);white-space:nowrap;">'+fmtM(e.amount)+' ر.س</div>'
       +'</div>'
       +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
@@ -2970,28 +3125,23 @@ function renderFixedCosts(){
     mcEl.innerHTML=(DB.monthly||[]).length?(DB.monthly||[]).map(function(m){
       var aptLabel = m.apt&&m.apt!=='عام' ? m.apt : 'عام';
       var dueLabel = m.dueDate
-        ? '<div style="display:flex;align-items:center;gap:4px;margin-top:4px;">'
-          +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
-          +'<span style="font-size:10px;color:var(--accent);font-weight:700;">'+fmtDate(m.dueDate)+'</span>'
-          +'</div>'
+        ? '<div style="font-size:11px;color:var(--text3);">'+fmtDate(m.dueDate)+'</div>'
         : '';
-      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">'
-        +'<div style="flex:1;min-width:0;">'
-          +'<div style="font-size:13px;font-weight:800;color:var(--text);">'+m.name+'</div>'
-          +'<div style="display:flex;align-items:center;gap:6px;margin-top:3px;">'
-            +'<span style="font-size:10px;color:var(--text3);background:var(--bg3);padding:1px 7px;border-radius:20px;">'+aptLabel+'</span>'
+      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">'
+        +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">'
+          +'<div style="width:42px;height:42px;border-radius:10px;background:var(--gold);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
+            +'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
           +'</div>'
-          +dueLabel
+          +'<div style="flex:1;min-width:0;">'
+            +'<div style="font-weight:700;font-size:13px;margin-bottom:2px;">'+m.name+' <span style="color:var(--accent);">· '+aptLabel+'</span></div>'
+            +'<div style="font-size:11px;color:var(--text3);">'+(m.dueDate?'تاريخ الاستحقاق: '+_fmtCalDate(m.dueDate):'شهري')+'</div>'
+          +'</div>'
+          +'<div style="font-weight:900;font-size:15px;color:var(--yellow);white-space:nowrap;">'+fmtM(m.amount)+' ر.س</div>'
         +'</div>'
-        +'<div style="text-align:left;flex-shrink:0;">'
-          +'<div style="font-size:14px;font-weight:900;color:var(--accent);">'+fmtM(m.amount)+'</div>'
-          +'<div style="font-size:10px;color:var(--text3);text-align:center;">ر.س</div>'
-        +'</div>'
-        +'<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">'
+        +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
           +'<button class="btn btn-xs btn-success" onclick="openEditMo(\''+m.id+'\')">تعديل</button>'
-          +'<button class="btn btn-xs btn-danger"  onclick="delMo(\''+m.id+'\')">حذف</button>'
-        +'</div>'
-      +'</div>';
+          +'<button class="btn btn-xs btn-danger" onclick="delMo(\''+m.id+'\')">حذف</button>'
+        +'</div></div>';
     }).join(''):'<div class="empty" style="padding:20px;"><div class="empty-text">لا توجد تكاليف شهرية — اضغط "+ تكلفة شهرية"</div></div>';
   }
   var emEl=document.getElementById('employees-costs-list');
@@ -3122,13 +3272,65 @@ function openEditExp(id){
   _expId=id;
   _et=e.type||'صيانة';
   document.getElementById('sheet-expense').querySelector('.sheet-title').textContent='تعديل مصروف';
+
+  // راتب — نموذج مخصص
+  if(e.type==='راتب'&&e.salaryRef){
+    var emp=(DB.employees||[]).find(function(x){return x.id===e.salaryRef;});
+    var MONTHS_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    var nowY=new Date().getFullYear(), nowM=new Date().getMonth()+1;
+    var curM=e.salaryMonth?parseInt(e.salaryMonth.split('-')[1]):nowM;
+    var curY=e.salaryMonth?parseInt(e.salaryMonth.split('-')[0]):nowY;
+    var monthOpts=''; for(var i=1;i<=12;i++){monthOpts+='<option value="'+String(i).padStart(2,'0')+'"'+(i===curM?' selected':'')+'>'+MONTHS_AR[i-1]+'</option>';}
+    var yearOpts=''; for(var y=nowY-3;y<=nowY+1;y++){yearOpts+='<option value="'+y+'"'+(y===curY?' selected':'')+'>'+y+'</option>';}
+    document.getElementById('exp-body').innerHTML=
+      '<div class="form-group"><label class="form-label">الموظف</label>'
+        +'<input class="fi" value="'+(emp?emp.name:(e.desc||''))+'" readonly style="opacity:0.55;cursor:not-allowed;background:var(--bg3);">'
+      +'</div>'
+      +'<div class="form-row">'
+        +'<div class="form-group"><label class="form-label">الشهر</label><select id="ps-m" class="fi">'+monthOpts+'</select></div>'
+        +'<div class="form-group"><label class="form-label">السنة</label><select id="ps-y" class="fi">'+yearOpts+'</select></div>'
+      +'</div>'
+      +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label>'
+        +'<input id="ps-am" class="fi" type="number" value="'+e.amount+'">'
+      +'</div>'
+      +'<button class="btn btn-primary btn-full" onclick="saveSalaryEdit(\''+id+'\',\''+e.salaryRef+'\')">حفظ التعديل</button>';
+    document.getElementById('sheet-expense').classList.add('open');
+    return;
+  }
+
+  // مصروف عادي
   document.getElementById('exp-body').innerHTML=
     '<div class="form-group"><label class="form-label">النوع</label><div class="exp-grid">'+EXP_TYPES.map(function(x,i){return'<div class="exp-opt'+(x.t===e.type?' sel':'')+'" onclick="sExp('+i+',this)">'+x.i+' '+x.t+'</div>';}).join('')+'</div><input type="hidden" id="e-t" value="'+(e.type||'صيانة')+'"></div>'
-    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام"'+(e.apt==='عام'?' selected':'')+'>عام</option>'+(DB.units||[]).map(function(u){return'<option'+(u===e.apt?' selected':'')+'>'+u+'</option>';}).join('')+'</select></div><div class="form-group"><label class="form-label">التاريخ</label></div></div>'
+    +'<div class="form-row"><div class="form-group"><label class="form-label">الوحدة</label><select id="e-a" class="fi"><option value="عام"'+(e.apt==='عام'?' selected':'')+'>عام</option>'+(DB.units||[]).map(function(u){return'<option'+(u===e.apt?' selected':'')+'>'+u+'</option>';}).join('')+'</select></div>'
+    +'<div class="form-group"><label class="form-label">التاريخ</label>'
+      +'<button type="button" id="e-d-btn" data-fid="e-d" onclick="calOpenField(this.dataset.fid)" class="fi" style="text-align:right;cursor:pointer;font-size:13px;">'+(_fmtCalDate(e.date||toDay())||'اختر تاريخ')+'</button>'
+      +'<input type="hidden" id="e-d" value="'+(e.date||toDay())+'">'
+    +'</div></div>'
     +'<div class="form-group"><label class="form-label">الوصف</label><input id="e-ds" class="fi" value="'+(e.desc||'')+'"></div>'
-    +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="e-am" class="fi" value="'+(e.amount||'')+'"></div>'
+    +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label><input id="e-am" class="fi" type="number" value="'+(e.amount||'')+'"></div>'
     +'<button class="btn btn-primary btn-full" onclick="savExpEdit()">حفظ التعديل</button>';
   document.getElementById('sheet-expense').classList.add('open');
+}
+
+function saveSalaryEdit(expId, empId){
+  var salM=document.getElementById('ps-m')?.value||'01';
+  var salY=document.getElementById('ps-y')?.value||String(new Date().getFullYear());
+  var amount=parseFloat(document.getElementById('ps-am')?.value)||0;
+  if(!amount){toast('أدخل المبلغ','error');return;}
+  var MONTHS_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var salaryMonth=salY+'-'+salM;
+  var mLabel=MONTHS_AR[parseInt(salM)-1]+' '+salY;
+  var emp=(DB.employees||[]).find(function(x){return x.id===empId;});
+  var desc='راتب '+(emp?emp.name:'')+'  — '+mLabel;
+  // Check duplicate (exclude current record)
+  var already=(DB.expenses||[]).some(function(x){return x.id!==expId&&x.salaryRef===empId&&x.salaryMonth===salaryMonth;});
+  if(already){toast('يوجد راتب مسجل لشهر '+mLabel+' مسبقاً','error');return;}
+  DB.expenses=(DB.expenses||[]).map(function(e){
+    return e.id===expId?Object.assign({},e,{amount:amount,salaryMonth:salaryMonth,desc:desc}):e;
+  });
+  sbFetch('expenses','PATCH',{amount:amount,desc:desc,notes:desc},'?id=eq.'+expId).catch(function(){});
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(err){}
+  closeSheet('expense');toast('✅ تم التعديل','success');renderExpensesList();renderDashboard();
 }
 function savExpEdit(){
   var type=document.getElementById('e-t')?.value||'أخرى';var apt=document.getElementById('e-a')?.value||'عام';
@@ -4099,32 +4301,101 @@ function renderEmployeesList(){
       +'<div style="font-size:11px;color:var(--text3);">لا يوجد موظفون بعد</div></div>';
     return;
   }
+  var nowY=new Date().getFullYear(), nowM=new Date().getMonth()+1;
+  var curMonth=nowY+'-'+String(nowM).padStart(2,'0');
   el.innerHTML = emps.map(function(e){
     var acc = (DB.appUsers||[]).find(function(u){return u.employeeId===e.id;});
-    return '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;">'
-      // أفاتار
+    // Check if salary paid this month
+    var paid = (DB.expenses||[]).some(function(x){
+      return x.salaryRef===e.id && x.date && x.date.startsWith(curMonth);
+    });
+    var payBtn = e.salary
+      ? (paid
+        ? '<button class="btn btn-xs" style="background:rgba(52,211,153,.12);color:var(--green);border:1px solid rgba(52,211,153,.3);" disabled>✓ مصروف</button>'
+        : '<button class="btn btn-xs btn-gold" onclick="paySalary(\''+e.id+'\')">صرف راتب</button>')
+      : '';
+    return '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;">'
       +'<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#1a0f00;flex-shrink:0;">'+(e.name.charAt(0)||'م')+'</div>'
-      // معلومات
       +'<div style="flex:1;min-width:0;">'
         +'<div style="font-size:13px;font-weight:800;color:var(--text);">'+e.name+'</div>'
         +'<div style="font-size:11px;color:var(--text3);margin-top:1px;display:flex;align-items:center;gap:8px;">'
           +'<span>'+e.role+'</span>'
           +(e.salary?'<span style="color:var(--accent);font-weight:700;">'+fmtM(e.salary)+' ر.س</span>':'')
-          +(e.hireDate?'<span style="color:var(--text3);">منذ '+e.hireDate+'</span>':'')
           +(acc
             ?'<span style="display:inline-flex;align-items:center;gap:3px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;"></span><span style="color:var(--green);font-weight:700;">مستخدم</span></span>'
-            :'<span style="color:var(--text3);opacity:.6;">بدون مستخدم</span>'
-          )
+            :'')
         +'</div>'
       +'</div>'
-      // أزرار
-      +'<div style="display:flex;gap:6px;flex-shrink:0;">'
+      +'<div style="display:flex;gap:6px;flex-shrink:0;align-items:center;">'
+        +payBtn
         +'<button class="btn btn-xs btn-success" onclick="openEditEm(\''+e.id+'\')">تعديل</button>'
         +'<button class="btn btn-xs btn-danger" onclick="delEm(\''+e.id+'\')">حذف</button>'
       +'</div>'
     +'</div>';
   }).join('');
 }
+
+function paySalary(empId){
+  var e=(DB.employees||[]).find(function(x){return x.id===empId;});
+  if(!e||!e.salary){toast('لا يوجد راتب محدد للموظف','error');return;}
+
+  // Open the expense sheet (add mode)
+  var sheet=document.getElementById('sheet-expense');
+  var title=document.getElementById('exp-title');
+  if(title) title.textContent='صرف راتب';
+
+  // Build salary-specific form
+  var MONTHS_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var nowY=new Date().getFullYear(), nowM=new Date().getMonth()+1;
+  var monthOpts=''; for(var i=1;i<=12;i++){monthOpts+='<option value="'+String(i).padStart(2,'0')+'"'+(i===nowM?' selected':'')+'>'+MONTHS_AR[i-1]+'</option>';}
+  var yearOpts=''; for(var y=nowY-3;y<=nowY+1;y++){yearOpts+='<option value="'+y+'"'+(y===nowY?' selected':'')+'>'+y+'</option>';}
+
+  document.getElementById('exp-body').innerHTML=
+    // اسم الموظف - مظلل غير قابل للتعديل
+    '<div class="form-group"><label class="form-label">الموظف</label>'
+      +'<input class="fi" value="'+e.name+'" readonly style="opacity:0.55;cursor:not-allowed;background:var(--bg3);">'
+    +'</div>'
+    // الشهر والسنة
+    +'<div class="form-row">'
+      +'<div class="form-group"><label class="form-label">الشهر</label><select id="ps-m" class="fi">'+monthOpts+'</select></div>'
+      +'<div class="form-group"><label class="form-label">السنة</label><select id="ps-y" class="fi">'+yearOpts+'</select></div>'
+    +'</div>'
+    // الراتب قابل للتعديل
+    +'<div class="form-group"><label class="form-label">المبلغ (ر.س)</label>'
+      +'<input id="ps-am" class="fi" type="number" value="'+e.salary+'">'
+    +'</div>'
+    +'<button class="btn btn-primary btn-full" onclick="confirmPaySalary(\''+empId+'\')">صرف الراتب</button>';
+
+  if(sheet) sheet.classList.add('open');
+}
+
+function confirmPaySalary(empId){
+  var e=(DB.employees||[]).find(function(x){return x.id===empId;});
+  if(!e) return;
+  var salM=document.getElementById('ps-m')?.value||'01';
+  var salY=document.getElementById('ps-y')?.value||String(new Date().getFullYear());
+  var amount=parseFloat(document.getElementById('ps-am')?.value)||e.salary;
+  if(!amount){toast('أدخل المبلغ','error');return;}
+  var MONTHS_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var salaryMonth=salY+'-'+salM;
+  var mLabel=MONTHS_AR[parseInt(salM)-1]+' '+salY;
+  // منع التكرار
+  var already=(DB.expenses||[]).some(function(x){return x.salaryRef===empId&&x.salaryMonth===salaryMonth;});
+  if(already){toast('تم صرف راتب '+e.name+' لشهر '+mLabel+' مسبقاً','error');return;}
+  var rec={
+    id:uid(),type:'راتب',amount:amount,date:toDay(),apt:'عام',
+    desc:'راتب '+e.name+' — '+mLabel,notes:'',
+    salaryRef:empId,salaryMonth:salaryMonth,biz_id:getBizId()
+  };
+  if(!DB.expenses) DB.expenses=[];
+  DB.expenses.push(rec);
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(err){}
+  sbFetch('expenses','POST',rec,'?on_conflict=id').catch(function(){});
+  closeSheet('expense');
+  toast('✅ تم صرف راتب '+e.name+' — '+mLabel,'success');
+  renderEmployeesList();renderExpensesList();renderDashboard();
+}
+
 
 // ── إخفاء sheet-adduser (لم نعد نحتاجه منفصلاً) ──function renderUsersList(){ renderEmployeesList(); }function delUser(id){ delEm(id); }
 
@@ -4460,13 +4731,13 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 // ── Business Identifier ──
 function getBizId(){
+  // Priority: currentUser.bizId (set at login for subscribers)
+  if(currentUser&&currentUser.bizId) return currentUser.bizId;
   var sub = DB.subscriberInfo || {};
-  // bizId = email-based unique ID set at registration
   if(sub.bizId) return sub.bizId;
-  // Fallback: generate from email or username
-  var email = sub.email || '';
+  var email = sub.email || (currentUser&&currentUser.username) || '';
   if(email) return email.toLowerCase().replace(/[^a-z0-9]/g,'_');
-  return (currentUser&&currentUser.username) || DB.bizName || 'default';
+  return DB.bizName || 'default';
 }
 async function sbFetch(table, method, body, query) {
   var url = SB_URL + '/rest/v1/' + table + (query||'');
@@ -4836,7 +5107,7 @@ function showConfirm(title, msg, onConfirm, opts){
   var ok = document.getElementById('confirm-ok');
   if(!ov||!t||!m||!ok) return;
   t.textContent = title||'تأكيد';
-  m.textContent = msg||'هل أنت متأكد؟';
+  m.innerHTML = msg||'هل أنت متأكد؟';
   ok.textContent = opts.okText||'حذف';
   ok.style.background = opts.okColor||'#dc2626';
   _confirmCallback = onConfirm;
