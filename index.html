@@ -2949,8 +2949,16 @@ function savExp(){
   }
   if(!DB.expenses)DB.expenses=[];
   var exp={id:uid(),type:type,apt:apt,date:date,desc:desc,amount:amount,salaryRef:salaryRef,salaryMonth:salaryMonth,biz_id:getBizId()};
+  _markPending('expenses',exp.id);
   DB.expenses.push(exp);
-  sbFetch('expenses','POST',{id:exp.id,type:exp.type,amount:exp.amount,date:exp.date,apt:exp.apt,description:exp.desc,notes:exp.desc,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
+  sbFetch('expenses','POST',{
+    id:exp.id,type:exp.type,amount:exp.amount,date:exp.date,apt:exp.apt,
+    description:exp.desc,notes:exp.desc,
+    salary_ref:salaryRef||null,salary_month:salaryMonth||null,
+    biz_id:getBizId()
+  },'?on_conflict=id')
+    .then(function(){_clearPending('expenses',exp.id);})
+    .catch(function(){_clearPending('expenses',exp.id);});
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('expense');toast('✅ تم حفظ المصروف','success');renderExpenses();renderDashboard();
 }
@@ -3147,18 +3155,24 @@ function buildSaleForm(pre){
 }
 function openEditSale(id){if(!DB.sales)return;var s=DB.sales.find(function(x){return x.id===id;});if(s){buildSaleForm(s);document.getElementById('sheet-sale').classList.add('open');}}
 function saveSale(){
-  var desc=document.getElementById('sl-d')?.value?.trim();var date=document.getElementById('sl-dt')?.value||toDay();
-  var apt=document.getElementById('sl-a')?.value||'عام';var amount=parseFloat(document.getElementById('sl-am')?.value)||0;
+  var desc=document.getElementById('sl-ds')?.value?.trim()||document.getElementById('sl-d')?.value?.trim();
+  var date=_readCal('sl-dt')||toDay();
+  var apt=document.getElementById('sl-a')?.value||'عام';
+  var amount=parseFloat(document.getElementById('sl-am')?.value)||0;
   var notes=document.getElementById('sl-n')?.value||'';
-  if(!desc){toast('أدخل الوصف','error');return;}if(!amount){toast('أدخل المبلغ','error');return;}
+  if(!desc){toast('أدخل الوصف','error');return;}
+  if(!amount){toast('أدخل المبلغ','error');return;}
   if(!DB.sales)DB.sales=[];
   var entry={id:_saleId||uid(),desc:desc,date:date,apt:apt,amount:amount,notes:notes};
   if(_saleId){
     DB.sales=DB.sales.map(function(s){return s.id===_saleId?entry:s;});
     sbFetch('sales','PATCH',{description:desc,date:date,apt:apt,amount:amount,notes:notes},'?id=eq.'+_saleId).catch(function(){});
   } else {
+    _markPending('sales',entry.id);
     DB.sales.push(entry);
-    sbFetch('sales','POST',{id:entry.id,description:desc,date:date,apt:apt,amount:amount,notes:notes,biz_id:getBizId()},'?on_conflict=id').then(function(){_clearPending('sales',entry.id);}).catch(function(){});
+    sbFetch('sales','POST',{id:entry.id,description:desc,date:date,apt:apt,amount:amount,notes:notes,biz_id:getBizId()},'?on_conflict=id')
+      .then(function(){_clearPending('sales',entry.id);})
+      .catch(function(){_clearPending('sales',entry.id);});
   }
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('sale');toast(_saleId?'✅ تم التعديل':'✅ تم الحفظ','success');renderRevenue();renderDashboard();
