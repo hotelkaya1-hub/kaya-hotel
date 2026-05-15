@@ -5148,6 +5148,88 @@ function injectGmailBookings(){
 const SB_URL = 'https://uoysyclcycnttnidllxc.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVveXN5Y2xjeWNudHRuaWRsbHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjI0MjEsImV4cCI6MjA5MzgzODQyMX0.0GJbr8bQpcZ3G__p6CIW3t8dvEZAjjQL5FXLXmQ9Jmg';
 
+// ── Realtime Sync ──
+var _realtimeWS = null;
+var _realtimeTimer = null;
+var _reloadPending = false;
+
+function _scheduleReload(){
+  // Debounce — reload once even if multiple events fire together
+  if(_reloadPending) return;
+  _reloadPending = true;
+  setTimeout(function(){
+    _reloadPending = false;
+    loadFromSupabaseAuto().catch(function(){});
+  }, 300);
+}
+
+function initRealtime(){
+  if(_realtimeTimer) clearInterval(_realtimeTimer);
+  _realtimeTimer = setInterval(function(){
+    if(document.visibilityState !== 'hidden') loadFromSupabaseAuto().catch(function(){});
+  }, 30000);
+
+  _connectRealtime();
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'visible') loadFromSupabaseAuto().catch(function(){});
+  });
+}
+
+function _connectRealtime(){
+  try{
+    if(_realtimeWS){ try{_realtimeWS.close();}catch(e){} _realtimeWS=null; }
+    var wsUrl = SB_URL.replace('https://','wss://')
+      + '/realtime/v1/websocket?apikey=' + SB_KEY + '&vsn=1.0.0';
+    var ws = new WebSocket(wsUrl);
+    _realtimeWS = ws;
+    var hbInterval;
+
+    ws.onopen = function(){
+      // Heartbeat every 25s to keep connection alive
+      hbInterval = setInterval(function(){
+        if(ws.readyState===1) ws.send(JSON.stringify({topic:'phoenix',event:'heartbeat',payload:{},ref:'hb'}));
+      }, 25000);
+
+      var bizId = getBizId();
+      var tables = ['bookings','expenses','sales','monthly_costs','foundation_costs','employees','units'];
+      tables.forEach(function(tbl, i){
+        ws.send(JSON.stringify({
+          topic: 'realtime:public:'+tbl,
+          event: 'phx_join',
+          payload: {
+            config: {
+              broadcast: {self: false},
+              presence: {key: ''},
+              postgres_changes: [{event:'*', schema:'public', table:tbl, filter:'biz_id=eq.'+bizId}]
+            }
+          },
+          ref: String(i+1)
+        }));
+      });
+    };
+
+    ws.onmessage = function(e){
+      try{
+        var msg = JSON.parse(e.data);
+        var ev = msg.payload && msg.payload.type;
+        if(ev === 'INSERT' || ev === 'UPDATE' || ev === 'DELETE'){
+          _scheduleReload();
+        }
+      }catch(err){}
+    };
+
+    ws.onclose = function(){
+      clearInterval(hbInterval);
+      setTimeout(_connectRealtime, 3000);
+    };
+
+    ws.onerror = function(){ ws.close(); };
+  }catch(e){
+    setTimeout(_connectRealtime, 5000);
+  }
+}
+
 
 // ── Business Identifier ──
 function getBizId(){
