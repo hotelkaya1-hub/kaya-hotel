@@ -3155,7 +3155,7 @@ function buildSaleForm(pre){
 }
 function openEditSale(id){if(!DB.sales)return;var s=DB.sales.find(function(x){return x.id===id;});if(s){buildSaleForm(s);document.getElementById('sheet-sale').classList.add('open');}}
 function saveSale(){
-  var desc=document.getElementById('sl-ds')?.value?.trim()||document.getElementById('sl-d')?.value?.trim();
+  var desc=document.getElementById('sl-d')?.value?.trim();
   var date=_readCal('sl-dt')||toDay();
   var apt=document.getElementById('sl-a')?.value||'عام';
   var amount=parseFloat(document.getElementById('sl-am')?.value)||0;
