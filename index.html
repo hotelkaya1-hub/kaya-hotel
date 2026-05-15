@@ -1370,7 +1370,6 @@ document.addEventListener('DOMContentLoaded', function(){
   <span id="ic-lock"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 
 
@@ -5189,49 +5188,61 @@ function _scheduleReload(){
 
 function initRealtime(){
   if(_realtimeTimer) clearInterval(_realtimeTimer);
-
-  // Backup poll every 10 seconds
+  // Poll every 5 seconds as backup
   _realtimeTimer = setInterval(function(){
-    if(document.visibilityState !== 'hidden') loadFromSupabaseAuto().catch(function(){});
-  }, 10000);
-
+    if(document.visibilityState !== 'hidden') _syncFromCloud();
+  }, 5000);
   document.addEventListener('visibilitychange', function(){
-    if(document.visibilityState === 'visible') loadFromSupabaseAuto().catch(function(){});
+    if(document.visibilityState === 'visible') _syncFromCloud();
   });
-
-  _connectRealtime();
+  _startWS();
 }
 
-var _sbClient = null;
-var _sbChannel = null;
+// Lock to prevent concurrent loads
+var _syncLock = false;
+var _syncQueue = false;
+function _syncFromCloud(){
+  if(_syncLock){ _syncQueue=true; return; }
+  _syncLock=true;
+  loadFromSupabaseAuto().catch(function(){}).finally(function(){
+    _syncLock=false;
+    if(_syncQueue){ _syncQueue=false; setTimeout(_syncFromCloud,500); }
+  });
+}
 
-function _connectRealtime(){
+// Simple WebSocket polling approach
+var _ws=null;
+var _wsTimer=null;
+function _startWS(){
+  if(_ws) try{_ws.close();}catch(e){}
   try{
-    // Use official Supabase JS client
-    if(!window.supabase) { setTimeout(_connectRealtime, 1000); return; }
-
-    if(!_sbClient){
-      _sbClient = window.supabase.createClient(SB_URL, SB_KEY);
-    }
-
-    if(_sbChannel){ _sbClient.removeChannel(_sbChannel); }
-
-    _sbChannel = _sbClient
-      .channel('db-changes')
-      .on('postgres_changes', {event:'*', schema:'public', table:'bookings'}, function(){ loadFromSupabaseAuto().catch(function(){}); })
-      .on('postgres_changes', {event:'*', schema:'public', table:'sales'}, function(){ loadFromSupabaseAuto().catch(function(){}); })
-      .on('postgres_changes', {event:'*', schema:'public', table:'expenses'}, function(){ loadFromSupabaseAuto().catch(function(){}); })
-      .on('postgres_changes', {event:'*', schema:'public', table:'monthly_costs'}, function(){ loadFromSupabaseAuto().catch(function(){}); })
-      .on('postgres_changes', {event:'*', schema:'public', table:'foundation_costs'}, function(){ loadFromSupabaseAuto().catch(function(){}); })
-      .on('postgres_changes', {event:'*', schema:'public', table:'employees'}, function(){ loadFromSupabaseAuto().catch(function(){}); })
-      .on('postgres_changes', {event:'*', schema:'public', table:'units'}, function(){ loadFromSupabaseAuto().catch(function(){}); })
-      .subscribe(function(status){
-        console.log('Realtime:', status);
-      });
-  }catch(e){
-    setTimeout(_connectRealtime, 3000);
-  }
+    var url=SB_URL.replace('https://','wss://')+'/realtime/v1/websocket?apikey='+SB_KEY+'&vsn=1.0.0';
+    _ws=new WebSocket(url);
+    var hb=null;
+    _ws.onopen=function(){
+      hb=setInterval(function(){if(_ws.readyState===1)_ws.send(JSON.stringify({topic:'phoenix',event:'heartbeat',payload:{},ref:'1'}));},25000);
+      // Subscribe once to all public schema
+      _ws.send(JSON.stringify({
+        topic:'realtime:public',event:'phx_join',ref:'2',
+        payload:{config:{postgres_changes:[{event:'*',schema:'public'}]}}
+      }));
+    };
+    _ws.onmessage=function(e){
+      try{
+        var m=JSON.parse(e.data);
+        // Only reload if change is from ANOTHER device
+        if(m.event==='postgres_changes'||
+          (m.payload&&m.payload.commit_timestamp&&m.payload.type)){
+          _syncFromCloud();
+        }
+      }catch(x){}
+    };
+    _ws.onclose=function(){clearInterval(hb);setTimeout(_startWS,3000);};
+    _ws.onerror=function(){try{_ws.close();}catch(e){}};
+  }catch(e){setTimeout(_startWS,5000);}
 }
+
+function _connectRealtime(){}
 
 
 // ── Business Identifier ──
@@ -5555,8 +5566,12 @@ async function loadFromSupabaseAuto(){
     }
 
     if(changed){
-      try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-      if(!document.querySelector('.sheet-overlay.open')) renderAll();
+      var newHash=JSON.stringify({b:DB.bookings?.length,e:DB.expenses?.length,s:DB.sales?.length,m:DB.monthly?.length,em:DB.employees?.length});
+      if(newHash!==_lastDataHash){
+        _lastDataHash=newHash;
+        try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+        if(!document.querySelector('.sheet-overlay.open')) renderAll();
+      }
     }
     showSyncStatus('✅ متزامن', true);
   }catch(e){
