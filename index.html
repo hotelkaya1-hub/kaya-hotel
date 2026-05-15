@@ -5288,44 +5288,28 @@ async function sbFetch(table, method, body, query) {
 async function syncToSupabase() {
   try {
     showToast('⏳ جارٍ المزامنة...', 'info');
-    
-    // Sync bookings
+    var bizId=getBizId();
     for(var b of (DB.bookings||[])) {
-      await sbFetch('bookings', 'POST', {
-        id: b.id, apt: b.apt, guest: b.guest, phone: b.phone||'',
-        source: b.source, checkin: b.checkin, checkout: b.checkout,
-        nights: b.nights, price: b.price, total: b.total,
-        status: b.status, notes: b.notes||'', code: b.code||''
-      }, '?on_conflict=id');
+      await sbFetch('bookings','POST',{id:b.id,apt:b.apt,guest:b.guest,phone:b.phone||'',source:b.source,checkin:b.checkin,checkout:b.checkout,nights:b.nights,price:b.price,total:b.total,status:b.status,notes:b.notes||'',biz_id:bizId},'?on_conflict=id');
     }
-    
-    // Sync units
     for(var u of (DB.units||[])) {
-      await sbFetch('units', 'POST', {
-        id: u, name: u, type: (DB.unitTypes&&DB.unitTypes[u])||''
-      }, '?on_conflict=id');
+      await sbFetch('units','POST',{id:u,name:u,type:(DB.unitTypes&&DB.unitTypes[u])||'',biz_id:bizId},'?on_conflict=id');
     }
-    
-    // Sync monthly costs
     for(var m of (DB.monthly||[])) {
-      await sbFetch('monthly_costs', 'POST', {
-        id: m.id, name: m.name, amount: m.amount, apt: m.apt||'', due_date: m.dueDate||null
-      }, '?on_conflict=id');
+      await sbFetch('monthly_costs','POST',{id:m.id,name:m.name,amount:m.amount,apt:m.apt||'',due_date:m.dueDate||null,biz_id:bizId},'?on_conflict=id');
     }
-    
-    // Sync expenses
     for(var e of (DB.expenses||[])) {
-      await sbFetch('expenses', 'POST', {
-        id: e.id, type: e.type, amount: e.amount,
-        date: e.date||new Date().toISOString().slice(0,10),
-        notes: e.notes||'', apt: e.apt||''
-      }, '?on_conflict=id');
+      await sbFetch('expenses','POST',{id:e.id,type:e.type,amount:e.amount,date:e.date||'',description:e.desc||'',notes:e.notes||'',apt:e.apt||'',salary_ref:e.salaryRef||null,salary_month:e.salaryMonth||null,biz_id:bizId},'?on_conflict=id');
     }
-    
+    for(var s of (DB.sales||[])) {
+      await sbFetch('sales','POST',{id:s.id,description:s.desc||'',amount:s.amount,date:s.date||'',apt:s.apt||'',notes:s.notes||'',biz_id:bizId},'?on_conflict=id');
+    }
+    for(var em of (DB.employees||[])) {
+      await sbFetch('employees','POST',{id:em.id,name:em.name,role:em.role||'',salary:em.salary||0,phone:em.phone||'',hire_date:em.hireDate||'',biz_id:bizId},'?on_conflict=id');
+    }
     showToast('✅ تمت المزامنة بنجاح', 'success');
   } catch(err) {
     showToast('❌ خطأ في المزامنة: ' + err.message, 'error');
-    console.error(err);
   }
 }
 
@@ -5333,31 +5317,10 @@ async function syncToSupabase() {
 async function loadFromSupabase() {
   try {
     showToast('⏳ جارٍ تحميل البيانات...', 'info');
-    
-    var [bookings, units, monthly, expenses, sales] = await Promise.all([
-      sbFetch('bookings', 'GET', null, '?select=*&order=checkin.desc'),
-      sbFetch('units', 'GET', null, '?select=*&biz_id=eq.'+getBizId()),
-      sbFetch('monthly_costs', 'GET', null, '?select=id,name,amount,apt,due_date&biz_id=eq.'+getBizId()),
-      sbFetch('expenses', 'GET', null, '?select=*&biz_id=eq.'+getBizId()+'&order=created_at.desc'),
-      sbFetch('sales', 'GET', null, '?select=*&biz_id=eq.'+getBizId()+'&order=created_at.desc'),
-    ]);
-    
-    if(bookings.length) DB.bookings = bookings;
-    if(units.length) {
-      DB.units = units.map(function(u){return u.name;});
-      DB.unitTypes = {};
-      units.forEach(function(u){if(u.type) DB.unitTypes[u.name]=u.type;});
-    }
-    if(monthly.length) DB.monthly = monthly.map(function(m){var loc=(DB.monthly||[]).find(function(x){return x.id===m.id;});return {id:m.id,name:m.name,amount:m.amount,apt:m.apt||'',dueDate:m.due_date||m.dueDate||(loc?loc.dueDate:'')};});
-    if(expenses.length) DB.expenses = expenses.map(function(e){return {id:e.id,type:e.type,amount:e.amount,date:e.date,notes:e.notes,apt:e.apt};});
-    if(sales.length) DB.sales = sales.map(function(s){return {id:s.id,description:s.description,amount:s.amount,date:s.date,apt:s.apt};});
-    
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch{}
-    renderAll();
+    await loadFromSupabaseAuto();
     showToast('✅ تم تحميل البيانات', 'success');
   } catch(err) {
     showToast('❌ خطأ في التحميل', 'error');
-    console.error(err);
   }
 }
 
@@ -5712,7 +5675,7 @@ async function _pollChanges(){
         sbFetch('foundation_costs','GET',null,'?select=id,name,amount,date&biz_id=eq.'+getBizId()).catch(function(){return null;}),
         sbFetch('employees','GET',null,'?select=id,name,role,salary&biz_id=eq.'+getBizId()).catch(function(){return null;}),
         sbFetch('sales','GET',null,'?select=id,desc,description,amount,date,apt,notes&biz_id=eq.'+getBizId()).catch(function(){return null;}),
-        sbFetch('app_config','GET',null,'?select=key,value').catch(function(){return null;}),
+        sbFetch('app_config','GET',null,'?select=key,value&biz_id=eq.'+getBizId()).catch(function(){return null;}),
       ]);
 
       if(expenses && Array.isArray(expenses)){
