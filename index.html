@@ -1370,6 +1370,7 @@ document.addEventListener('DOMContentLoaded', function(){
   <span id="ic-lock"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 
 
@@ -2245,9 +2246,10 @@ function showApp(){
   applyPerms();
   renderDashboard();
   try{renderNotificationsBell();}catch(e){}
-  // initRealtime يتكفل بكل السحب والمزامنة
   if(window._pollTimer) clearInterval(window._pollTimer);
   if(window._syncInterval) clearInterval(window._syncInterval);
+  // جلب البيانات من Supabase فوراً عند الدخول
+  loadFromSupabaseAuto().catch(function(){});
   initRealtime();
 }
 function logout(){
@@ -5161,23 +5163,22 @@ function injectGmailBookings(){
 const SB_URL = 'https://uoysyclcycnttnidllxc.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVveXN5Y2xjeWNudHRuaWRsbHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjI0MjEsImV4cCI6MjA5MzgzODQyMX0.0GJbr8bQpcZ3G__p6CIW3t8dvEZAjjQL5FXLXmQ9Jmg';
 
-// ── Device ID (to prevent self-overwrite) ──
+// ── Device ID ──
 var _deviceId = localStorage.getItem('bodo_device_id');
 if(!_deviceId){ _deviceId = 'dev_'+Math.random().toString(36).slice(2); localStorage.setItem('bodo_device_id',_deviceId); }
 
-// ── Pending saves queue (prevent overwrite before Supabase confirms) ──
+// ── Pending saves queue ──
 var _pendingSaves = {};
 function _markPending(table, id){ _pendingSaves[table+'_'+id] = Date.now(); }
 function _clearPending(table, id){ delete _pendingSaves[table+'_'+id]; }
 function _isPending(table, id){ return !!_pendingSaves[table+'_'+id]; }
 
 // ── Realtime Sync ──
-var _realtimeWS = null;
 var _realtimeTimer = null;
 var _reloadPending = false;
+var _lastDataHash = '';
 
 function _scheduleReload(){
-  // Debounce — reload once even if multiple events fire together
   if(_reloadPending) return;
   _reloadPending = true;
   setTimeout(function(){
@@ -5188,68 +5189,47 @@ function _scheduleReload(){
 
 function initRealtime(){
   if(_realtimeTimer) clearInterval(_realtimeTimer);
+
+  // Backup poll every 10 seconds
   _realtimeTimer = setInterval(function(){
     if(document.visibilityState !== 'hidden') loadFromSupabaseAuto().catch(function(){});
-  }, 30000);
-
-  _connectRealtime();
+  }, 10000);
 
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState === 'visible') loadFromSupabaseAuto().catch(function(){});
   });
+
+  _connectRealtime();
 }
+
+var _sbClient = null;
+var _sbChannel = null;
 
 function _connectRealtime(){
   try{
-    if(_realtimeWS){ try{_realtimeWS.close();}catch(e){} _realtimeWS=null; }
-    var wsUrl = SB_URL.replace('https://','wss://')
-      + '/realtime/v1/websocket?apikey=' + SB_KEY + '&vsn=1.0.0';
-    var ws = new WebSocket(wsUrl);
-    _realtimeWS = ws;
-    var hbInterval;
+    // Use official Supabase JS client
+    if(!window.supabase) { setTimeout(_connectRealtime, 1000); return; }
 
-    ws.onopen = function(){
-      // Heartbeat every 25s to keep connection alive
-      hbInterval = setInterval(function(){
-        if(ws.readyState===1) ws.send(JSON.stringify({topic:'phoenix',event:'heartbeat',payload:{},ref:'hb'}));
-      }, 25000);
+    if(!_sbClient){
+      _sbClient = window.supabase.createClient(SB_URL, SB_KEY);
+    }
 
-      var bizId = getBizId();
-      var tables = ['bookings','expenses','sales','monthly_costs','foundation_costs','employees','units'];
-      tables.forEach(function(tbl, i){
-        ws.send(JSON.stringify({
-          topic: 'realtime:public:'+tbl,
-          event: 'phx_join',
-          payload: {
-            config: {
-              broadcast: {self: false},
-              presence: {key: ''},
-              postgres_changes: [{event:'*', schema:'public', table:tbl, filter:'biz_id=eq.'+bizId}]
-            }
-          },
-          ref: String(i+1)
-        }));
+    if(_sbChannel){ _sbClient.removeChannel(_sbChannel); }
+
+    _sbChannel = _sbClient
+      .channel('db-changes')
+      .on('postgres_changes', {event:'*', schema:'public', table:'bookings'}, function(){ loadFromSupabaseAuto().catch(function(){}); })
+      .on('postgres_changes', {event:'*', schema:'public', table:'sales'}, function(){ loadFromSupabaseAuto().catch(function(){}); })
+      .on('postgres_changes', {event:'*', schema:'public', table:'expenses'}, function(){ loadFromSupabaseAuto().catch(function(){}); })
+      .on('postgres_changes', {event:'*', schema:'public', table:'monthly_costs'}, function(){ loadFromSupabaseAuto().catch(function(){}); })
+      .on('postgres_changes', {event:'*', schema:'public', table:'foundation_costs'}, function(){ loadFromSupabaseAuto().catch(function(){}); })
+      .on('postgres_changes', {event:'*', schema:'public', table:'employees'}, function(){ loadFromSupabaseAuto().catch(function(){}); })
+      .on('postgres_changes', {event:'*', schema:'public', table:'units'}, function(){ loadFromSupabaseAuto().catch(function(){}); })
+      .subscribe(function(status){
+        console.log('Realtime:', status);
       });
-    };
-
-    ws.onmessage = function(e){
-      try{
-        var msg = JSON.parse(e.data);
-        var ev = msg.payload && msg.payload.type;
-        if(ev === 'INSERT' || ev === 'UPDATE' || ev === 'DELETE'){
-          _scheduleReload();
-        }
-      }catch(err){}
-    };
-
-    ws.onclose = function(){
-      clearInterval(hbInterval);
-      setTimeout(_connectRealtime, 3000);
-    };
-
-    ws.onerror = function(){ ws.close(); };
   }catch(e){
-    setTimeout(_connectRealtime, 5000);
+    setTimeout(_connectRealtime, 3000);
   }
 }
 
