@@ -2152,6 +2152,9 @@ function initAuth(){
         document.getElementById('login-screen').style.display='none';
         document.getElementById('app').style.display='flex';
         renderAll();
+        // Load fresh data from Supabase
+        loadFromSupabaseAuto().catch(function(){});
+        initRealtime();
         return;
       }
     }catch(e){}
@@ -3152,10 +3155,10 @@ function saveSale(){
   var entry={id:_saleId||uid(),desc:desc,date:date,apt:apt,amount:amount,notes:notes};
   if(_saleId){
     DB.sales=DB.sales.map(function(s){return s.id===_saleId?entry:s;});
-    sbFetch('sales','PATCH',{desc:desc,date:date,apt:apt,amount:amount,notes:notes,description:desc},'?id=eq.'+_saleId).catch(function(){});
+    sbFetch('sales','PATCH',{description:desc,date:date,apt:apt,amount:amount,notes:notes},'?id=eq.'+_saleId).catch(function(){});
   } else {
     DB.sales.push(entry);
-    sbFetch('sales','POST',{id:entry.id,description:desc,date:date,apt:apt,amount:amount,notes:notes,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
+    sbFetch('sales','POST',{id:entry.id,description:desc,date:date,apt:apt,amount:amount,notes:notes,biz_id:getBizId()},'?on_conflict=id').then(function(){_clearPending('sales',entry.id);}).catch(function(){});
   }
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('sale');toast(_saleId?'✅ تم التعديل':'✅ تم الحفظ','success');renderRevenue();renderDashboard();
@@ -3357,11 +3360,7 @@ function payDueCost(monthlyId){
   };
   if(!DB.expenses) DB.expenses=[];
   DB.expenses.push(exp);
-  sbFetch('expenses','POST',{
-    id:exp.id, type:exp.type, desc:exp.desc,
-    amount:exp.amount, apt:exp.apt, date:exp.date,
-    notes:exp.desc, biz_id:getBizId()
-  },'?on_conflict=id').catch(function(){});
+  sbFetch('expenses','POST',{id:exp.id,type:exp.type,amount:exp.amount,date:exp.date,apt:exp.apt,description:exp.desc,notes:exp.desc,salary_ref:exp.salaryRef||null,salary_month:exp.salaryMonth||null,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   toast('✅ تم تسجيل دفع '+m.name,'success');
   renderAll();
@@ -3754,7 +3753,7 @@ function saveSalaryEdit(expId, empId){
   DB.expenses=(DB.expenses||[]).map(function(e){
     return e.id===expId?Object.assign({},e,{amount:amount,salaryMonth:salaryMonth,desc:desc}):e;
   });
-  sbFetch('expenses','PATCH',{amount:amount,desc:desc,notes:desc},'?id=eq.'+expId).catch(function(){});
+  sbFetch('expenses','PATCH',{amount:amount,description:desc,notes:desc},'?id=eq.'+expId).catch(function(){});
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(err){}
   closeSheet('expense');toast('✅ تم التعديل','success');renderExpensesList();renderDashboard();
 }
@@ -3765,7 +3764,7 @@ function savExpEdit(){
   if(!amount){toast('أدخل المبلغ','error');return;}
   DB.expenses=(DB.expenses||[]).map(function(e){return e.id===_expId?Object.assign({},e,{type:type,apt:apt,date:date,desc:desc,amount:amount}):e;});
   // ── تحديث فوري في Supabase ──
-  sbFetch('expenses','PATCH',{type:type,apt:apt,date:date,desc:desc,notes:desc,amount:amount},'?id=eq.'+_expId).catch(function(err){showToast('⚠️ التحديث السحابي فشل','error');});
+  sbFetch('expenses','PATCH',{type:type,apt:apt,date:date,description:desc,notes:desc,amount:amount},'?id=eq.'+_expId).catch(function(err){showToast('⚠️ التحديث السحابي فشل','error');});
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('expense');_expId=null;toast('✅ تم التعديل','success');renderExpenses();renderDashboard();
 }
@@ -3994,7 +3993,7 @@ function saveBusinessName(){
     try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
     updateBizLabels();
     // Sync instantly to Supabase so ALL devices update immediately
-    sbFetch('app_config','POST',{key:'biz_name',value:name},'?on_conflict=key').catch(function(){});
+    sbFetch('app_config','POST',{key:'biz_name',value:name,biz_id:getBizId()},'?on_conflict=key').catch(function(){});
     showToast('✅ '+name+' — تم التحديث لجميع الأجهزة','success');
   }catch(err){
     showToast('تم','success');
@@ -4120,7 +4119,7 @@ function saveFieldEdit(id){
 
   if(id==='biz-name'){
     DB.bizName=val; updateBizLabels();
-    sbFetch('app_config','POST',{key:'biz_name',value:val},'?on_conflict=key').catch(function(){});
+    sbFetch('app_config','POST',{key:'biz_name',value:val,biz_id:getBizId()},'?on_conflict=key').catch(function(){});
     var cn=document.getElementById('current-biz-name'); if(cn) cn.textContent=val;
   } else if(id==='acc-name'){
     if(!DB.subscriberInfo) DB.subscriberInfo={};
@@ -4653,7 +4652,7 @@ function saveEm(){
     DB.employees = DB.employees.map(function(e){
       return e.id===_emId ? Object.assign({},e,{name:name,role:role,salary:salary,phone:phone,hireDate:hireDate}) : e;
     });
-    sbFetch('employees','PATCH',{name:name,role:role,salary:salary,phone:phone,hireDate:hireDate},'?id=eq.'+_emId).catch(function(){});
+    sbFetch('employees','PATCH',{name:name,role:role,salary:salary,phone:phone,hire_date:hireDate},'?id=eq.'+_emId).catch(function(){});
   } else {
     // فحص حد الباقة
     if(!checkEmployeeLimit()) return;
@@ -5148,6 +5147,16 @@ function injectGmailBookings(){
 const SB_URL = 'https://uoysyclcycnttnidllxc.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVveXN5Y2xjeWNudHRuaWRsbHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjI0MjEsImV4cCI6MjA5MzgzODQyMX0.0GJbr8bQpcZ3G__p6CIW3t8dvEZAjjQL5FXLXmQ9Jmg';
 
+// ── Device ID (to prevent self-overwrite) ──
+var _deviceId = localStorage.getItem('bodo_device_id');
+if(!_deviceId){ _deviceId = 'dev_'+Math.random().toString(36).slice(2); localStorage.setItem('bodo_device_id',_deviceId); }
+
+// ── Pending saves queue (prevent overwrite before Supabase confirms) ──
+var _pendingSaves = {};
+function _markPending(table, id){ _pendingSaves[table+'_'+id] = Date.now(); }
+function _clearPending(table, id){ delete _pendingSaves[table+'_'+id]; }
+function _isPending(table, id){ return !!_pendingSaves[table+'_'+id]; }
+
 // ── Realtime Sync ──
 var _realtimeWS = null;
 var _realtimeTimer = null;
@@ -5535,11 +5544,15 @@ async function loadFromSupabaseAuto(){
       changed = true;
     }
     if(expenses&&Array.isArray(expenses)){
+      // Merge: keep local pending items, use cloud for rest
+      var pendingExp=(DB.expenses||[]).filter(function(e){return _isPending('expenses',e.id);});
       DB.expenses = expenses.map(function(e){
         return{id:e.id,type:e.type||'أخرى',amount:e.amount||0,date:e.date||'',
           desc:e.description||e.notes||e.type||'',apt:e.apt||'عام',
           salaryRef:e.salary_ref||'',salaryMonth:e.salary_month||''};
       });
+      // Re-add pending local items not yet in cloud
+      pendingExp.forEach(function(pe){ if(!DB.expenses.find(function(e){return e.id===pe.id;})) DB.expenses.push(pe); });
       changed = true;
     }
     if(monthly&&Array.isArray(monthly)){
@@ -5567,9 +5580,11 @@ async function loadFromSupabaseAuto(){
       changed=true;
     }
     if(sales&&Array.isArray(sales)){
+      var pendingSales=(DB.sales||[]).filter(function(s){return _isPending('sales',s.id);});
       DB.sales=sales.map(function(s){
         return{id:s.id,desc:s.description||s.notes||'',amount:s.amount||0,date:s.date||'',apt:s.apt||'عام',notes:s.notes||''};
       });
+      pendingSales.forEach(function(ps){ if(!DB.sales.find(function(s){return s.id===ps.id;})) DB.sales.push(ps); });
       changed=true;
     }
     if(appCfg&&Array.isArray(appCfg)){
