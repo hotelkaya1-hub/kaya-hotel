@@ -2220,10 +2220,11 @@ function doLogin(){
   });
 }
 function showApp(){
-  // Reload DB fresh to avoid stale data between sessions
-  DB=loadDB();
+  // مسح البيانات المحلية القديمة — الحقيقة دائماً من Supabase
+  var keys=['kaya_v9','kaya_v8','kaya_v7','kaya_db'];
+  keys.forEach(function(k){localStorage.removeItem(k);});
+  DB = {bookings:[],expenses:[],employees:[],units:['B18','410','411','412'],unitTypes:{B18:'شقة','410':'شقة','411':'شقة','412':'شقة'},monthly:[],foundation:[],sales:[],appUsers:[],adminPass:{},calStats:{}};
   if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;
-  if(DB.adminPass&&DB.adminPass.username) ADMIN.username=DB.adminPass.username;
   if(!DB.appUsers)DB.appUsers=[];
   document.getElementById('login-screen').style.display='none';
   var app=document.getElementById('app');
