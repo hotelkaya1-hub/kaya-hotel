@@ -2241,12 +2241,13 @@ function doLogin(){
   });
 }
 function showApp(){
-  // مسح البيانات المحلية القديمة — الحقيقة دائماً من Supabase
-  var keys=['kaya_v9','kaya_v8','kaya_v7','kaya_db'];
-  keys.forEach(function(k){localStorage.removeItem(k);});
-  DB = {bookings:[],expenses:[],employees:[],units:[],unitTypes:{},monthly:[],foundation:[],sales:[],appUsers:[],adminPass:{},calStats:{}};
+  DB = loadDB();
+  // احتفظ بـ subscriberInfo لأنه يُضبط قبل showApp في doLogin
+  if(currentUser && currentUser.bizId && !DB.subscriberInfo){
+    DB.subscriberInfo = {bizId: currentUser.bizId, email: currentUser.username};
+  }
   if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;
-  if(!DB.appUsers)DB.appUsers=[];
+  if(!DB.appUsers) DB.appUsers=[];
   document.getElementById('login-screen').style.display='none';
   var app=document.getElementById('app');
   app.style.display='flex';app.style.flexDirection='column';app.style.height='100dvh';app.style.overflow='hidden';
@@ -5221,306 +5222,7 @@ function _scheduleReload(){
   }, 300);
 }
 
-function initRealtime(){
-  if(_realtimeTimer) clearInterval(_realtimeTimer);
-  // Poll every 5 seconds as backup
-  _realtimeTimer = setInterval(function(){
-    if(document.visibilityState !== 'hidden') _syncFromCloud();
-  }, 5000);
-  document.addEventListener('visibilitychange', function(){
-    if(document.visibilityState === 'visible') _syncFromCloud();
-  });
-  _startWS();
-}
 
-// Lock to prevent concurrent loads
-var _syncLock = false;
-var _syncQueue = false;
-function _syncFromCloud(){
-  if(_syncLock){ _syncQueue=true; return; }
-  _syncLock=true;
-  loadFromSupabaseAuto().catch(function(){}).finally(function(){
-    _syncLock=false;
-    if(_syncQueue){ _syncQueue=false; setTimeout(_syncFromCloud,500); }
-  });
-}
-
-// Simple WebSocket polling approach
-var _ws=null;
-var _wsTimer=null;
-function _startWS(){
-  if(_ws) try{_ws.close();}catch(e){}
-  try{
-    var url=SB_URL.replace('https://','wss://')+'/realtime/v1/websocket?apikey='+SB_KEY+'&vsn=1.0.0';
-    _ws=new WebSocket(url);
-    var hb=null;
-    _ws.onopen=function(){
-      hb=setInterval(function(){if(_ws.readyState===1)_ws.send(JSON.stringify({topic:'phoenix',event:'heartbeat',payload:{},ref:'1'}));},25000);
-      // Subscribe once to all public schema
-      _ws.send(JSON.stringify({
-        topic:'realtime:public',event:'phx_join',ref:'2',
-        payload:{config:{postgres_changes:[{event:'*',schema:'public'}]}}
-      }));
-    };
-    _ws.onmessage=function(e){
-      try{
-        var m=JSON.parse(e.data);
-        // Only reload if change is from ANOTHER device
-        if(m.event==='postgres_changes'||
-          (m.payload&&m.payload.commit_timestamp&&m.payload.type)){
-          _syncFromCloud();
-        }
-      }catch(x){}
-    };
-    _ws.onclose=function(){clearInterval(hb);setTimeout(_startWS,3000);};
-    _ws.onerror=function(){try{_ws.close();}catch(e){}};
-  }catch(e){setTimeout(_startWS,5000);}
-}
-
-function _connectRealtime(){}
-
-
-// ── Business Identifier ──
-function getBizId(){
-  // Priority: currentUser.bizId (set at login for subscribers)
-  if(currentUser&&currentUser.bizId) return currentUser.bizId;
-  var sub = DB.subscriberInfo || {};
-  if(sub.bizId) return sub.bizId;
-  var email = sub.email || (currentUser&&currentUser.username) || '';
-  if(email) return email.toLowerCase().replace(/[^a-z0-9]/g,'_');
-  return DB.bizName || 'default';
-}
-async function sbFetch(table, method, body, query) {
-  var url = SB_URL + '/rest/v1/' + table + (query||'');
-  var headers = {
-    'apikey': SB_KEY,
-    'Authorization': 'Bearer ' + SB_KEY,
-    'Cache-Control': 'no-cache',
-  };
-  if(method !== 'DELETE') headers['Content-Type'] = 'application/json';
-  if(method==='POST' && query && query.includes('on_conflict')){
-    headers['Prefer'] = 'resolution=merge-duplicates,return=minimal';
-  } else if(method==='POST'){
-    headers['Prefer'] = 'return=minimal';
-  } else if(method==='PATCH'){
-    headers['Prefer'] = 'return=minimal';
-  } else if(method==='DELETE'){
-    headers['Prefer'] = 'return=minimal';
-  }
-  var opts = {method: method||'GET', headers: headers};
-  if(body) opts.body = JSON.stringify(body);
-  var resp;
-  try{
-    resp = await fetch(url, opts);
-  } catch(fetchErr){
-    throw new Error('Network error: '+fetchErr.message);
-  }
-  if(!resp.ok){
-    var err = await resp.text();
-    var msg = 'Supabase '+method+' '+table+': '+err.slice(0,300);
-    throw new Error(msg);
-  }
-  var text = await resp.text();
-  return text ? JSON.parse(text) : [];
-}
-
-// SYNC: push local DB to Supabase
-async function syncToSupabase() {
-  try {
-    showToast('⏳ جارٍ المزامنة...', 'info');
-    var bizId=getBizId();
-    for(var b of (DB.bookings||[])) {
-      await sbFetch('bookings','POST',{id:b.id,apt:b.apt,guest:b.guest,phone:b.phone||'',source:b.source,checkin:b.checkin,checkout:b.checkout,nights:b.nights,price:b.price,total:b.total,status:b.status,notes:b.notes||'',biz_id:bizId},'?on_conflict=id');
-    }
-    for(var u of (DB.units||[])) {
-      await sbFetch('units','POST',{id:u,name:u,type:(DB.unitTypes&&DB.unitTypes[u])||'',biz_id:bizId},'?on_conflict=id');
-    }
-    for(var m of (DB.monthly||[])) {
-      await sbFetch('monthly_costs','POST',{id:m.id,name:m.name,amount:m.amount,apt:m.apt||'',due_date:m.dueDate||null,biz_id:bizId},'?on_conflict=id');
-    }
-    for(var e of (DB.expenses||[])) {
-      await sbFetch('expenses','POST',{id:e.id,type:e.type,amount:e.amount,date:e.date||'',description:e.desc||'',notes:e.notes||'',apt:e.apt||'',salary_ref:e.salaryRef||null,salary_month:e.salaryMonth||null,biz_id:bizId},'?on_conflict=id');
-    }
-    for(var s of (DB.sales||[])) {
-      await sbFetch('sales','POST',{id:s.id,description:s.desc||'',amount:s.amount,date:s.date||'',apt:s.apt||'',notes:s.notes||'',biz_id:bizId},'?on_conflict=id');
-    }
-    for(var em of (DB.employees||[])) {
-      await sbFetch('employees','POST',{id:em.id,name:em.name,role:em.role||'',salary:em.salary||0,phone:em.phone||'',hire_date:em.hireDate||'',biz_id:bizId},'?on_conflict=id');
-    }
-    showToast('✅ تمت المزامنة بنجاح', 'success');
-  } catch(err) {
-    showToast('❌ خطأ في المزامنة: ' + err.message, 'error');
-  }
-}
-
-// LOAD: pull from Supabase to local DB
-async function loadFromSupabase() {
-  try {
-    showToast('⏳ جارٍ تحميل البيانات...', 'info');
-    await loadFromSupabaseAuto();
-    showToast('✅ تم تحميل البيانات', 'success');
-  } catch(err) {
-    showToast('❌ خطأ في التحميل', 'error');
-  }
-}
-
-// ══ GITHUB DEPLOY ══
-async function deployToGitHub(){
-  var btn=document.getElementById('deploy-btn');
-  btn.textContent='⏳ جارٍ الرفع...';
-  btn.disabled=true;
-  try{
-    var TOKEN='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';
-    var OWNER='hotelkaya1-hub';
-    var REPO='kaya-hotel';
-    // Get current file SHA
-    var sha='';
-    try{
-      var r=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/index.html',{
-        headers:{'Authorization':'token '+TOKEN,'Accept':'application/vnd.github.v3+json'}
-      });
-      if(r.ok){var d=await r.json();sha=d.sha;}
-    }catch(e){}
-    // Get current page HTML
-    var pageHTML=document.documentElement.outerHTML;
-    var content=btoa(unescape(encodeURIComponent(pageHTML)));
-    var body={message:'Update kaya hotel',content:content,branch:'main'};
-    if(sha)body.sha=sha;
-    var resp=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/index.html',{
-      method:'PUT',
-      headers:{'Authorization':'token '+TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
-      body:JSON.stringify(body)
-    });
-    if(resp.ok){
-      btn.textContent='✅ تم التحديث!';
-      showToast('✅ تم رفع التطبيق على GitHub','success');
-    }else{
-      var e=await resp.json();
-      throw new Error(e.message);
-    }
-  }catch(err){
-    btn.textContent='تحديث الموقع';
-    btn.disabled=false;
-    showToast('❌ '+err.message,'error');
-  }
-}
-
-
-// ══ PULL TO REFRESH ══
-var _ptrY = 0, _ptrOn = false, _ptrDone = false;
-
-document.addEventListener('touchstart', function(e){
-  var c = document.getElementById('content');
-  if(c && c.scrollTop === 0){
-    _ptrY = e.touches[0].clientY;
-    _ptrOn = true; _ptrDone = false;
-  }
-},{passive:true});
-
-document.addEventListener('touchmove', function(e){
-  if(!_ptrOn) return;
-  var dy = e.touches[0].clientY - _ptrY;
-  if(dy < 0){_ptrOn=false;return;}
-  var pull = Math.min(dy * 0.5, 56);
-  var ind = document.getElementById('ptr-indicator');
-  if(!ind) return;
-  ind.style.height = pull + 'px';
-  ind.classList.toggle('ptr-visible', pull > 10);
-  var spinner = document.getElementById('ptr-spinner');
-  if(pull >= 52 && !_ptrDone){
-    _ptrDone = true;
-    if(spinner) spinner.style.borderTopColor = 'var(--accent)';
-  } else if(pull < 52 && _ptrDone){
-    _ptrDone = false;
-    if(spinner) spinner.style.borderTopColor = '';
-  }
-},{passive:true});
-
-document.addEventListener('touchend', function(){
-  if(!_ptrOn) return;
-  _ptrOn = false;
-  var ind = document.getElementById('ptr-indicator');
-  var spinner = document.getElementById('ptr-spinner');
-  var txt = document.getElementById('ptr-text');
-  if(_ptrDone){
-    if(spinner) spinner.classList.add('spinning');
-    if(txt) txt.textContent = 'جارٍ التحديث...';
-    if(ind) ind.style.height = '50px';
-    loadFromSupabaseAuto().then(function(){
-      if(spinner) spinner.classList.remove('spinning');
-      if(txt) txt.textContent = '✓ تم التحديث';
-      setTimeout(function(){
-        if(ind){ind.style.height='0';ind.classList.remove('ptr-visible');}
-        if(spinner) spinner.style.borderTopColor='';
-        if(txt) txt.textContent = 'اسحب للتحديث';
-        _ptrDone = false;
-      }, 600);
-    }).catch(function(){
-      if(spinner) spinner.classList.remove('spinning');
-      if(txt) txt.textContent = 'اسحب للتحديث';
-      if(ind){ind.style.height='0';ind.classList.remove('ptr-visible');}
-      _ptrDone=false;
-    });
-  } else {
-    if(ind){ind.style.height='0';ind.classList.remove('ptr-visible');}
-  }
-},{passive:true});
-
-// ══ SWIPE NAVIGATION ══
-var _swipeX=0, _swipeY=0, _swipePages=['dashboard','calbooking','revenue','expenses','settings'];
-document.addEventListener('touchstart',function(e){
-  _swipeX=e.touches[0].clientX;
-  _swipeY=e.touches[0].clientY;
-},{passive:true});
-document.addEventListener('touchend',function(e){
-  var dx=e.changedTouches[0].clientX-_swipeX;
-  var dy=e.changedTouches[0].clientY-_swipeY;
-  if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*2){
-    var idx=_swipePages.indexOf(_currentPage);
-    if(dx>0&&idx<_swipePages.length-1) showPage(_swipePages[idx+1]);
-    if(dx<0&&idx>0) showPage(_swipePages[idx-1]);
-  }
-},{passive:true});
-
-// ══ HAPTIC FEEDBACK ══
-function haptic(type){
-  try{
-    if(window.navigator&&window.navigator.vibrate){
-      window.navigator.vibrate(type==='light'?10:type==='medium'?20:50);
-    }
-  }catch(e){}
-}
-
-function updateNavBadge(){
-  // Badge removed - no-op
-}
-
-
-
-
-
-
-
-
-
-
-// Init biz name labels
-
-
-// ══ AUTO SYNC ══
-var _syncInProgress = false;
-
-// autoSyncToSupabase - now lightweight backup only
-// All saves happen directly via sbFetch in each function above
-// This is only called from save() as a safety net for bizInfo changes
-async function autoSyncToSupabase(){
-  // No-op - all direct saves handle Supabase instantly
-  // Kept for compatibility
-}
-
-var _syncInProgress = false;
-
-// Load from Supabase on startup
 async function loadFromSupabaseAuto(){
   try{
     var bizId=getBizId();
@@ -5678,14 +5380,52 @@ function _updateRtIndicator(connected){
   if(lbl) lbl.textContent = connected ? 'متصل مباشر' : 'جارٍ الاتصال...';
 }
 
+var _ws=null;
+var _pollTimer=null;
+
 function initRealtime(){
   clearInterval(_pollTimer);
-  // Poll every 3 seconds — fast enough to feel real-time
+  // Polling كل 3 ثواني كـ backup
   _pollTimer = setInterval(function(){
     _pollChanges();
   }, 3000);
   // First pull immediately
   _pollChanges();
+  // WebSocket للتحديث الفوري
+  _startWS();
+}
+
+function _startWS(){
+  try{
+    if(_ws){ try{_ws.close();}catch(e){} _ws=null; }
+    var url=SB_URL.replace('https://','wss://')+'/realtime/v1/websocket?apikey='+SB_KEY+'&vsn=1.0.0';
+    _ws=new WebSocket(url);
+    var hb=null;
+    var ref=1;
+    _ws.onopen=function(){
+      hb=setInterval(function(){
+        if(_ws.readyState===1) _ws.send(JSON.stringify({topic:'phoenix',event:'heartbeat',payload:{},ref:String(ref++)}));
+      },20000);
+      _ws.send(JSON.stringify({
+        topic:'realtime:public',event:'phx_join',ref:String(ref++),
+        payload:{config:{postgres_changes:[{event:'*',schema:'public'}]}}
+      }));
+    };
+    _ws.onmessage=function(e){
+      try{
+        var m=JSON.parse(e.data);
+        if(m.event==='postgres_changes'||(m.payload&&m.payload.commit_timestamp)){
+          // تحديث فوري عند أي تغيير
+          _pollChanges();
+        }
+      }catch(x){}
+    };
+    _ws.onclose=function(){
+      clearInterval(hb);
+      setTimeout(_startWS,3000);
+    };
+    _ws.onerror=function(){try{_ws.close();}catch(e){}};
+  }catch(e){setTimeout(_startWS,5000);}
 }
 
 // Track last-known updated_at per table to only fetch NEW changes
