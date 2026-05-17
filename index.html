@@ -5657,7 +5657,7 @@ var _lastKnown = {};
 async function _pollChanges(){
   try {
     // Quick ping to check connection
-    var result = await sbFetch('bookings','GET',null,'?select=id,status,notes,checkin,checkout,total,price,guest,phone,source,apt,nights,code&biz_id=eq.'+getBizId()+'&order=id.desc&limit=200');
+    var result = await sbFetch('bookings','GET',null,'?select=*&biz_id=eq.'+getBizId()+'&order=checkin.desc&limit=200');
     if(!result) return;
 
     _rtConnected = true;
@@ -5679,17 +5679,17 @@ async function _pollChanges(){
     _lastKnown._pollCount = (_lastKnown._pollCount||0) + 1;
     if(_lastKnown._pollCount % 4 === 0){
       var [expenses, monthly, foundation, employees, sales, appCfg] = await Promise.all([
-        sbFetch('expenses','GET',null,'?select=id,type,amount,date,apt,desc,notes&biz_id=eq.'+getBizId()).catch(function(){return null;}),
-        sbFetch('monthly_costs','GET',null,'?select=id,name,amount,apt,due_date&biz_id=eq.'+getBizId()).catch(function(){return null;}),
-        sbFetch('foundation_costs','GET',null,'?select=id,name,amount,date&biz_id=eq.'+getBizId()).catch(function(){return null;}),
-        sbFetch('employees','GET',null,'?select=id,name,role,salary&biz_id=eq.'+getBizId()).catch(function(){return null;}),
-        sbFetch('sales','GET',null,'?select=id,desc,description,amount,date,apt,notes&biz_id=eq.'+getBizId()).catch(function(){return null;}),
+        sbFetch('expenses','GET',null,'?select=*&biz_id=eq.'+getBizId()).catch(function(){return null;}),
+        sbFetch('monthly_costs','GET',null,'?select=*&biz_id=eq.'+getBizId()).catch(function(){return null;}),
+        sbFetch('foundation_costs','GET',null,'?select=*&biz_id=eq.'+getBizId()).catch(function(){return null;}),
+        sbFetch('employees','GET',null,'?select=*&biz_id=eq.'+getBizId()).catch(function(){return null;}),
+        sbFetch('sales','GET',null,'?select=*&biz_id=eq.'+getBizId()).catch(function(){return null;}),
         sbFetch('app_config','GET',null,'?select=key,value&biz_id=eq.'+getBizId()).catch(function(){return null;}),
       ]);
 
       if(expenses && Array.isArray(expenses)){
         var newExp = expenses.filter(function(e){return !deleted['expense_'+e.id];}).map(function(e){
-          return {id:e.id,type:e.type,amount:e.amount,date:e.date,desc:e.desc||e.notes||e.type,apt:e.apt||'عام'};
+          return {id:e.id,type:e.type||'أخرى',amount:e.amount||0,date:e.date||'',desc:e.description||e.notes||e.type||'',apt:e.apt||'عام',salaryRef:e.salary_ref||'',salaryMonth:e.salary_month||''};
         });
         if(JSON.stringify(newExp) !== JSON.stringify(DB.expenses||[])){ DB.expenses=newExp; changed=true; }
       }
