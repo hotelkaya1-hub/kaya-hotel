@@ -1708,7 +1708,8 @@ function submitJoin(){
   if(!email) { toast('أدخل البريد الإلكتروني','error'); return; }
   if(!biz)   { toast('أدخل اسم النشاط','error');     return; }
 
-  var pkg    = PKG_PRICES[_selectedPkg];
+  if(!_selectedPkg) _selectedPkg='free';
+  var pkg = PKG_PRICES[_selectedPkg] || PKG_PRICES['free'];
   var price  = _billingYearly ? pkg.yearly  : pkg.monthly;
   var billing= _billingYearly ? 'سنوي' : 'شهري';
 
@@ -1723,7 +1724,7 @@ function submitJoin(){
   };
 
   // Save to Supabase first
-  var btn=document.querySelector('#join-step-2 .btn-primary');
+  var btn=document.getElementById('join-submit-btn');
   if(btn){btn.textContent='جارٍ الإرسال...';btn.disabled=true;}
   sbFetch('join_requests','POST',req,'?on_conflict=id').then(function(){
     if(!DB.joinRequests) DB.joinRequests=[];
@@ -1759,7 +1760,7 @@ function submitJoin(){
         +'</div>';
     }
   }).catch(function(err){
-    var btn=document.querySelector('.btn-primary[disabled]');
+    var btn=document.getElementById('join-submit-btn');
     if(btn){btn.textContent='إرسال الطلب';btn.disabled=false;}
     toast('فشل الإرسال — تحقق من الاتصال وحاول مرة ثانية','error');
   });
@@ -2472,7 +2473,12 @@ function renderBookingsList(){
   updateBadge();
 }
 function renderCalendars(){
-  document.getElementById('cals-container').innerHTML=(DB.units||[]).map(function(apt){return buildCal(apt);}).join('');
+  var units=DB.units||[];
+  if(!units.length){
+    document.getElementById('cals-container').innerHTML='<div class="empty"><div class="empty-text">لا توجد وحدات — أضف وحدة من الإعدادات</div></div>';
+    return;
+  }
+  document.getElementById('cals-container').innerHTML=units.map(function(apt){return buildCal(apt);}).join('');
 }
 function buildCal(apt){
   var cs=getCalSt(apt);var y=cs.y,m=cs.m;
@@ -5543,9 +5549,9 @@ async function loadFromSupabaseAuto(){
       changed=true;
     }
     if(units&&Array.isArray(units)&&units.length){
-      DB.units=units.map(function(u){return u.name;});
+      DB.units=units.map(function(u){return u.name||u.id;});
       if(!DB.unitTypes) DB.unitTypes={};
-      units.forEach(function(u){if(u.type) DB.unitTypes[u.name]=u.type;});
+      units.forEach(function(u){if(u.type) DB.unitTypes[u.name||u.id]=u.type;});
       changed=true;
     }
     if(sales&&Array.isArray(sales)){
