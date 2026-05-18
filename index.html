@@ -1704,75 +1704,75 @@ function submitJoin(){
   var name  = document.getElementById('j-name')?.value?.trim();
   var phone = document.getElementById('j-phone')?.value?.trim();
   var city  = document.getElementById('j-city')?.value?.trim();
-  var email = document.getElementById('j-email')?.value?.trim();
+  var email = (document.getElementById('j-email')?.value?.trim()||'').toLowerCase();
   var biz   = document.getElementById('j-biz')?.value?.trim();
   var btype = document.getElementById('j-biztype')?.value || '';
   var units = document.getElementById('j-units')?.value  || '1-5';
-  var pass  = document.getElementById('j-pass')?.value?.trim();
-  var pass2 = document.getElementById('j-pass2')?.value?.trim();
+  var pass  = document.getElementById('j-pass')?.value?.trim()||'';
 
-  if(!name)  { toast('أدخل اسمك الكامل','error');   return; }
-  if(!phone) { toast('أدخل رقم الجوال','error');     return; }
-  if(!email) { toast('أدخل البريد الإلكتروني','error'); return; }
-  if(!biz)   { toast('أدخل اسم النشاط','error');     return; }
+  if(!name)  { toast('أدخل اسمك الكامل','error'); return; }
+  if(!phone||phone.length<10) { toast('أدخل رقم جوال صحيح','error'); return; }
+  if(!email||!email.includes('@')) { toast('أدخل بريد إلكتروني صحيح','error'); return; }
+  if(!biz)   { toast('أدخل اسم النشاط','error'); return; }
 
   if(!_selectedPkg) _selectedPkg='free';
-  var pkg = PKG_PRICES[_selectedPkg] || PKG_PRICES['free'];
-  var price  = _billingYearly ? pkg.yearly  : pkg.monthly;
-  var billing= _billingYearly ? 'سنوي' : 'شهري';
+  var pkg    = PKG_PRICES[_selectedPkg]||PKG_PRICES['free'];
+  var price  = _billingYearly?pkg.yearly:pkg.monthly;
+  var billing= _billingYearly?'سنوي':'شهري';
+  var bizId  = email.replace(/[^a-z0-9]/g,'_');
+  var reqId  = bizId+'_'+Date.now();
+  var req = {id:reqId,name:name,phone:phone,city:city||'',email:email,biz:biz,biz_name:biz,biztype:btype,units:units,pkg:_selectedPkg,pkg_label:pkg.label,price:price,billing:billing,status:'pending',date:toDay(),pass:pass};
 
-  var bizId = email.toLowerCase().replace(/[^a-z0-9]/g,'_');
-  var reqId = bizId+'_'+Date.now();
-  var req = {
-    id:reqId, name:name, phone:phone, city:city||'', email:email,
-    biz:biz, biz_name:biz, biztype:btype, units:units,
-    pkg:_selectedPkg, pkg_label:pkg.label,
-    price:price, billing:billing,
-    status:'pending', date:toDay(), pass:pass||''
-  };
-
-  // Save to Supabase first
   var btn=document.getElementById('join-submit-btn');
   if(btn){btn.textContent='جارٍ الإرسال...';btn.disabled=true;}
-  sbFetch('join_requests','POST',req,'?on_conflict=id').then(function(){
-    if(!DB.joinRequests) DB.joinRequests=[];
-    DB.joinRequests.push(req);
-    DB.subscriberInfo = {
-      name:name, email:email, phone:phone, city:city,
-      biz:biz, bizType:btype,
-      pkg:_selectedPkg, pkgLabel:pkg.label,
-      price:price, billing:billing,
-      date:toDay(), status:'pending', bizId:bizId
-    };
-    if(!DB.bizName){ DB.bizName=biz; updateBizLabels(); }
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
 
-    // Success screen
-    _showJoinStep(3);
-    var js = document.getElementById('join-screen');
-    if(js) js.scrollTop=0;
-    var pad = js ? js.querySelector('#join-step-1')?.parentElement : null;
-    if(pad){
-      pad.innerHTML=
+  Promise.all([
+    sbFetch('biz_accounts','GET',null,'?email=eq.'+encodeURIComponent(email)+'&select=id').catch(function(){return[];}),
+    sbFetch('join_requests','GET',null,'?email=eq.'+encodeURIComponent(email)+'&status=eq.pending&select=id').catch(function(){return[];})
+  ]).then(function(results){
+    var existing=results[0]||[], pending=results[1]||[];
+    if(existing.length>0){
+      if(btn){btn.textContent='إرسال طلب الاشتراك ✓';btn.disabled=false;}
+      toast('هذا البريد مسجّل مسبقاً','error'); return;
+    }
+    if(pending.length>0){
+      if(btn){btn.textContent='إرسال طلب الاشتراك ✓';btn.disabled=false;}
+      toast('طلبك قيد المراجعة — سنتواصل معك قريباً','error'); return;
+    }
+    sbFetch('join_requests','POST',req,'?on_conflict=id').then(function(){
+      if(btn){btn.textContent='إرسال طلب الاشتراك ✓';btn.disabled=false;}
+      if(!DB.joinRequests) DB.joinRequests=[];
+      DB.joinRequests.push(req);
+      DB.subscriberInfo={name:name,email:email,phone:phone,city:city,biz:biz,bizType:btype,pkg:_selectedPkg,pkgLabel:pkg.label,price:price,billing:billing,date:toDay(),status:'pending',bizId:bizId};
+      if(!DB.bizName){DB.bizName=biz;updateBizLabels();}
+      try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+      _showJoinStep(3);
+      var js=document.getElementById('join-screen');
+      if(js) js.scrollTop=0;
+      var pad=js?js.querySelector('#join-step-1')?.parentElement:null;
+      if(pad) pad.innerHTML=
         '<div style="padding:32px 24px 48px;text-align:center;">'
           +'<div style="width:72px;height:72px;border-radius:50%;background:rgba(52,211,153,.15);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px;">✅</div>'
-          +'<div style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:8px;">تم إرسال طلبك!</div>'
-          +'<div style="font-size:13px;color:var(--text3);line-height:1.8;margin-bottom:28px;">سيتواصل معك فريق BODO على<br><strong style="color:var(--accent);">'+phone+'</strong><br>خلال 24 ساعة لتفعيل حسابك</div>'
-          +'<div style="background:var(--card);border:1px solid var(--goldb);border-radius:16px;padding:16px;margin-bottom:28px;width:100%;text-align:right;">'
-            +'<div style="font-size:11px;color:var(--text3);margin-bottom:10px;text-align:center;letter-spacing:1px;">ملخص الطلب</div>'
+          +'<div style="font-size:22px;font-weight:900;margin-bottom:8px;">تم إرسال طلبك!</div>'
+          +'<div style="font-size:13px;color:var(--text3);line-height:1.8;margin-bottom:24px;">سيتواصل معك فريق BODO على<br><strong style="color:var(--accent);">'+phone+'</strong><br>خلال 24 ساعة</div>'
+          +'<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:24px;text-align:right;">'
             +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text3);">الاسم</span><span style="font-size:12px;font-weight:700;">'+name+'</span></div>'
+            +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text3);">البريد</span><span style="font-size:12px;font-weight:700;">'+email+'</span></div>'
             +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text3);">النشاط</span><span style="font-size:12px;font-weight:700;">'+biz+'</span></div>'
             +'<div style="display:flex;justify-content:space-between;padding:7px 0;"><span style="font-size:12px;color:var(--text3);">الباقة</span><span style="font-size:13px;font-weight:900;color:var(--accent);">'+pkg.label+' · '+price+' ر.س/'+billing+'</span></div>'
           +'</div>'
-          +'<button onclick="showLoginScreen()" class="btn btn-primary btn-full" style="height:50px;font-size:15px;font-weight:800;width:100%;">العودة لتسجيل الدخول</button>'
+          +'<button onclick="showLoginScreen()" class="btn btn-primary btn-full" style="height:50px;font-size:15px;font-weight:800;">العودة لتسجيل الدخول</button>'
         +'</div>';
-    }
-  }).catch(function(err){
-    var btn=document.getElementById('join-submit-btn');
-    if(btn){btn.textContent='إرسال الطلب';btn.disabled=false;}
-    toast('فشل الإرسال — تحقق من الاتصال وحاول مرة ثانية','error');
+    }).catch(function(){
+      if(btn){btn.textContent='إرسال طلب الاشتراك ✓';btn.disabled=false;}
+      toast('فشل الإرسال — تحقق من الاتصال','error');
+    });
+  }).catch(function(){
+    if(btn){btn.textContent='إرسال طلب الاشتراك ✓';btn.disabled=false;}
+    toast('فشل الإرسال — تحقق من الاتصال','error');
   });
 }
+
 
 // ── Owner Panel ──
 function doOwnerLogin(){
@@ -1962,28 +1962,53 @@ function _genTempPass(){
   return pass;
 }
 function approveRequest(id){
-  // Get request from DB or Supabase
-  var req = (DB.joinRequests||[]).find(function(r){return r.id===id;});
-  if(!req){
-    // Try fetch from Supabase directly
-    sbFetch('join_requests','GET',null,'?id=eq.'+id).then(function(data){
-      if(data&&data.length>0){
-        if(!DB.joinRequests) DB.joinRequests=[];
-        DB.joinRequests.push(data[0]);
-        approveRequest(id);
-      }
+  var btn=document.querySelector('[onclick="approveRequest(\''+id+'\')"]');
+  if(btn){btn.textContent='جارٍ...';btn.disabled=true;}
+
+  // جلب الطلب من Supabase مباشرة لضمان البيانات الكاملة
+  sbFetch('join_requests','GET',null,'?id=eq.'+id).then(function(data){
+    if(!data||!data.length){
+      toast('الطلب غير موجود','error');
+      if(btn){btn.textContent='قبول';btn.disabled=false;}
+      return;
+    }
+    var req=data[0];
+    var bizId=(req.email||'').toLowerCase().replace(/[^a-z0-9]/g,'_');
+    var tempPass=_genTempPass();
+    var acct={
+      id:bizId,
+      email:(req.email||'').toLowerCase(),
+      password:tempPass,
+      biz_name:req.biz||req.biz_name||req.name||'',
+      biz_type:req.biztype||req.biz_type||'',
+      owner_name:req.name||'',
+      phone:req.phone||'',
+      pkg:req.pkg||'free',
+      status:'active',
+      created_at:new Date().toISOString()
+    };
+
+    // حفظ الحساب في Supabase
+    sbFetch('biz_accounts','POST',acct,'?on_conflict=id').then(function(){
+      // تحديث حالة الطلب
+      sbFetch('join_requests','PATCH',{status:'approved'},'?id=eq.'+id).catch(function(){});
+      // تحديث محلي
+      if(!DB.joinRequests) DB.joinRequests=[];
+      DB.joinRequests=DB.joinRequests.map(function(r){
+        return r.id===id?Object.assign({},r,{status:'approved'}):r;
+      });
+      try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+      // إظهار واتساب مع كلمة المرور
+      _sendWhatsApp(req, tempPass);
+      renderOwnerRequests();
+    }).catch(function(err){
+      toast('فشل إنشاء الحساب — حاول مرة ثانية','error');
+      if(btn){btn.textContent='قبول';btn.disabled=false;}
     });
-    return;
-  }
-  DB.joinRequests=DB.joinRequests.map(function(r){return r.id===id?Object.assign({},r,{status:'approved'}):r;});
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-  sbFetch('join_requests','PATCH',{status:'approved'},'?id=eq.'+id).catch(function(){});
-  var bizId=req.email?req.email.toLowerCase().replace(/[^a-z0-9]/g,'_'):(req.biz_id||id);
-  var tempPass=_genTempPass();
-  var acct={id:bizId,email:req.email,password:tempPass,biz_name:req.biz||req.biz_name||req.name,biz_type:req.biztype||req.biz_type||'',owner_name:req.name,phone:req.phone,pkg:req.pkg||'free',status:'active',created_at:new Date().toISOString()};
-  sbFetch('biz_accounts','POST',acct,'?on_conflict=id').catch(function(){});
-  _sendWhatsApp(req, tempPass);
-  renderOwnerRequests();
+  }).catch(function(){
+    toast('فشل جلب الطلب','error');
+    if(btn){btn.textContent='قبول';btn.disabled=false;}
+  });
 }
 
 function _sendWhatsApp(req,tempPass){
@@ -2220,7 +2245,7 @@ function doLogin(){
     if(btn){btn.textContent='دخول';btn.disabled=false;}
     if(!res||!res.length){err.style.display='block';setTimeout(function(){err.style.display='none';},3000);return;}
     var acct=res[0];
-    if(acct.password!==p){err.style.display='block';setTimeout(function(){err.style.display='none';},3000);return;}
+    if((acct.password||'').trim()!==p.trim()){err.style.display='block';setTimeout(function(){err.style.display='none';},3000);return;}
     if(acct.status!=='active'){
       var errMsg=document.getElementById('login-err');
       if(errMsg){errMsg.textContent='الحساب غير مفعّل بعد';errMsg.style.display='block';setTimeout(function(){errMsg.style.display='none';errMsg.textContent='بيانات الدخول غير صحيحة';},4000);}
@@ -5192,6 +5217,16 @@ function injectGmailBookings(){
   } else {
     showToast('الحجوزات مضافة مسبقاً','info');
   }
+}
+
+// ── getBizId ──
+function getBizId(){
+  if(currentUser&&currentUser.bizId) return currentUser.bizId.toLowerCase();
+  var sub=DB.subscriberInfo||{};
+  if(sub.bizId) return sub.bizId.toLowerCase();
+  var email=sub.email||(currentUser&&currentUser.username)||'';
+  if(email) return email.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  return (DB.bizName||'default').toLowerCase();
 }
 
 // ══ SUPABASE CONFIG ══
