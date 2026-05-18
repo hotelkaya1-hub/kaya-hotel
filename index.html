@@ -2058,29 +2058,94 @@ function rejectRequest(id){
 }
 
 function renderOwnerSubscribers(){
-  var approved = (DB.joinRequests||[]).filter(function(r){return r.status==='approved';});
-  var content = document.getElementById('owner-content');
-  content.innerHTML = approved.length ?
-    '<div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:12px;">'+approved.length+' مشترك نشط</div>'
-    +approved.map(function(r){
-      return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">'
-        +'<div>'
-          +'<div style="font-size:14px;font-weight:800;">'+r.biz+'</div>'
-          +'<div style="font-size:11px;color:var(--text3);">'+r.name+' · '+r.phone+'</div>'
-          +'<div style="font-size:11px;color:var(--accent);font-weight:700;margin-top:2px;">باقة '+r.pkgLabel+'</div>'
-        +'</div>'
-        +'<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">'
-          +'<div style="font-size:14px;font-weight:900;color:var(--accent);">'+r.price+' ر.س</div>'
-          +'<div style="font-size:10px;color:var(--text3);">'+r.billing+'</div>'
-          +'<div style="font-size:10px;color:var(--text3);">منذ '+r.date+'</div>'
-          +'<button onclick="_sendWhatsApp(DB.joinRequests.find(function(x){return x.id===\''+r.id+'\'}))" style="margin-top:4px;display:flex;align-items:center;gap:4px;background:#25d366;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">'
-            +'<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>'
-            +' إرسال البيانات'
-          +'</button>'
+  var content=document.getElementById('owner-content');
+  content.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3);">جارٍ التحميل...</div>';
+  
+  sbFetch('biz_accounts','GET',null,'?select=*&order=created_at.desc').then(function(accounts){
+    accounts=accounts||[];
+    
+    // أضف Kaled كمشترك افتراضي لو مو موجود
+    var kaledExists=accounts.find(function(a){return a.id==='kaled';});
+    if(!kaledExists){
+      accounts.unshift({id:'kaled',email:'Kaled',biz_name:'Kaya Hotel',owner_name:'Kaled',phone:'',pkg:'all',status:'active',created_at:''});
+    }
+    
+    if(!accounts.length){
+      content.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3);">لا يوجد مشتركون بعد</div>';
+      return;
+    }
+    
+    content.innerHTML=
+      '<div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:16px;">'+accounts.length+' مشترك نشط</div>'
+      +accounts.map(function(a){
+        var pkgLabel=a.pkg==='all'?'الشاملة':a.pkg==='pro'?'الاحترافية':'المجانية';
+        var pkgColor=a.pkg==='all'?'var(--accent)':a.pkg==='pro'?'var(--yellow)':'var(--text3)';
+        return '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:10px;">'
+          +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">'
+            +'<div>'
+              +'<div style="font-size:15px;font-weight:800;">'+( a.biz_name||a.id)+'</div>'
+              +'<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+( a.owner_name||'')+(a.phone?' · '+a.phone:'')+'</div>'
+              +'<div style="font-size:11px;color:var(--text3);">'+a.email+'</div>'
+            +'</div>'
+            +'<span style="background:var(--bg3);color:'+pkgColor+';font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;">'+pkgLabel+'</span>'
+          +'</div>'
+          +'<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+            +(a.id!=='kaled'?
+              '<button onclick="editSubscriber(\''+a.id+'\')" style="flex:1;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text);">تعديل</button>'
+              +'<button onclick="deleteSubscriber(\''+a.id+'\',\''+( a.biz_name||a.id)+'\')" style="flex:1;padding:8px;background:rgba(220,38,38,.1);border:1px solid var(--red);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--red);">حذف</button>'
+            :'<div style="font-size:11px;color:var(--text3);padding:4px 0;">الحساب الرئيسي</div>')
+            +(a.phone?
+              '<button onclick="_sendWhatsApp({name:\''+( a.owner_name||a.id)+'\',email:\''+a.email+'\',phone:\''+a.phone+'\'},\''+( a.password||'—')+'\')" style="padding:8px 12px;background:#25d366;border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;">واتساب</button>'
+            :'')
+          +'</div>'
+        +'</div>';
+      }).join('');
+  }).catch(function(){
+    content.innerHTML='<div style="text-align:center;padding:40px;color:var(--red);">فشل التحميل</div>';
+  });
+}
+
+function deleteSubscriber(id, name){
+  if(!confirm('حذف مشترك "'+name+'"؟ لا يمكن التراجع')) return;
+  sbFetch('biz_accounts','DELETE',null,'?id=eq.'+id).then(function(){
+    sbFetch('join_requests','PATCH',{status:'deleted'},'?email=eq.'+id).catch(function(){});
+    toast('تم حذف المشترك','success');
+    renderOwnerSubscribers();
+  }).catch(function(){toast('فشل الحذف','error');});
+}
+
+function editSubscriber(id){
+  sbFetch('biz_accounts','GET',null,'?id=eq.'+id+'&select=*').then(function(data){
+    if(!data||!data.length) return;
+    var a=data[0];
+    var modal=document.createElement('div');
+    modal.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;';
+    modal.innerHTML=
+      '<div style="background:var(--card);border-radius:20px;padding:24px;max-width:380px;width:100%;direction:rtl;">'
+        +'<div style="font-size:16px;font-weight:800;margin-bottom:16px;">تعديل المشترك</div>'
+        +'<div class="form-group"><label class="form-label">اسم النشاط</label><input id="es-biz" class="fi" value="'+(a.biz_name||'')+'"></div>'
+        +'<div class="form-group"><label class="form-label">الباقة</label><select id="es-pkg" class="fi"><option value="free"'+(a.pkg==='free'?' selected':'')+'>المجانية</option><option value="pro"'+(a.pkg==='pro'?' selected':'')+'>الاحترافية</option><option value="all"'+(a.pkg==='all'?' selected':'')+'>الشاملة</option></select></div>'
+        +'<div class="form-group"><label class="form-label">كلمة مرور جديدة (اختياري)</label><input id="es-pass" class="fi" placeholder="اتركه فارغاً للإبقاء على القديمة"></div>'
+        +'<div style="display:flex;gap:8px;margin-top:16px;">'
+          +'<button onclick="saveSubscriberEdit(\''+id+'\')" class="btn btn-primary" style="flex:1;">حفظ</button>'
+          +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="flex:1;padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-family:inherit;font-weight:700;">إلغاء</button>'
         +'</div>'
       +'</div>';
-    }).join('')
-    : '<div style="text-align:center;padding:40px;color:var(--text3);">لا يوجد مشتركون بعد</div>';
+    document.body.appendChild(modal);
+  });
+}
+
+function saveSubscriberEdit(id){
+  var biz=document.getElementById('es-biz')?.value?.trim();
+  var pkg=document.getElementById('es-pkg')?.value;
+  var pass=document.getElementById('es-pass')?.value?.trim();
+  var body={biz_name:biz,pkg:pkg};
+  if(pass) body.password=pass;
+  sbFetch('biz_accounts','PATCH',body,'?id=eq.'+id).then(function(){
+    document.querySelector('[style*="fixed"]')?.remove();
+    toast('تم الحفظ','success');
+    renderOwnerSubscribers();
+  }).catch(function(){toast('فشل الحفظ','error');});
 }
 
 function renderOwnerRevenue(){
@@ -2173,40 +2238,29 @@ function saveOwnerConfig(){
 }
 
 function initAuth(){
-  // Load owner config
-  if(DB.ownerConfig && DB.ownerConfig.pass) OWNER_PASS = DB.ownerConfig.pass;
+  if(DB.ownerConfig&&DB.ownerConfig.pass) OWNER_PASS=DB.ownerConfig.pass;
 
-  // Hash router — owner panel
-  if(location.hash === '#bodo-owner-2025'){
-    document.getElementById('login-screen').style.display = 'none';
+  // Owner panel
+  if(location.hash==='#bodo-owner-2025'){
+    document.getElementById('login-screen').style.display='none';
     document.getElementById('owner-screen').style.display='flex';
-    if(localStorage.getItem('bodo_owner')==='1'){
-      _ownerLoggedIn = true;
-      showOwnerDashboard();
-    }
+    if(localStorage.getItem('bodo_owner')==='1'){_ownerLoggedIn=true;showOwnerDashboard();}
     return;
   }
 
-  // Normal auth flow
-  var remember = localStorage.getItem('kaya_remember');
-  var session = localStorage.getItem('kaya_session');
-  if(remember==='1' && session){
-    try{
-      var u=JSON.parse(session);
-      if(u&&u.username){
-        currentUser=u;
-        document.getElementById('login-screen').style.display='none';
-        document.getElementById('app').style.display='flex';
-        renderAll();
-        // Load fresh data from Supabase
-        loadFromSupabaseAuto().catch(function(){});
-        initRealtime();
-        return;
-      }
-    }catch(e){}
+  // Auto-login from saved session
+  var saved=_loadSession();
+  if(saved&&saved.username){
+    currentUser=saved;
+    DB=_freshDB(saved.bizId||saved.username.toLowerCase());
+    if(saved.role==='subscriber'){
+      DB.subscriberInfo={bizId:saved.bizId,email:saved.username,bizName:saved.bizName};
+      DB.bizName=saved.bizName||'';
+    }
+    showApp();
+    return;
   }
-  var cb = document.getElementById('remember-me');
-  if(cb) cb.checked = remember==='1';
+
   initIcons();
   if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;
   if(DB.adminPass&&DB.adminPass.username) ADMIN.username=DB.adminPass.username;
@@ -2221,56 +2275,57 @@ function doLogin(){
   var p=document.getElementById('login-pass').value.trim();
   var err=document.getElementById('login-err');
   if(!u||!p){err.style.display='block';return;}
-  // 1. Admin check
+
+  // ── 1. Admin ─────────────────────────────────
   if(u===ADMIN.username&&p===ADMIN.password){
-    currentUser={username:u,role:'admin'};
-    localStorage.setItem('kaya_session',JSON.stringify(currentUser));
-    showApp();return;
+    currentUser={username:u,role:'admin',bizId:'kaled'};
+    _clearSession();
+    DB=_freshDB('kaled');
+    _saveSession(currentUser);
+    showApp();
+    return;
   }
-  // 2. Staff/employee check (local) - inherits bizId from current session context
-  var found=(DB.appUsers||[]).find(function(x){return x.username===u&&x.password===p;});
+
+  // ── 2. Staff (local) ──────────────────────────
+  var found=(DB.appUsers||[]).find(x=>x.username===u&&x.password===p);
   if(found){
-    var uRole=found.role||'staff';
-    // Staff inherits bizId from the subscriber who owns this DB instance
-    var staffBizId=found.bizId||(DB.subscriberInfo&&DB.subscriberInfo.bizId)||getBizId();
-    currentUser={username:u,role:uRole,fullname:found.fullname,perms:found.perms,id:found.id,bizId:staffBizId};
-    localStorage.setItem('kaya_session',JSON.stringify(currentUser));
-    showApp();return;
+    currentUser={username:u,role:found.role||'staff',fullname:found.fullname,perms:found.perms,id:found.id,bizId:found.bizId||getBizId()};
+    _saveSession(currentUser);
+    showApp();
+    return;
   }
-  // 3. Subscriber (biz_account) check via Supabase
+
+  // ── 3. Subscriber (Supabase) ──────────────────
   var btn=document.getElementById('login-btn');
   if(btn){btn.textContent='جاري التحقق...';btn.disabled=true;}
-  var emailQ=encodeURIComponent(u.toLowerCase());
-  sbFetch('biz_accounts','GET',null,'?email=eq.'+emailQ+'&select=*').then(function(res){
+  sbFetch('biz_accounts','GET',null,'?email=eq.'+encodeURIComponent(u.toLowerCase())+'&select=*')
+  .then(function(res){
     if(btn){btn.textContent='دخول';btn.disabled=false;}
-    if(!res||!res.length){err.style.display='block';setTimeout(function(){err.style.display='none';},3000);return;}
+    if(!res||!res.length){err.style.display='block';setTimeout(()=>{err.style.display='none';},3000);return;}
     var acct=res[0];
-    if((acct.password||'').trim()!==p.trim()){err.style.display='block';setTimeout(function(){err.style.display='none';},3000);return;}
+    if((acct.password||'').trim()!==p.trim()){err.style.display='block';setTimeout(()=>{err.style.display='none';},3000);return;}
     if(acct.status!=='active'){
-      var errMsg=document.getElementById('login-err');
-      if(errMsg){errMsg.textContent='الحساب غير مفعّل بعد';errMsg.style.display='block';setTimeout(function(){errMsg.style.display='none';errMsg.textContent='بيانات الدخول غير صحيحة';},4000);}
+      err.textContent='الحساب غير مفعّل بعد';err.style.display='block';
+      setTimeout(()=>{err.style.display='none';err.textContent='بيانات الدخول غير صحيحة';},4000);
       return;
     }
-    // Login as subscriber
-    var bizId=acct.id||acct.email.toLowerCase().replace(/[^a-z0-9]/g,'_');
+    var bizId=(acct.id||acct.email.toLowerCase().replace(/[^a-z0-9]/g,'_'));
     currentUser={username:acct.email,role:'subscriber',fullname:acct.owner_name,bizId:bizId,bizName:acct.biz_name,pkg:acct.pkg};
-    localStorage.setItem('kaya_session',JSON.stringify(currentUser));
-    // Set subscriberInfo
+    _clearSession();
+    DB=_freshDB(bizId);
     DB.subscriberInfo={email:acct.email,name:acct.owner_name,bizName:acct.biz_name,bizType:acct.biz_type,pkg:acct.pkg,status:'active',bizId:bizId};
     DB.bizName=acct.biz_name;
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    _saveSession(currentUser);
     showApp();
-  }).catch(function(){
+  })
+  .catch(function(){
     if(btn){btn.textContent='دخول';btn.disabled=false;}
-    err.style.display='block';setTimeout(function(){err.style.display='none';},3000);
+    err.style.display='block';setTimeout(()=>{err.style.display='none';},3000);
   });
 }
+
 function showApp(){
-  DB = loadDB();
-  if(currentUser&&currentUser.bizId&&!DB.subscriberInfo){
-    DB.subscriberInfo={bizId:currentUser.bizId,email:currentUser.username};
-  }
-  if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;
+  // البيانات دائماً من Supabase — DB يبدأ فارغاً
   if(!DB.appUsers) DB.appUsers=[];
 
   document.getElementById('login-screen').style.display='none';
@@ -2279,51 +2334,22 @@ function showApp(){
   var contentEl=document.getElementById('content');
   if(contentEl){contentEl.style.flex='1';contentEl.style.overflowY='auto';contentEl.style.overflowX='hidden';}
 
-  var uname=currentUser?currentUser.username:'';
-  var greetTxt=currentUser?.fullname||uname;
-  var nm=document.getElementById('nav-username');if(nm)nm.textContent=greetTxt;
+  var uname=currentUser?.fullname||currentUser?.username||'';
+  var nm=document.getElementById('nav-username');if(nm)nm.textContent=uname;
   var nset=document.getElementById('nm-set');if(nset)nset.textContent=uname;
-  var gset=document.getElementById('gr-set');if(gset)gset.textContent=greetTxt;
-  document.querySelectorAll('.nav-item').forEach(function(n){n.style.display='';});
+  var gset=document.getElementById('gr-set');if(gset)gset.textContent=uname;
+  document.querySelectorAll('.nav-item').forEach(n=>n.style.display='');
   applyPerms();
-
-  // عرض الواجهة أولاً بالبيانات المحلية
   renderDashboard();
   try{renderNotificationsBell();}catch(e){}
 
-  // جلب كل البيانات من Supabase فوراً
-  var bizId=getBizId();
-  Promise.all([
-    sbFetch('bookings','GET',null,'?select=*&biz_id=eq.'+bizId+'&order=checkin.desc').catch(function(){return[];}),
-    sbFetch('units','GET',null,'?select=*&biz_id=eq.'+bizId).catch(function(){return[];}),
-    sbFetch('sales','GET',null,'?select=*&biz_id=eq.'+bizId).catch(function(){return[];}),
-    sbFetch('expenses','GET',null,'?select=*&biz_id=eq.'+bizId).catch(function(){return[];}),
-    sbFetch('employees','GET',null,'?select=*&biz_id=eq.'+bizId).catch(function(){return[];}),
-    sbFetch('monthly_costs','GET',null,'?select=*&biz_id=eq.'+bizId).catch(function(){return[];}),
-    sbFetch('foundation_costs','GET',null,'?select=*&biz_id=eq.'+bizId).catch(function(){return[];})
-  ]).then(function(results){
-    var bookings=results[0],units=results[1],sales=results[2],expenses=results[3],employees=results[4],monthly=results[5],foundation=results[6];
-    if(bookings&&bookings.length) DB.bookings=bookings;
-    if(units&&units.length){
-      DB.units=units.map(function(u){return u.name||u.id;});
-      if(!DB.unitTypes) DB.unitTypes={};
-      units.forEach(function(u){if(u.type) DB.unitTypes[u.name||u.id]=u.type;});
-    }
-    if(sales&&sales.length) DB.sales=sales.map(function(s){return{id:s.id,desc:s.description||'',amount:s.amount||0,date:s.date||'',apt:s.apt||'عام',notes:s.notes||''};});
-    if(expenses&&expenses.length) DB.expenses=expenses.map(function(e){return{id:e.id,type:e.type||'أخرى',amount:e.amount||0,date:e.date||'',desc:e.description||'',apt:e.apt||'عام',salaryRef:e.salary_ref||'',salaryMonth:e.salary_month||''};});
-    if(employees&&employees.length) DB.employees=employees.map(function(e){return{id:e.id,name:e.name,role:e.role||'',salary:e.salary||0,hireDate:e.hire_date||''};});
-    if(monthly&&monthly.length) DB.monthly=monthly.map(function(m){return{id:m.id,name:m.name,amount:m.amount||0,apt:m.apt||'',dueDate:m.due_date||''};});
-    if(foundation&&foundation.length) DB.foundation=foundation.map(function(f){return{id:f.id,name:f.name,amount:f.amount||0,date:f.date||''};});
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-    renderAll();
-    // لو التقويم مفتوح أعد رسمه بالبيانات الجديدة
-    if(_currentPage==='calbooking' && _currentCBTab===1) renderCalendars();
-  }).catch(function(){});
-
-  if(window._pollTimer) clearInterval(window._pollTimer);
-  if(window._syncInterval) clearInterval(window._syncInterval);
+  // جلب البيانات فوراً
+  loadAllData();
+  // تشغيل الـ realtime
+  clearInterval(_pollTimer);
   initRealtime();
 }
+
 function logout(){
   localStorage.removeItem('kaya_session');
   currentUser=null;
@@ -5238,275 +5264,113 @@ function injectGmailBookings(){
   }
 }
 
-// ── getBizId ──
-function getBizId(){
-  if(currentUser&&currentUser.bizId) return currentUser.bizId.toLowerCase();
-  var sub=DB.subscriberInfo||{};
-  if(sub.bizId) return sub.bizId.toLowerCase();
-  var email=sub.email||(currentUser&&currentUser.username)||'';
-  if(email) return email.toLowerCase().replace(/[^a-z0-9]/g,'_');
-  return (DB.bizName||'default').toLowerCase();
-}
+// ══ SUPABASE ══════════════════════════════════
+const SB_URL='https://uoysyclcycnttnidllxc.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVveXN5Y2xjeWNudHRuaWRsbHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjI0MjEsImV4cCI6MjA5MzgzODQyMX0.0GJbr8bQpcZ3G__p6CIW3t8dvEZAjjQL5FXLXmQ9Jmg';
 
-// ══ SUPABASE CONFIG ══
-const SB_URL = 'https://uoysyclcycnttnidllxc.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVveXN5Y2xjeWNudHRuaWRsbHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjI0MjEsImV4cCI6MjA5MzgzODQyMX0.0GJbr8bQpcZ3G__p6CIW3t8dvEZAjjQL5FXLXmQ9Jmg';
-
-async function sbFetch(table, method, body, query){
-  var url=SB_URL+'/rest/v1/'+table+(query||'');
-  var headers={
+// ── Core fetch ───────────────────────────────
+async function sbFetch(table,method,body,query){
+  const url=SB_URL+'/rest/v1/'+table+(query||'');
+  const h={
     'apikey':SB_KEY,
     'Authorization':'Bearer '+SB_KEY,
     'Content-Type':'application/json',
     'Cache-Control':'no-cache'
   };
-  if(method==='GET') headers['Accept']='application/json';
-  if(method==='POST'&&query&&query.includes('on_conflict')){
-    headers['Prefer']='resolution=merge-duplicates,return=minimal';
-  }
-  if(method==='PATCH'||method==='DELETE') headers['Prefer']='return=minimal';
-  var opts={method:method,headers:headers};
-  if(body&&method!=='GET'&&method!=='DELETE') opts.body=JSON.stringify(body);
-  var res=await fetch(url,opts);
-  if(!res.ok){
-    var txt=await res.text().catch(function(){return '';});
-    throw new Error('sbFetch '+method+' '+table+': '+res.status+' '+txt);
-  }
-  if(res.status===204||method==='DELETE'||method==='PATCH') return null;
-  var text=await res.text();
-  return text?JSON.parse(text):null;
+  if(method==='POST'&&query?.includes('on_conflict')) h['Prefer']='resolution=merge-duplicates,return=minimal';
+  if(method==='PATCH'||method==='DELETE') h['Prefer']='return=minimal';
+  const r=await fetch(url,{method,headers:h,body:body&&method!=='GET'&&method!=='DELETE'?JSON.stringify(body):undefined});
+  if(!r.ok){const t=await r.text().catch(()=>'');throw new Error(method+' '+table+': '+r.status+' '+t);}
+  if(r.status===204||method==='DELETE'||method==='PATCH') return null;
+  const t=await r.text();
+  return t?JSON.parse(t):null;
 }
 
-// ── Device ID ──
-var _deviceId = localStorage.getItem('bodo_device_id');
-if(!_deviceId){ _deviceId = 'dev_'+Math.random().toString(36).slice(2); localStorage.setItem('bodo_device_id',_deviceId); }
-
-// ── Pending saves queue ──
-var _pendingSaves = {};
-function _markPending(table, id){ _pendingSaves[table+'_'+id] = Date.now(); }
-function _clearPending(table, id){ delete _pendingSaves[table+'_'+id]; }
-function _isPending(table, id){ return !!_pendingSaves[table+'_'+id]; }
-
-// ── Realtime Sync ──
-var _realtimeTimer = null;
-var _reloadPending = false;
-var _lastDataHash = '';
-
-function _scheduleReload(){
-  if(_reloadPending) return;
-  _reloadPending = true;
-  setTimeout(function(){
-    _reloadPending = false;
-    loadFromSupabaseAuto().catch(function(){});
-  }, 300);
+// ── getBizId — always lowercase ───────────────
+function getBizId(){
+  if(currentUser?.bizId) return currentUser.bizId.toLowerCase();
+  const s=DB.subscriberInfo||{};
+  if(s.bizId) return s.bizId.toLowerCase();
+  const e=s.email||(currentUser?.username)||'';
+  if(e) return e.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  return 'default';
 }
 
+// ── Session helpers ───────────────────────────
+function _saveSession(user){ localStorage.setItem('bodo_session',JSON.stringify(user)); }
+function _loadSession(){ try{const s=localStorage.getItem('bodo_session');return s?JSON.parse(s):null;}catch{return null;} }
+function _clearSession(){ localStorage.removeItem('bodo_session'); localStorage.removeItem('kaya_v9'); }
 
-async function loadFromSupabaseAuto(){
+// ── DB init (always empty — data comes from Supabase) ──
+function _freshDB(bizId){
+  return {bookings:[],expenses:[],employees:[],units:[],unitTypes:{},monthly:[],foundation:[],sales:[],appUsers:[],adminPass:{},calStats:{},subscriberInfo:{bizId:bizId||''}};
+}
+
+// ── Load all data for current user ───────────
+async function loadAllData(){
+  const bizId=getBizId();
+  if(!bizId||bizId==='default') return;
   try{
-    var bizId=getBizId();
-    var q='&biz_id=eq.'+bizId;
-    var [bookings, expenses, monthly, foundation, employees, units, sales, appCfg] = await Promise.all([
-      sbFetch('bookings','GET',null,'?select=*&biz_id=eq.'+bizId+'&order=checkin.desc'),
-      sbFetch('expenses','GET',null,'?select=*&biz_id=eq.'+bizId+'&order=created_at.desc'),
-      sbFetch('monthly_costs','GET',null,'?select=*&biz_id=eq.'+bizId),
-      sbFetch('foundation_costs','GET',null,'?select=*&biz_id=eq.'+bizId),
-      sbFetch('employees','GET',null,'?select=*&biz_id=eq.'+bizId),
-      sbFetch('units','GET',null,'?select=*&biz_id=eq.'+bizId),
-      sbFetch('sales','GET',null,'?select=*&biz_id=eq.'+bizId+'&order=created_at.desc'),
-      sbFetch('app_config','GET',null,'?select=key,value&biz_id=eq.'+bizId).catch(function(){return[];}),
+    const [bookings,units,sales,expenses,employees,monthly,foundation]=await Promise.all([
+      sbFetch('bookings','GET',null,'?select=*&biz_id=eq.'+bizId+'&order=checkin.desc').catch(()=>[]),
+      sbFetch('units','GET',null,'?select=*&biz_id=eq.'+bizId).catch(()=>[]),
+      sbFetch('sales','GET',null,'?select=*&biz_id=eq.'+bizId+'&order=created_at.desc').catch(()=>[]),
+      sbFetch('expenses','GET',null,'?select=*&biz_id=eq.'+bizId+'&order=created_at.desc').catch(()=>[]),
+      sbFetch('employees','GET',null,'?select=*&biz_id=eq.'+bizId).catch(()=>[]),
+      sbFetch('monthly_costs','GET',null,'?select=*&biz_id=eq.'+bizId).catch(()=>[]),
+      sbFetch('foundation_costs','GET',null,'?select=*&biz_id=eq.'+bizId).catch(()=>[]),
     ]);
-
-    var changed = false;
-
-    if(bookings&&Array.isArray(bookings)){
-      DB.bookings = bookings.map(function(b){
-        return{id:b.id,apt:b.apt||'',guest:b.guest||'',phone:b.phone||'',source:b.source||'direct',
-          checkin:b.checkin||'',checkout:b.checkout||'',nights:b.nights||1,
-          price:b.price||0,total:b.total||0,status:b.status||'confirmed',notes:b.notes||''};
-      });
-      changed = true;
+    if(bookings?.length) DB.bookings=bookings;
+    if(units?.length){
+      DB.units=units.map(u=>u.name||u.id);
+      units.forEach(u=>{if(u.type)(DB.unitTypes=DB.unitTypes||{})[u.name||u.id]=u.type;});
     }
-    if(expenses&&Array.isArray(expenses)){
-      // Merge: keep local pending items, use cloud for rest
-      var pendingExp=(DB.expenses||[]).filter(function(e){return _isPending('expenses',e.id);});
-      DB.expenses = expenses.map(function(e){
-        return{id:e.id,type:e.type||'أخرى',amount:e.amount||0,date:e.date||'',
-          desc:e.description||e.notes||e.type||'',apt:e.apt||'عام',
-          salaryRef:e.salary_ref||'',salaryMonth:e.salary_month||''};
-      });
-      // Re-add pending local items not yet in cloud
-      pendingExp.forEach(function(pe){ if(!DB.expenses.find(function(e){return e.id===pe.id;})) DB.expenses.push(pe); });
-      changed = true;
-    }
-    if(monthly&&Array.isArray(monthly)){
-      DB.monthly=monthly.map(function(m){
-        return{id:m.id,name:m.name,amount:m.amount||0,apt:m.apt||'عام',dueDate:m.due_date||''};
-      });
-      changed=true;
-    }
-    if(foundation&&Array.isArray(foundation)){
-      DB.foundation=foundation.map(function(f){
-        return{id:f.id,name:f.name,amount:f.amount||0,date:f.date||''};
-      });
-      changed=true;
-    }
-    if(employees&&Array.isArray(employees)){
-      DB.employees=employees.map(function(e){
-        return{id:e.id,name:e.name,role:e.role||'',salary:e.salary||0,hireDate:e.hire_date||''};
-      });
-      changed=true;
-    }
-    if(units&&Array.isArray(units)&&units.length){
-      DB.units=units.map(function(u){return u.name||u.id;});
-      if(!DB.unitTypes) DB.unitTypes={};
-      units.forEach(function(u){if(u.type) DB.unitTypes[u.name||u.id]=u.type;});
-      changed=true;
-      // Re-render calendar if open
-      if(_currentPage==='calbooking'&&_currentCBTab===1) renderCalendars();
-    }
-    if(sales&&Array.isArray(sales)){
-      var pendingSales=(DB.sales||[]).filter(function(s){return _isPending('sales',s.id);});
-      DB.sales=sales.map(function(s){
-        return{id:s.id,desc:s.description||s.notes||'',amount:s.amount||0,date:s.date||'',apt:s.apt||'عام',notes:s.notes||''};
-      });
-      pendingSales.forEach(function(ps){ if(!DB.sales.find(function(s){return s.id===ps.id;})) DB.sales.push(ps); });
-      changed=true;
-    }
-    if(appCfg&&Array.isArray(appCfg)){
-      var bn=appCfg.find(function(c){return c.key==='biz_name';});
-      if(bn&&bn.value&&bn.value!==DB.bizName){
-        DB.bizName=bn.value; updateBizLabels();
-        var cn=document.getElementById('current-biz-name');
-        if(cn) cn.textContent=bn.value;
-        changed=true;
-      }
-    }
-
-    if(changed){
-      var newHash=JSON.stringify({b:DB.bookings?.length,e:DB.expenses?.length,s:DB.sales?.length,m:DB.monthly?.length,em:DB.employees?.length});
-      if(newHash!==_lastDataHash){
-        _lastDataHash=newHash;
-        try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-        if(!document.querySelector('.sheet-overlay.open')) renderAll();
-      }
-    }
-    showSyncStatus('✅ متزامن', true);
-  }catch(e){
-    // Silent fail - app works offline too
-  }
+    if(sales?.length) DB.sales=sales.map(s=>({id:s.id,desc:s.description||'',amount:s.amount||0,date:s.date||'',apt:s.apt||'عام',notes:s.notes||''}));
+    if(expenses?.length) DB.expenses=expenses.map(e=>({id:e.id,type:e.type||'أخرى',amount:e.amount||0,date:e.date||'',desc:e.description||'',apt:e.apt||'عام',salaryRef:e.salary_ref||'',salaryMonth:e.salary_month||''}));
+    if(employees?.length) DB.employees=employees.map(e=>({id:e.id,name:e.name,role:e.role||'',salary:e.salary||0,phone:e.phone||'',hireDate:e.hire_date||''}));
+    if(monthly?.length) DB.monthly=monthly.map(m=>({id:m.id,name:m.name,amount:m.amount||0,apt:m.apt||'',dueDate:m.due_date||''}));
+    if(foundation?.length) DB.foundation=foundation.map(f=>({id:f.id,name:f.name,amount:f.amount||0,date:f.date||''}));
+    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    renderAll();
+    if(_currentPage==='calbooking'&&_currentCBTab===1) renderCalendars();
+  }catch(e){ console.warn('loadAllData error',e); }
 }
 
-
-function showSyncStatus(msg, success, error){
-  // Completely silent
-}
-
-
-
-
-
-window.onerror = function(msg,src,line,col,err){
-  if(!msg||msg==='Script error.'||msg==='Script error') return true;
-  return false;
-};
-window.addEventListener('unhandledrejection',function(e){
-  if(e&&e.reason&&e.reason.message&&e.reason.message.indexOf('Load failed')>=0) e.preventDefault();
-});
-
-
-// ══ CONFIRM DIALOG ══
-var _confirmCallback = null;
-
-function showConfirm(title, msg, onConfirm, opts){
-  opts = opts||{};
-  var ov = document.getElementById('confirm-overlay');
-  var t = document.getElementById('confirm-title');
-  var m = document.getElementById('confirm-msg');
-  var ok = document.getElementById('confirm-ok');
-  if(!ov||!t||!m||!ok) return;
-  t.textContent = title||'تأكيد';
-  m.innerHTML = msg||'هل أنت متأكد؟';
-  ok.textContent = opts.okText||'حذف';
-  ok.style.background = opts.okColor||'#dc2626';
-  _confirmCallback = onConfirm;
-  ov.style.display = 'flex';
-}
-
-function closeConfirm(){
-  var ov = document.getElementById('confirm-overlay');
-  if(ov) ov.style.display = 'none';
-  _confirmCallback = null;
-}
-
-function doConfirm(){
-  var cb = _confirmCallback;
-  closeConfirm();
-  if(cb) cb();
-}
-
-// ══ SYNC ENGINE - Smart Polling (موثوق 100%) ══
-// كل عملية تُحفظ فوراً في Supabase عبر sbFetch
-// هذا الـ polling يسحب أي تغيير من أجهزة أخرى كل 3 ثوان
-var _rtConnected = false;
-var _lastSync = 0;
-var _pollTimer = null;
-
-function _updateRtIndicator(connected){
-  var dot = document.getElementById('rt-dot');
-  var lbl = document.getElementById('rt-label');
-  if(dot) dot.style.background = connected ? 'var(--green)' : '#888';
-  if(lbl) lbl.textContent = connected ? 'متصل مباشر' : 'جارٍ الاتصال...';
-}
-
-var _ws=null;
+// ── Realtime polling ──────────────────────────
 var _pollTimer=null;
-
 function initRealtime(){
   clearInterval(_pollTimer);
-  // Polling كل 3 ثواني كـ backup
-  _pollTimer = setInterval(function(){
-    _pollChanges();
-  }, 3000);
-  // First pull immediately
-  _pollChanges();
-  // WebSocket للتحديث الفوري
+  _pollTimer=setInterval(loadAllData,3000);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='visible') loadAllData();
+  });
   _startWS();
 }
-
+var _ws=null;
 function _startWS(){
   try{
-    if(_ws){ try{_ws.close();}catch(e){} _ws=null; }
-    var url=SB_URL.replace('https://','wss://')+'/realtime/v1/websocket?apikey='+SB_KEY+'&vsn=1.0.0';
+    if(_ws){try{_ws.close();}catch(e){}}
+    const url=SB_URL.replace('https://','wss://')+'/realtime/v1/websocket?apikey='+SB_KEY+'&vsn=1.0.0';
     _ws=new WebSocket(url);
-    var hb=null;
-    var ref=1;
-    _ws.onopen=function(){
-      hb=setInterval(function(){
-        if(_ws.readyState===1) _ws.send(JSON.stringify({topic:'phoenix',event:'heartbeat',payload:{},ref:String(ref++)}));
-      },20000);
-      _ws.send(JSON.stringify({
-        topic:'realtime:public',event:'phx_join',ref:String(ref++),
-        payload:{config:{postgres_changes:[{event:'*',schema:'public'}]}}
-      }));
+    let hb=null,ref=1;
+    _ws.onopen=()=>{
+      hb=setInterval(()=>{if(_ws.readyState===1)_ws.send(JSON.stringify({topic:'phoenix',event:'heartbeat',payload:{},ref:String(ref++)}));},20000);
+      _ws.send(JSON.stringify({topic:'realtime:public',event:'phx_join',ref:String(ref++),payload:{config:{postgres_changes:[{event:'*',schema:'public'}]}}}));
     };
-    _ws.onmessage=function(e){
-      try{
-        var m=JSON.parse(e.data);
-        if(m.event==='postgres_changes'||(m.payload&&m.payload.commit_timestamp)){
-          // تحديث فوري عند أي تغيير
-          _pollChanges();
-        }
-      }catch(x){}
+    _ws.onmessage=e=>{
+      try{const m=JSON.parse(e.data);if(m.event==='postgres_changes'||(m.payload?.commit_timestamp)) loadAllData();}catch(x){}
     };
-    _ws.onclose=function(){
-      clearInterval(hb);
-      setTimeout(_startWS,3000);
-    };
-    _ws.onerror=function(){try{_ws.close();}catch(e){}};
+    _ws.onclose=()=>{clearInterval(hb);setTimeout(_startWS,3000);};
+    _ws.onerror=()=>{try{_ws.close();}catch(e){}};
   }catch(e){setTimeout(_startWS,5000);}
 }
 
+// pending saves helpers
+var _pendingSaves={};
+function _markPending(t,id){_pendingSaves[t+'_'+id]=Date.now();}
+function _clearPending(t,id){delete _pendingSaves[t+'_'+id];}
+function _isPending(t,id){return !!_pendingSaves[t+'_'+id];}
+function showSyncStatus(){}
 // Track last-known updated_at per table to only fetch NEW changes
 var _lastKnown = {};
 
