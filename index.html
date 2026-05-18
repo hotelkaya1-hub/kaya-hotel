@@ -548,15 +548,15 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 @media(min-width:1024px){
   #owner-screen { overflow:hidden; }
   #owner-screen #owner-body {
-    flex-direction:row-reverse !important;
+    flex-direction:row !important;
   }
   #owner-screen #owner-nav {
     flex-direction:column !important;
     flex-shrink:0 !important;
     width:240px !important;
     border-bottom:none !important;
-    border-right:1px solid var(--border) !important;
-    border-left:none !important;
+    border-left:1px solid var(--border) !important;
+    border-right:none !important;
     overflow-y:auto !important;
     overflow-x:hidden !important;
     padding-top:8px !important;
@@ -571,15 +571,15 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     padding:15px 20px !important;
     font-size:14px !important;
     border-bottom:none !important;
-    border-right:3px solid transparent !important;
-    border-left:none !important;
+    border-left:3px solid transparent !important;
+    border-right:none !important;
     gap:10px !important;
     direction:ltr !important;
   }
   #owner-screen .owner-otab span { flex:1; text-align:right; }
   #owner-screen .owner-otab.active {
     background:var(--gold) !important;
-    border-right-color:var(--accent) !important;
+    border-left-color:var(--accent) !important;
     color:var(--accent) !important;
   }
   #owner-screen .owner-otab:hover:not(.active){ background:var(--bg3) !important; }
@@ -1451,30 +1451,41 @@ function initIcons(){
     var map = {
       'kaya_v9'      : 'bodo_v9',
       'kaya_notif'   : 'bodo_notif',
-      'bodo_session' : 'bodo_session',
-      'bodo_theme'   : 'bodo_theme',
-      'bodo_remember': 'bodo_remember'
+      'kaya_session' : 'bodo_session',
+      'kaya_theme'   : 'bodo_theme',
+      'kaya_remember': 'bodo_remember'
     };
     // مفاتيح ثابتة
     Object.keys(map).forEach(function(oldKey){
-      var newKey = map[oldKey];
-      var oldVal = localStorage.getItem(oldKey);
-      if(oldVal !== null && localStorage.getItem(newKey) === null){
-        localStorage.setItem(newKey, oldVal);
-      }
-      localStorage.removeItem(oldKey);
+      try{
+        var newKey = map[oldKey];
+        var oldVal = localStorage.getItem(oldKey);
+        if(oldVal === null) return; // ما فيه شي للترحيل
+        // إذا الجديد فاضي، انسخ. إذا فيه قيمة، لا تكتب فوقه
+        if(localStorage.getItem(newKey) === null){
+          localStorage.setItem(newKey, oldVal);
+        }
+        localStorage.removeItem(oldKey);
+      }catch(e){}
     });
-    // مفاتيح ديناميكية (bodo_v9_<bizId>, bodo_notif_<bizId>)
-    Object.keys(localStorage).forEach(function(k){
-      if(k.indexOf('kaya_v9_')===0){
-        var nk = 'bodo_v9_'+k.substring(8);
-        if(localStorage.getItem(nk) === null) localStorage.setItem(nk, localStorage.getItem(k));
+    // مفاتيح ديناميكية — اجمعها أولاً ثم رحّلها (تجنّب الحذف أثناء الدوران)
+    var dynKeys = [];
+    for(var i=0; i<localStorage.length; i++){
+      var k = localStorage.key(i);
+      if(k && (k.indexOf('kaya_v9_')===0 || k.indexOf('kaya_notif_')===0)) dynKeys.push(k);
+    }
+    dynKeys.forEach(function(k){
+      try{
+        var val = localStorage.getItem(k);
+        if(val === null) return;
+        var nk = k.indexOf('kaya_v9_')===0
+          ? 'bodo_v9_'+k.substring(8)
+          : 'bodo_notif_'+k.substring(11);
+        if(localStorage.getItem(nk) === null){
+          localStorage.setItem(nk, val);
+        }
         localStorage.removeItem(k);
-      } else if(k.indexOf('kaya_notif_')===0){
-        var nk2 = 'bodo_notif_'+k.substring(11);
-        if(localStorage.getItem(nk2) === null) localStorage.setItem(nk2, localStorage.getItem(k));
-        localStorage.removeItem(k);
-      }
+      }catch(e){}
     });
   }catch(e){ console.warn('migration failed', e); }
 })();
@@ -2656,7 +2667,7 @@ function renderOwnerSubscribers(){
 
     // أضف Kaled
     var kaledExists=accounts.find(function(a){return a.id==='kaled';});
-    if(!kaledExists) accounts.unshift({id:'kaled',email:'Kaled',biz_name:'Kaya Hotel',owner_name:'Kaled',phone:'',pkg:'all',status:'active'});
+    if(!kaledExists) accounts.unshift({id:'kaled',email:'Kaled',biz_name:'BODO',owner_name:'Kaled',phone:'',pkg:'all',status:'active'});
 
     // احتفظ بالنسخة الكاملة عشان البحث
     window._ownerAllSubs = accounts;
@@ -3192,8 +3203,11 @@ function saveOwnerConfig(){
 
 function initAuth(){
   if(DB.ownerConfig&&DB.ownerConfig.pass) OWNER_PASS=DB.ownerConfig.pass;
+  if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;
+  if(DB.adminPass&&DB.adminPass.username) ADMIN.username=DB.adminPass.username;
+  if(!DB.appUsers) DB.appUsers=[];
 
-  // Owner panel
+  // Owner panel (يدخل عبر الـ hash)
   if(location.hash==='#bodo-owner-2025'){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('owner-screen').style.display='flex';
@@ -3201,20 +3215,26 @@ function initAuth(){
     return;
   }
 
-  // Auto-login from saved session
+  // Auto-login من الجلسة المحفوظة
   var saved=_loadSession();
   if(saved&&saved.username){
     currentUser=saved;
     var sbid = saved.bizId||saved.username.toLowerCase();
     // اقرأ DB من المفتاح الخاص بهذا المستخدم — عزل كامل
     var loaded = loadDB(sbid);
-    if(loaded && (loaded.bookings || loaded.units)){
-      DB = loaded;
-    } else {
-      DB = _freshDB(sbid);
-    }
+    DB = (loaded && (loaded.bookings || loaded.units)) ? loaded : _freshDB(sbid);
+
     if(saved.role==='subscriber'){
-      // جلب بيانات المشترك من Supabase عند الدخول التلقائي
+      // بيانات مبدئية من الجلسة (قبل ما يرجع الفتش)
+      DB.subscriberInfo = Object.assign(DB.subscriberInfo||{}, {
+        bizId:saved.bizId,
+        email:saved.username,
+        bizName:saved.bizName||'',
+        name:saved.fullname||'',
+        pkg:saved.pkg||'free'
+      });
+      DB.bizName=saved.bizName||DB.bizName||'';
+      // جلب بيانات المشترك من Supabase
       sbFetch('biz_accounts','GET',null,'?id=eq.'+(saved.bizId||'')+'&select=*').then(function(data){
         if(data&&data.length){
           var a=data[0];
@@ -3231,26 +3251,14 @@ function initAuth(){
           if(_currentPage==='settings') renderSettings();
         }
       }).catch(function(){});
-      // بيانات مبدئية من الجلسة (قبل ما يرجع الفتش)
-      DB.subscriberInfo={
-        bizId:saved.bizId,
-        email:saved.username,
-        bizName:saved.bizName||'',
-        name:saved.fullname||'',
-        pkg:saved.pkg||'free'
-      };
-      DB.bizName=saved.bizName||'';
     }
+
     showApp();
     return;
   }
 
+  // لا يوجد جلسة — اعرض صفحة الدخول
   initIcons();
-  if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;
-  if(DB.adminPass&&DB.adminPass.username) ADMIN.username=DB.adminPass.username;
-  if(!DB.appUsers) DB.appUsers=[];
-  var saved=localStorage.getItem('bodo_session');
-  if(saved){try{currentUser=JSON.parse(saved);showApp();return;}catch{}}
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('app').style.display='none';
 }
@@ -3503,9 +3511,10 @@ function logout(){
   // ⚠ لا نمسح bodo_v9_<bizId> ولا bodo_notif_<bizId> — هذي معزولة لكل اشتراك
   // وتبقى محفوظة لو نفس المستخدم رجع سجل دخول
   localStorage.removeItem('bodo_session');
-  localStorage.removeItem('bodo_session'); // legacy
-  localStorage.removeItem('bodo_v9');      // legacy shared
-  localStorage.removeItem('bodo_notif');   // legacy shared
+  localStorage.removeItem('kaya_session');   // legacy
+  localStorage.removeItem('bodo_v9');        // legacy shared
+  localStorage.removeItem('bodo_notif');     // legacy shared
+  sessionStorage.removeItem('bodo_session'); // النسخة الاحتياطية
   // امسح آخر صفحة عشان المستخدم الجديد يبدأ من الرئيسية
   localStorage.removeItem('bodo_lastpage');
   localStorage.removeItem('bodo_cbtab');
@@ -6837,13 +6846,44 @@ function getBizId(){
   return 'default';
 }
 
-// ── Session helpers ───────────────────────────
-function _saveSession(user){ localStorage.setItem('bodo_session',JSON.stringify(user)); }
-function _loadSession(){ try{const s=localStorage.getItem('bodo_session');return s?JSON.parse(s):null;}catch{return null;} }
+// ── Session helpers — حفظ مزدوج للأمان ───────
+function _saveSession(user){
+  try{
+    var s = JSON.stringify(user);
+    localStorage.setItem('bodo_session', s);
+    sessionStorage.setItem('bodo_session', s); // نسخة احتياطية
+  }catch(e){}
+}
+function _loadSession(){
+  // الترتيب: localStorage → sessionStorage → legacy kaya_session
+  try{
+    var s = localStorage.getItem('bodo_session');
+    if(s) return JSON.parse(s);
+  }catch(e){}
+  try{
+    var s2 = sessionStorage.getItem('bodo_session');
+    if(s2){
+      // استرجع للـ localStorage
+      try{ localStorage.setItem('bodo_session', s2); }catch(e){}
+      return JSON.parse(s2);
+    }
+  }catch(e){}
+  try{
+    var old = localStorage.getItem('kaya_session');
+    if(old){
+      try{ localStorage.setItem('bodo_session', old); }catch(e){}
+      try{ sessionStorage.setItem('bodo_session', old); }catch(e){}
+      localStorage.removeItem('kaya_session');
+      return JSON.parse(old);
+    }
+  }catch(e){}
+  return null;
+}
 function _clearSession(){
   localStorage.removeItem('bodo_session');
-  // امسح المفتاح القديم المشترك (legacy) — البيانات الجديدة معزولة في bodo_v9_<bizId>
-  localStorage.removeItem('bodo_v9');
+  localStorage.removeItem('kaya_session');   // legacy
+  sessionStorage.removeItem('bodo_session');
+  localStorage.removeItem('bodo_v9');        // legacy shared
 }
 
 // ── DB init (always empty — data comes from Supabase) ──
