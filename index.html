@@ -6,11 +6,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Bodo</title>
+<title>BODO</title>
 <link rel="icon" id="favicon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231a1a2e'/><text x='16' y='24' font-family='Georgia,serif' font-size='24' font-weight='900' text-anchor='middle' fill='%23c8a96e'>B</text></svg>">
 <link rel="shortcut icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA/4QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAERERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA">
 <link rel="apple-touch-icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%231a1a2e'/><text x='90' y='135' font-family='Georgia,serif' font-size='130' font-weight='900' text-anchor='middle' fill='%23c8a96e'>B</text></svg>">
-<meta name="apple-mobile-web-app-title" content="Bodo">
+<meta name="apple-mobile-web-app-title" content="BODO">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f0f4f8;--bg2:#ffffff;--bg3:#e8eef6;--card:#ffffff;--card2:#f5f8fc;--border:#dde4ef;--border2:#b0bdd0;--text:#111827;--text2:#374151;--text3:#6b7280;--green:#059669;--yellow:#d97706;--red:#dc2626;--blue:#2563eb;--purple:#7c3aed;--accent:#b8943a;--accent2:#c9a84c;--gold:rgba(184,148,58,.12);--goldb:rgba(184,148,58,.35);
@@ -111,7 +111,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 
   /* BODO logo in sidebar */
   #nav::before {
-    content: 'BODO';
+    content: var(--brand-name, 'BODO');
     display: block;
     font-family: Georgia, serif;
     font-size: 20px;
@@ -566,7 +566,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     display:flex !important;
     flex-direction:row !important;
     align-items:center !important;
-    justify-content:flex-start !important;
+    justify-content:flex-end !important;
     width:100% !important;
     padding:15px 20px !important;
     font-size:14px !important;
@@ -574,9 +574,10 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     border-left:3px solid transparent !important;
     border-right:none !important;
     gap:10px !important;
-    direction:ltr !important;
+    direction:rtl !important;
+    text-align:right !important;
   }
-  #owner-screen .owner-otab span { flex:1; text-align:right; }
+  #owner-screen .owner-otab span { text-align:right; }
   #owner-screen .owner-otab.active {
     background:var(--gold) !important;
     border-left-color:var(--accent) !important;
@@ -813,9 +814,9 @@ document.addEventListener('DOMContentLoaded', function(){
 <div id="login-screen">
   <!-- LOGO -->
   <div style="margin-bottom:32px;text-align:center;">
-    <div style="font-family:Georgia,serif;font-size:56px;font-weight:900;letter-spacing:10px;background:linear-gradient(135deg,#c8a96e,#e8c98e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:10px;">BODO</div>
+    <div class="brand-name" style="font-family:Georgia,serif;font-size:56px;font-weight:900;letter-spacing:10px;background:linear-gradient(135deg,#c8a96e,#e8c98e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:10px;">BODO</div>
     <div style="width:50px;height:1px;background:var(--goldb);margin:0 auto 10px;"></div>
-    <div style="font-size:12px;color:var(--text3);letter-spacing:3px;font-weight:600;">Management Systems</div>
+    <div class="brand-tagline" style="font-size:12px;color:var(--text3);letter-spacing:3px;font-weight:600;">Management Systems</div>
   </div>
 
   <!-- LOGIN CARD -->
@@ -853,7 +854,7 @@ document.addEventListener('DOMContentLoaded', function(){
     </div>
     <!-- شعار وسط - منفصل تماماً -->
     <div style="text-align:center;">
-      <div style="font-family:Georgia,serif;font-size:52px;font-weight:900;letter-spacing:14px;background:linear-gradient(135deg,#c8a96e,#f0d99a,#c8a96e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:10px;">BODO</div>
+      <div class="brand-name" style="font-family:Georgia,serif;font-size:52px;font-weight:900;letter-spacing:14px;background:linear-gradient(135deg,#c8a96e,#f0d99a,#c8a96e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:10px;">BODO</div>
       <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);margin:0 auto 12px;"></div>
       <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">ابدأ رحلتك معنا</div>
       <div style="font-size:12px;color:var(--text3);">منصة إدارة النشاط التأجيري الأذكى</div>
@@ -1026,7 +1027,7 @@ document.addEventListener('DOMContentLoaded', function(){
       <span style="font-size:20px;flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span>
       <div>
         <div style="font-size:12px;font-weight:800;color:var(--text);" id="payment-label">الدفع عند التفعيل</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="payment-desc">سيتواصل فريق BODO خلال 24 ساعة لإتمام الدفع وتفعيل حسابك</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;" id="payment-desc">سيتواصل فريق <span class="brand-name">BODO</span> خلال 24 ساعة لإتمام الدفع وتفعيل حسابك</div>
       </div>
     </div>
 
@@ -1051,7 +1052,7 @@ document.addEventListener('DOMContentLoaded', function(){
         <div style="width:80px;height:80px;border-radius:20px;background:#c8a96e;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 32px rgba(200,169,110,.4);">
           <span style="font-family:Georgia,serif;font-size:48px;font-weight:900;color:#1a1a2e;line-height:1;">B</span>
         </div>
-        <div style="font-size:14px;font-weight:800;color:var(--text);letter-spacing:1px;">BODO | مدير</div>
+        <div style="font-size:14px;font-weight:800;color:var(--text);letter-spacing:1px;"><span class="brand-name">BODO</span> | مدير</div>
       </div>
       <div class="login-card">
         <div class="login-err" id="owner-err">كلمة المرور غير صحيحة</div>
@@ -1069,7 +1070,7 @@ document.addEventListener('DOMContentLoaded', function(){
           <span style="font-family:Georgia,serif;font-size:22px;font-weight:900;color:#1a1a2e;line-height:1;">B</span>
         </div>
         <div>
-          <div style="font-size:13px;font-weight:800;color:var(--text);">BODO | مدير</div>
+          <div style="font-size:13px;font-weight:800;color:var(--text);"><span class="brand-name">BODO</span> | مدير</div>
           <div style="font-size:10px;color:var(--text3);">لوحة التحكم</div>
         </div>
       </div>
@@ -1139,7 +1140,7 @@ document.addEventListener('DOMContentLoaded', function(){
       <div class="topbar" style="display:flex;justify-content:space-between;align-items:center;">
         <div>
           <!-- موبايل: شعار + اسم النشاط -->
-          <div class="bodo-mobile-logo" style="font-family:Georgia,serif;font-size:20px;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,#c8a96e,#f0d99a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:1px;">BODO</div>
+          <div class="bodo-mobile-logo brand-name" style="font-family:Georgia,serif;font-size:20px;font-weight:900;letter-spacing:6px;background:linear-gradient(135deg,#c8a96e,#f0d99a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;margin-bottom:1px;">BODO</div>
           <div class="biz-label bodo-mobile-sub" style="font-size:12px;font-weight:600;color:var(--text3);margin-top:1px;"></div>
           <!-- لابتوب: لا شيء هنا -->
         </div>
@@ -1444,6 +1445,39 @@ function initIcons(){
 }
 
 // ══ DB ══
+
+// ╔════════════════════════════════════════════════════════════════╗
+// ║  🎨 إعدادات العلامة التجارية — غيّر من هنا فقط                 ║
+// ║  أي تغيير هنا يطبّق تلقائياً على كل التطبيق                   ║
+// ╚════════════════════════════════════════════════════════════════╝
+var BRAND = {
+  name:     'BODO',                         // اسم التطبيق (يظهر للمستخدمين في كل مكان)
+  url:      'kaya-hotel.vercel.app',        // رابط التطبيق (يدخل في الإيميلات والرسائل)
+  email:    'hotelkaya1@gmail.com',         // إيميل التواصل الرسمي
+  whatsapp: '966500000000',                 // رقم واتساب التواصل (بدون +)
+  tagline:  'Management System'             // الشعار التوضيحي (تحت اسم BODO)
+};
+// لتطبيق التغييرات: استبدل أي قيمة فوق وارفع الملف. ما يحتاج تعديل بأي مكان آخر.
+
+// ── دالة تطبيق العلامة على كل عناصر HTML ──
+function _applyBrand(){
+  try{
+    // أي عنصر فيه class="brand-name" يتعبأ تلقائياً
+    var names = document.querySelectorAll('.brand-name');
+    for(var i=0;i<names.length;i++){ names[i].textContent = BRAND.name; }
+    // أي عنصر فيه class="brand-tagline" 
+    var tags = document.querySelectorAll('.brand-tagline');
+    for(var j=0;j<tags.length;j++){ tags[j].textContent = BRAND.tagline; }
+    // عنوان الصفحة (في تبويب المتصفح)
+    document.title = BRAND.name;
+    // اسم التطبيق على الشاشة الرئيسية (iOS PWA)
+    var appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if(appleTitle) appleTitle.setAttribute('content', BRAND.name);
+    // CSS variable للأماكن اللي تستخدم ::before/::after
+    document.documentElement.style.setProperty('--brand-name', '"'+BRAND.name+'"');
+  }catch(e){}
+}
+
 // ── ترحيل آمن من الأسماء القديمة (kaya_*) إلى الجديدة (bodo_*) ──
 // يشتغل مرة واحدة عند تحميل الصفحة، ويرحّل البيانات الموجودة دون فقدانها
 (function _migrateKayaToBodo(){
@@ -1802,7 +1836,7 @@ function selectPkg(pkg){
     if(submitBtn) submitBtn.textContent='إنشاء حساب مجاني ✓';
   } else {
     if(pLabel) pLabel.textContent='الدفع عند التفعيل';
-    if(pDesc)  pDesc.textContent='سيتواصل فريق BODO خلال 24 ساعة لإتمام الدفع وتفعيل حسابك';
+    if(pDesc)  pDesc.textContent='سيتواصل فريق '+BRAND.name+' خلال 24 ساعة لإتمام الدفع وتفعيل حسابك';
     if(submitBtn) submitBtn.textContent='إرسال طلب الاشتراك ✓';
   }
   _updatePrices();
@@ -1923,7 +1957,7 @@ function _showJoinSuccessScreen(name, email, biz, phone, pkg, price, billing){
     '<div style="padding:32px 24px 48px;text-align:center;">'
       +'<div style="width:72px;height:72px;border-radius:50%;background:rgba(52,211,153,.15);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px;">✅</div>'
       +'<div style="font-size:22px;font-weight:900;margin-bottom:8px;">تم إرسال طلبك!</div>'
-      +'<div style="font-size:13px;color:var(--text3);line-height:1.8;margin-bottom:24px;">سيتواصل معك فريق BODO على<br><strong style="color:var(--accent);">'+phone+'</strong><br>خلال 24 ساعة</div>'
+      +'<div style="font-size:13px;color:var(--text3);line-height:1.8;margin-bottom:24px;">سيتواصل معك فريق '+BRAND.name+' على<br><strong style="color:var(--accent);">'+phone+'</strong><br>خلال 24 ساعة</div>'
       +'<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:24px;text-align:right;">'
         +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text3);">الاسم</span><span style="font-size:12px;font-weight:700;">'+name+'</span></div>'
         +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text3);">البريد</span><span style="font-size:12px;font-weight:700;">'+email+'</span></div>'
@@ -1960,12 +1994,12 @@ function ownerLogout(){
 }
 
 function _setFaviconOwner(){
-  document.title='BODO | مدير';
+  document.title=BRAND.name+' | مدير';
   var el=document.getElementById('favicon');
   if(el) el.href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23c8a96e'/><text x='16' y='24' font-family='Georgia,serif' font-size='24' font-weight='900' text-anchor='middle' fill='%231a1a2e'>B</text></svg>";
 }
 function _setFaviconApp(){
-  document.title='Bodo';
+  document.title=BRAND.name;
   var el=document.getElementById('favicon');
   if(el) el.href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231a1a2e'/><text x='16' y='24' font-family='Georgia,serif' font-size='24' font-weight='900' text-anchor='middle' fill='%23c8a96e'>B</text></svg>";
 }
@@ -2139,7 +2173,7 @@ function renderOwnerHome(){
       // ترحيب
       '<div style="margin-bottom:18px;">'
         +'<div style="font-size:11px;color:var(--text3);">مرحباً</div>'
-        +'<div style="font-size:20px;font-weight:900;color:var(--accent);">لوحة تحكم BODO</div>'
+        +'<div style="font-size:20px;font-weight:900;color:var(--accent);">لوحة تحكم '+BRAND.name+'</div>'
       +'</div>'
 
       // الـ MRR — بطاقة مميزة
@@ -2253,14 +2287,17 @@ function renderOwnerRequests(){
     DB.joinRequests=reqs;
 
     var pending=reqs.filter(function(r){return r.status==='pending';});
+    var renewals=reqs.filter(function(r){return r.status==='renewal_pending';});
+    var upgrades=reqs.filter(function(r){return r.status==='upgrade_pending';});
     var approved=reqs.filter(function(r){return r.status==='approved';});
     var rejected=reqs.filter(function(r){return r.status==='rejected';});
+    var actionable = pending.concat(renewals).concat(upgrades);
 
     // تحديث شارة الطلبات المعلّقة على التب
     try{
       var badge=document.getElementById('otab-1-badge');
       if(badge){
-        if(pending.length){ badge.textContent=pending.length; badge.style.display='inline-flex'; }
+        if(actionable.length){ badge.textContent=actionable.length; badge.style.display='inline-flex'; }
         else { badge.style.display='none'; }
       }
     }catch(e){}
@@ -2286,12 +2323,21 @@ function renderOwnerRequests(){
     }
 
     function reqCard(r){
-      var statusColor=r.status==='pending'?'var(--yellow)':r.status==='approved'?'var(--green)':'var(--red)';
-      var statusLabel=r.status==='pending'?'بانتظار الموافقة':r.status==='approved'?'تم القبول':'مرفوض';
+      var isRenewal = r.status==='renewal_pending';
+      var isUpgrade = r.status==='upgrade_pending';
+      var isActionable = r.status==='pending' || isRenewal || isUpgrade;
+      var typeBadge = '';
+      if(isRenewal) typeBadge = '<span style="font-size:9px;background:rgba(245,158,11,.15);color:var(--yellow);padding:2px 7px;border-radius:6px;font-weight:800;margin-right:4px;">⏰ تجديد</span>';
+      else if(isUpgrade) typeBadge = '<span style="font-size:9px;background:rgba(124,58,237,.15);color:#a78bfa;padding:2px 7px;border-radius:6px;font-weight:800;margin-right:4px;">⬆ ترقية</span>';
+      else if(r.status==='pending') typeBadge = '<span style="font-size:9px;background:rgba(34,197,94,.15);color:var(--green);padding:2px 7px;border-radius:6px;font-weight:800;margin-right:4px;">🆕 انضمام</span>';
+
+      var statusColor=isActionable?'var(--yellow)':r.status==='approved'?'var(--green)':'var(--red)';
+      var statusLabel=isActionable?'بانتظار الموافقة':r.status==='approved'?'تم القبول':'مرفوض';
       var dateStr=fmtReqDate(r.created_at||r.date);
       return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">'
         +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">'
           +'<div style="flex:1;min-width:0;">'
+            +(typeBadge?'<div style="margin-bottom:6px;">'+typeBadge+'</div>':'')
             +'<div style="font-size:14px;font-weight:800;">'+( r.biz||r.biz_name||r.name||'—')+'</div>'
             +'<div style="font-size:12px;color:var(--text3);">'+( r.name||'')+(r.phone?' · '+r.phone:'')+'</div>'
             +'<div style="font-size:11px;color:var(--text3);">'+(r.email||'')+(r.city?' · '+r.city:'')+'</div>'
@@ -2307,9 +2353,12 @@ function renderOwnerRequests(){
             +'<span style="font-size:10px;background:var(--bg3);padding:3px 8px;border-radius:8px;color:var(--text3);">'+(r.pkg_label||r.pkg||'—')+'</span>'
             +'<span style="font-size:10px;color:'+statusColor+';font-weight:700;">'+statusLabel+'</span>'
           +'</div>'
-          +(r.status==='pending'?
+          +(isActionable?
             '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
-              +'<button onclick="approveRequest(\''+r.id+'\')" style="background:var(--green);color:#fff;border:none;font-size:12px;font-weight:800;padding:8px 14px;border-radius:9px;cursor:pointer;font-family:inherit;">✓ قبول</button>'
+              +(isRenewal||isUpgrade
+                ? '<button onclick="approveRenewalOrUpgrade(\''+r.id+'\')" style="background:var(--green);color:#fff;border:none;font-size:12px;font-weight:800;padding:8px 14px;border-radius:9px;cursor:pointer;font-family:inherit;">✓ تنفيذ</button>'
+                : '<button onclick="approveRequest(\''+r.id+'\')" style="background:var(--green);color:#fff;border:none;font-size:12px;font-weight:800;padding:8px 14px;border-radius:9px;cursor:pointer;font-family:inherit;">✓ قبول</button>'
+              )
               +'<button onclick="editJoinRequest(\''+r.id+'\')" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:12px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;font-family:inherit;">✎ تعديل</button>'
               +'<button onclick="rejectRequest(\''+r.id+'\')" style="background:var(--bg3);color:var(--text2);border:1px solid var(--border);font-size:12px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;font-family:inherit;">رفض</button>'
               +'<button onclick="deleteJoinRequest(\''+r.id+'\')" style="background:rgba(220,38,38,.12);color:var(--red);border:1px solid rgba(220,38,38,.3);font-size:12px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;font-family:inherit;">🗑 حذف</button>'
@@ -2350,7 +2399,9 @@ function renderOwnerRequests(){
           +'<div style="font-size:10px;color:var(--text3);">مرفوض</div>'
         +'</div>'
       +'</div>'
-      +(pending.length?'<div style="font-size:12px;font-weight:800;color:var(--yellow);margin-bottom:10px;">🟡 طلبات بانتظار الموافقة</div>'+pending.map(reqCard).join(''):'')
+      +(pending.length?'<div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:10px;">🆕 طلبات انضمام جديدة</div>'+pending.map(reqCard).join(''):'')
+      +(renewals.length?'<div style="font-size:12px;font-weight:800;color:var(--yellow);margin-bottom:10px;margin-top:16px;">⏰ طلبات تجديد</div>'+renewals.map(reqCard).join(''):'')
+      +(upgrades.length?'<div style="font-size:12px;font-weight:800;color:#a78bfa;margin-bottom:10px;margin-top:16px;">⬆ طلبات ترقية</div>'+upgrades.map(reqCard).join(''):'')
       +(approved.length?'<div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:10px;margin-top:16px;">🟢 تم القبول</div>'+approved.map(reqCard).join(''):'')
       +(rejected.length?'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;margin-top:16px;"><div style="font-size:12px;font-weight:800;color:var(--red);">🔴 مرفوضة</div><button onclick="clearAllRejected()" style="background:rgba(220,38,38,.1);color:var(--red);border:1px solid rgba(220,38,38,.3);font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;cursor:pointer;font-family:inherit;">🗑 حذف الكل</button></div>'+rejected.map(reqCard).join(''):'')
       +(!reqs.length?'<div style="text-align:center;padding:40px;color:var(--text3);">لا توجد طلبات بعد</div>':'');
@@ -2424,10 +2475,10 @@ function editJoinRequest(id){
         +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:16px 0 8px;letter-spacing:1px;">📅 تواريخ الاشتراك</div>'
         +'<div class="form-row">'
           +'<div class="form-group" style="margin:0"><label class="form-label">تاريخ البداية</label>'
-            +'<input class="fi" id="edr-start" type="date">'
+            +'<input class="fi" id="edr-start" type="date" lang="en">'
           +'</div>'
           +'<div class="form-group" style="margin:0"><label class="form-label">تاريخ النهاية</label>'
-            +'<input class="fi" id="edr-end" type="date">'
+            +'<input class="fi" id="edr-end" type="date" lang="en">'
           +'</div>'
         +'</div>'
         +'<div style="font-size:10px;color:var(--text3);margin-bottom:6px;background:var(--bg3);padding:7px 10px;border-radius:8px;line-height:1.5;">💡 تاريخ النهاية يُحسب تلقائياً من البداية + الفوترة. غيّره يدوياً للتمديد.</div>'
@@ -2569,18 +2620,83 @@ function approveRequest(id){
   });
 }
 
+function approveRenewalOrUpgrade(id){
+  var btn=document.querySelector('[onclick="approveRenewalOrUpgrade(\''+id+'\')"]');
+  if(btn){btn.textContent='جارٍ...';btn.disabled=true;}
+
+  sbFetch('join_requests','GET',null,'?id=eq.'+id).then(function(data){
+    if(!data||!data.length){
+      toast('الطلب غير موجود','error');
+      if(btn){btn.disabled=false;}
+      return;
+    }
+    var req=data[0];
+    var isRenewal = req.status==='renewal_pending';
+    var actionLabel = isRenewal ? 'تجديد' : 'ترقية';
+    var bizId=(req.email||'').toLowerCase().replace(/[^a-z0-9]/g,'_');
+
+    // اجلب حساب المشترك الحالي
+    sbFetch('biz_accounts','GET',null,'?id=eq.'+bizId+'&select=*').then(function(accts){
+      if(!accts||!accts.length){
+        toast('حساب المشترك غير موجود','error');
+        if(btn){btn.disabled=false;}
+        return;
+      }
+      var acct = accts[0];
+
+      // احسب تاريخ النهاية الجديد
+      var startFrom = new Date();
+      if(acct.subscription_end){
+        var current = new Date(acct.subscription_end);
+        // لو الاشتراك الحالي لسّه ساري، نمدد من تاريخ نهايته
+        if(current > startFrom) startFrom = current;
+      }
+      var billing = req.billing||'شهري';
+      var newEnd = new Date(startFrom);
+      if(billing==='سنوي') newEnd.setFullYear(newEnd.getFullYear()+1);
+      else newEnd.setMonth(newEnd.getMonth()+1);
+
+      // التعديلات على حساب المشترك
+      var updates = {
+        subscription_end: newEnd.toISOString(),
+        billing: billing
+      };
+      if(!isRenewal && req.pkg){
+        // ترقية: غيّر الباقة كمان
+        updates.pkg = req.pkg;
+      }
+
+      sbFetch('biz_accounts','PATCH',updates,'?id=eq.'+bizId).then(function(){
+        // علّم الطلب كمنفّذ
+        sbFetch('join_requests','PATCH',{status:'approved'},'?id=eq.'+id).catch(function(){});
+        toast('✓ تم تنفيذ '+actionLabel+' لاشتراك '+(req.name||req.email),'success');
+        renderOwnerRequests();
+      }).catch(function(){
+        toast('فشل تنفيذ '+actionLabel,'error');
+        if(btn){btn.disabled=false;}
+      });
+    }).catch(function(){
+      toast('فشل جلب حساب المشترك','error');
+      if(btn){btn.disabled=false;}
+    });
+  }).catch(function(){
+    toast('فشل جلب الطلب','error');
+    if(btn){btn.disabled=false;}
+  });
+}
+
 function _sendWhatsApp(req,tempPass){
   if(!tempPass) tempPass=req._tempPass||req.pass||'—';
   var phone=(req.phone||'').replace(/[^0-9]/g,'');
   if(phone.startsWith('0')) phone='966'+phone.slice(1);
-  var appUrl='https://kaya-hotel.vercel.app';
+  var appUrl='https://'+BRAND.url;
   var msg='مرحباً '+req.name+' 👋\n\n'
-    +'تم قبول طلب انضمامك في منصة BODO ✅\n\n'
+    +'تم قبول طلب انضمامك في منصة '+BRAND.name+' ✅\n\n'
     +'*بيانات دخول نشاطك:*\n'
     +'🔗 الرابط: '+appUrl+'\n'
     +'📧 الإيميل: '+req.email+'\n'
     +'🔑 كلمة المرور المؤقتة: '+tempPass+'\n'+'(يُنصح بتغييرها بعد أول دخول)\n\n'
-    +'أهلاً وسهلاً بك في BODO 🎉';
+    +'أهلاً وسهلاً بك في '+BRAND.name+' 🎉';
   var url='https://wa.me/'+phone+'?text='+encodeURIComponent(msg);
   req._tempPass=tempPass;
   var modal=document.createElement('div');
@@ -2667,7 +2783,7 @@ function renderOwnerSubscribers(){
 
     // أضف Kaled
     var kaledExists=accounts.find(function(a){return a.id==='kaled';});
-    if(!kaledExists) accounts.unshift({id:'kaled',email:'Kaled',biz_name:'BODO',owner_name:'Kaled',phone:'',pkg:'all',status:'active'});
+    if(!kaledExists) accounts.unshift({id:'kaled',email:'Kaled',biz_name:BRAND.name,owner_name:'Kaled',phone:'',pkg:'all',status:'active'});
 
     // احتفظ بالنسخة الكاملة عشان البحث
     window._ownerAllSubs = accounts;
@@ -2703,11 +2819,14 @@ function renderOwnerSubscribers(){
           +'<div style="font-size:9px;color:var(--text3);">مجانية</div>'
         +'</div>'
       +'</div>'
-      // شريط البحث
-      +'<div style="position:relative;margin-bottom:14px;">'
-        +'<input id="subs-search" type="search" placeholder="🔍 بحث بالاسم، الإيميل، أو الجوال..." '
-        +'oninput="filterSubscribers(this.value)" '
-        +'style="width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;color:var(--text);box-sizing:border-box;">'
+      // شريط البحث + زر إضافة
+      +'<div style="display:flex;gap:8px;margin-bottom:14px;">'
+        +'<div style="position:relative;flex:1;">'
+          +'<input id="subs-search" type="search" placeholder="🔍 بحث بالاسم، الإيميل، أو الجوال..." '
+          +'oninput="filterSubscribers(this.value)" '
+          +'style="width:100%;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;font-family:inherit;font-size:13px;color:var(--text);box-sizing:border-box;">'
+        +'</div>'
+        +'<button onclick="showAddSubscriberModal()" style="background:var(--accent);color:#1a1a2e;border:none;border-radius:12px;padding:0 16px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;">+ إضافة</button>'
       +'</div>'
       +'<div id="subs-list-container">'+_renderSubsList(accounts)+'</div>';
   }).catch(function(){
@@ -2781,6 +2900,151 @@ function _renderSubsList(accounts){
       +'</div>'
     +'</div>';
   }).join('');
+}
+
+function showAddSubscriberModal(){
+  var today = new Date().toISOString().substring(0,10);
+  // تاريخ النهاية الافتراضي: +30 يوم
+  var d = new Date(); d.setDate(d.getDate()+30);
+  var endDef = d.toISOString().substring(0,10);
+
+  var modal = document.createElement('div');
+  modal.id = '_addSubModal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML =
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:20px;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">'
+        +'<div style="font-size:16px;font-weight:900;color:var(--text);">➕ إضافة مشترك جديد</div>'
+        +'<button onclick="document.getElementById(\'_addSubModal\').remove()" style="background:none;border:none;color:var(--text3);font-size:24px;cursor:pointer;line-height:1;">×</button>'
+      +'</div>'
+
+      +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:8px 0 8px;letter-spacing:1px;">👤 المعلومات الأساسية</div>'
+      +'<div class="form-group" style="margin:0 0 10px;"><label class="form-label">اسم النشاط *</label>'
+        +'<input id="as-biz" class="fi" type="text" placeholder="مثال: فندق الرياض">'
+      +'</div>'
+      +'<div class="form-group" style="margin:0 0 10px;"><label class="form-label">اسم المالك *</label>'
+        +'<input id="as-name" class="fi" type="text" placeholder="مثال: خالد محمد">'
+      +'</div>'
+      +'<div class="form-row">'
+        +'<div class="form-group" style="margin:0 0 10px;"><label class="form-label">الإيميل (للدخول) *</label>'
+          +'<input id="as-email" class="fi" type="email" placeholder="user@example.com">'
+        +'</div>'
+        +'<div class="form-group" style="margin:0 0 10px;"><label class="form-label">الجوال</label>'
+          +'<input id="as-phone" class="fi" type="tel" placeholder="05xxxxxxxx">'
+        +'</div>'
+      +'</div>'
+      +'<div class="form-group" style="margin:0 0 10px;"><label class="form-label">كلمة المرور *</label>'
+        +'<input id="as-pass" class="fi" type="text" placeholder="حد أدنى 6 أحرف">'
+      +'</div>'
+
+      +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:14px 0 8px;letter-spacing:1px;">💼 الاشتراك</div>'
+      +'<div class="form-row">'
+        +'<div class="form-group" style="margin:0 0 10px;"><label class="form-label">الباقة</label>'
+          +'<select id="as-pkg" class="fi" onchange="_recalcAddSubEnd()">'
+            +'<option value="free">مجانية</option>'
+            +'<option value="pro" selected>احترافية</option>'
+            +'<option value="all">شاملة</option>'
+          +'</select>'
+        +'</div>'
+        +'<div class="form-group" style="margin:0 0 10px;"><label class="form-label">الفوترة</label>'
+          +'<select id="as-billing" class="fi" onchange="_recalcAddSubEnd()">'
+            +'<option value="شهري" selected>شهري</option>'
+            +'<option value="سنوي">سنوي</option>'
+          +'</select>'
+        +'</div>'
+      +'</div>'
+      +'<div class="form-row">'
+        +'<div class="form-group" style="margin:0 0 10px;"><label class="form-label">تاريخ البداية</label>'
+          +'<input id="as-start" class="fi" type="date" lang="en" value="'+today+'" onchange="_recalcAddSubEnd()">'
+        +'</div>'
+        +'<div class="form-group" style="margin:0 0 10px;"><label class="form-label">تاريخ النهاية</label>'
+          +'<input id="as-end" class="fi" type="date" lang="en" value="'+endDef+'">'
+        +'</div>'
+      +'</div>'
+      +'<div style="font-size:10px;color:var(--text3);margin-bottom:14px;background:var(--bg3);padding:7px 10px;border-radius:8px;line-height:1.5;">💡 تاريخ النهاية يُحسب تلقائياً من البداية + الفوترة. غيّره يدوياً للتمديد.</div>'
+
+      +'<div style="display:flex;gap:8px;">'
+        +'<button onclick="document.getElementById(\'_addSubModal\').remove()" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:12px;border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;">إلغاء</button>'
+        +'<button onclick="saveNewSubscriber()" style="flex:2;background:var(--accent);color:#1a1a2e;border:none;padding:12px;border-radius:10px;font-family:inherit;font-weight:800;cursor:pointer;">حفظ المشترك</button>'
+      +'</div>'
+    +'</div>';
+  document.body.appendChild(modal);
+}
+
+function _recalcAddSubEnd(){
+  try{
+    var pkg=document.getElementById('as-pkg').value;
+    var billing=document.getElementById('as-billing').value;
+    var start=document.getElementById('as-start').value;
+    if(!start) return;
+    var d=new Date(start+'T00:00:00');
+    if(pkg==='free'){
+      d.setFullYear(d.getFullYear()+10); // مجانية = طويلة
+    } else if(billing==='سنوي'){
+      d.setFullYear(d.getFullYear()+1);
+    } else {
+      d.setMonth(d.getMonth()+1);
+    }
+    document.getElementById('as-end').value = d.toISOString().substring(0,10);
+  }catch(e){}
+}
+
+function saveNewSubscriber(){
+  var biz   = (document.getElementById('as-biz').value||'').trim();
+  var name  = (document.getElementById('as-name').value||'').trim();
+  var email = (document.getElementById('as-email').value||'').trim().toLowerCase();
+  var phone = (document.getElementById('as-phone').value||'').trim();
+  var pass  = (document.getElementById('as-pass').value||'').trim();
+  var pkg   = document.getElementById('as-pkg').value;
+  var billing = document.getElementById('as-billing').value;
+  var start = document.getElementById('as-start').value;
+  var end   = document.getElementById('as-end').value;
+
+  if(!biz||!name||!email||!pass){
+    alert('املأ كل الحقول المطلوبة *');
+    return;
+  }
+  if(pass.length<6){
+    alert('كلمة المرور قصيرة (٦ أحرف على الأقل)');
+    return;
+  }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    alert('الإيميل غير صحيح');
+    return;
+  }
+
+  var bizId = email.replace(/[^a-z0-9]/g,'_');
+
+  // فحص: هل الإيميل موجود؟
+  sbFetch('biz_accounts','GET',null,'?or=(id.eq.'+bizId+',email.eq.'+encodeURIComponent(email)+')&select=id').then(function(existing){
+    if(existing && existing.length){
+      alert('هذا الإيميل مسجّل مسبقاً');
+      return;
+    }
+    // POST
+    var rec = {
+      id: bizId,
+      email: email,
+      password: pass,
+      biz_name: biz,
+      owner_name: name,
+      phone: phone,
+      pkg: pkg,
+      billing: billing,
+      status: 'active',
+      subscription_end: end || null,
+      created_at: start ? new Date(start+'T00:00:00').toISOString() : new Date().toISOString()
+    };
+    sbFetch('biz_accounts','POST',rec).then(function(){
+      document.getElementById('_addSubModal').remove();
+      alert('✓ تمّت إضافة المشترك');
+      renderOwnerSubscribers();
+    }).catch(function(err){
+      alert('فشل الحفظ: '+(err&&err.message||''));
+    });
+  }).catch(function(){
+    alert('فشل التحقق من الإيميل');
+  });
 }
 
 function filterSubscribers(query){
@@ -2904,10 +3168,10 @@ function _renderEditSubscriberModal(a, req){
       +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:16px 0 8px;letter-spacing:1px;">📅 تواريخ الاشتراك</div>'
       +'<div class="form-row">'
         +'<div class="form-group" style="margin:0"><label class="form-label">تاريخ البداية</label>'
-          +'<input id="es-start" class="fi" type="date" value="'+startISO+'">'
+          +'<input id="es-start" class="fi" type="date" lang="en" value="'+startISO+'">'
         +'</div>'
         +'<div class="form-group" style="margin:0"><label class="form-label">تاريخ النهاية</label>'
-          +'<input id="es-end" class="fi" type="date" value="'+endVal+'">'
+          +'<input id="es-end" class="fi" type="date" lang="en" value="'+endVal+'">'
         +'</div>'
       +'</div>'
       +'<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">'
@@ -2969,10 +3233,10 @@ function quickActionSubscriber(id, action){
       if(phone.startsWith('0')) phone='966'+phone.slice(1);
       if(!phone){ toast('لا يوجد رقم جوال','error'); return; }
       var msg = 'مرحباً '+(a.owner_name||'')+' 👋\n\n'
-        +'بيانات حسابك في BODO:\n'
+        +'بيانات حسابك في '+BRAND.name+':\n'
         +'📧 الإيميل: '+a.email+'\n'
         +'🔑 كلمة المرور: '+pass+'\n\n'
-        +'🌐 https://kaya-hotel.vercel.app';
+        +'🌐 https://'+BRAND.url;
       window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
     });
   }
@@ -5644,7 +5908,7 @@ function renderSubscriberInfo(){
   if(!pkg){
     el.innerHTML='<div style="background:linear-gradient(135deg,rgba(200,169,110,.1),rgba(200,169,110,.04));border:1px solid var(--goldb);border-radius:14px;padding:16px;margin-bottom:4px;display:flex;align-items:center;gap:12px;">'
       +'<div style="flex:1;">'
-        +'<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:3px;">اشترك في BODO</div>'
+        +'<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:3px;">اشترك في '+BRAND.name+'</div>'
         +'<div style="font-size:11px;color:var(--text3);">اختر الباقة المناسبة لنشاطك</div>'
       +'</div>'
       +'<button onclick="showJoinScreen()" class="btn btn-primary btn-sm">اشترك الآن</button>'
@@ -5801,7 +6065,7 @@ function _showSubscriptionModal(opts){
         +'<svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>'
         +'تواصل عبر واتساب'
       +'</button>'
-      +'<div style="font-size:10px;color:var(--text3);text-align:center;margin-top:10px;">سيتم تحويلك إلى محادثة مع فريق BODO لإتمام العملية</div>'
+      +'<div style="font-size:10px;color:var(--text3);text-align:center;margin-top:10px;">سيتم تحويلك إلى محادثة مع فريق '+BRAND.name+' لإتمام العملية</div>'
     +'</div>';
   document.body.appendChild(modal);
 
@@ -5825,27 +6089,63 @@ function _sendActionRequest(action, targetPkg){
   var billingAr = billing==='yearly' ? 'سنوي' : 'شهري';
 
   // رقم واتساب فريق BODO
-  var bodoWA = (DB.ownerConfig && DB.ownerConfig.whatsapp) || '966500000000';
+  var bodoWA = (DB.ownerConfig && DB.ownerConfig.whatsapp) || BRAND.whatsapp;
   bodoWA = bodoWA.replace(/[^0-9]/g,'');
 
   var actionLabel = action==='renew' ? 'تجديد الاشتراك' : 'ترقية الباقة';
-  var msg = 'مرحباً 👋\n\n'
-    +'أطلب '+actionLabel+':\n\n'
-    +'━━━━━━━━━━━━━━━━\n'
-    +'🏢 النشاط: '+(sub.bizName||'')+'\n'
-    +'👤 الاسم: '+(sub.name||'')+'\n'
-    +'📧 الإيميل: '+(sub.email||'')+'\n'
-    +'📱 الجوال: '+(sub.phone||'')+'\n'
-    +'━━━━━━━━━━━━━━━━\n'
-    +'📦 الباقة: '+pkg.label+'\n'
-    +'💳 الفوترة: '+billingAr+'\n'
-    +'💰 السعر: '+price+' ر.س\n'
-    +'━━━━━━━━━━━━━━━━\n\n'
-    +'بانتظار توجيهاتكم للدفع والتفعيل.';
+  var statusKey   = action==='renew' ? 'renewal_pending' : 'upgrade_pending';
 
-  window.open('https://wa.me/'+bodoWA+'?text='+encodeURIComponent(msg),'_blank');
-  document.getElementById('sub-action-modal')?.remove();
-  toast('تم فتح واتساب — أكمل المحادثة مع فريق BODO','info');
+  // 1) سجّل الطلب رسمياً في النظام عشان يوصل المالك
+  var reqId = 'r_'+Date.now()+'_'+Math.random().toString(36).substring(2,7);
+  var rec = {
+    id: reqId,
+    biz: sub.bizName||'',
+    name: sub.name||'',
+    email: sub.email||'',
+    phone: sub.phone||'',
+    pkg: targetPkg,
+    billing: billingAr,
+    status: statusKey,
+    created_at: new Date().toISOString()
+  };
+
+  sbFetch('join_requests','POST',rec).then(function(){
+    // 2) أظهر رسالة نجاح للمشترك
+    document.getElementById('sub-action-modal')?.remove();
+
+    // Modal تأكيد بدل alert
+    var ok = document.createElement('div');
+    ok.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    ok.innerHTML =
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:380px;width:100%;padding:24px;text-align:center;">'
+        +'<div style="font-size:48px;margin-bottom:10px;">✅</div>'
+        +'<div style="font-size:17px;font-weight:900;color:var(--text);margin-bottom:8px;">تم إرسال طلب '+actionLabel+'</div>'
+        +'<div style="font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:16px;">فريق '+BRAND.name+' سيراجع الطلب ويتواصل معك قريباً.<br>تقدر تستعجل بالتواصل المباشر عبر واتساب.</div>'
+        +'<div style="display:flex;gap:8px;">'
+          +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:12px;border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;">حسناً</button>'
+          +'<a href="https://wa.me/'+bodoWA+'?text='+encodeURIComponent('مرحباً، أطلب '+actionLabel+'. الإيميل: '+(sub.email||''))+'" target="_blank" style="flex:1;background:#25d366;color:#fff;text-decoration:none;padding:12px;border-radius:10px;font-family:inherit;font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px;">💬 واتساب</a>'
+        +'</div>'
+      +'</div>';
+    document.body.appendChild(ok);
+  }).catch(function(){
+    // لو فشل الحفظ، نرجع للسلوك القديم (واتساب مباشرة)
+    var msg = 'مرحباً 👋\n\n'
+      +'أطلب '+actionLabel+':\n\n'
+      +'━━━━━━━━━━━━━━━━\n'
+      +'🏢 النشاط: '+(sub.bizName||'')+'\n'
+      +'👤 الاسم: '+(sub.name||'')+'\n'
+      +'📧 الإيميل: '+(sub.email||'')+'\n'
+      +'📱 الجوال: '+(sub.phone||'')+'\n'
+      +'━━━━━━━━━━━━━━━━\n'
+      +'📦 الباقة: '+pkg.label+'\n'
+      +'💳 الفوترة: '+billingAr+'\n'
+      +'💰 السعر: '+price+' ر.س\n'
+      +'━━━━━━━━━━━━━━━━\n\n'
+      +'بانتظار توجيهاتكم للدفع والتفعيل.';
+    window.open('https://wa.me/'+bodoWA+'?text='+encodeURIComponent(msg),'_blank');
+    document.getElementById('sub-action-modal')?.remove();
+    toast('تم فتح واتساب — أكمل المحادثة مع فريق '+BRAND.name,'info');
+  });
 }
 
 function renderSettings(){
@@ -7213,6 +7513,7 @@ function handleRealtimeChange(table, payload){
 
 
 loadTheme();
+_applyBrand();
 try{
   initAuth();
 }catch(err){
