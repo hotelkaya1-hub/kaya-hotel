@@ -2522,14 +2522,7 @@ function renderCalendars(){
   var el=document.getElementById('cals-container');
   if(!el) return;
   if(!units.length){
-    // Skeleton loading cards
-    el.innerHTML=[1,2,3,4].map(function(){
-      return '<div style="background:var(--card);border-radius:16px;padding:16px;animation:pulse 1.5s infinite;">'
-        +'<div style="height:16px;width:40%;background:var(--bg3);border-radius:8px;margin-bottom:12px;"></div>'
-        +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">'
-        +Array(35).fill('<div style="height:28px;background:var(--bg3);border-radius:6px;"></div>').join('')
-        +'</div></div>';
-    }).join('');
+    el.innerHTML='<div class="empty"><div class="empty-text">لا توجد وحدات — أضف وحدة من الإعدادات</div></div>';
     return;
   }
   el.innerHTML=units.map(function(apt){return buildCal(apt);}).join('');
@@ -5493,9 +5486,11 @@ var _lastKnown = {};
 
 async function _pollChanges(){
   try {
-    // Quick ping to check connection
-    var result = await sbFetch('bookings','GET',null,'?select=*&biz_id=eq.'+getBizId()+'&order=checkin.desc&limit=200');
-    if(!result) return;
+    var bizId = getBizId();
+    var [bookingsResult, unitsResult] = await Promise.all([
+      sbFetch('bookings','GET',null,'?select=*&biz_id=eq.'+bizId+'&order=checkin.desc&limit=200'),
+      sbFetch('units','GET',null,'?select=*&biz_id=eq.'+bizId).catch(function(){return null;})
+    ]);
 
     _rtConnected = true;
     _updateRtIndicator(true);
@@ -5503,7 +5498,26 @@ async function _pollChanges(){
     var changed = false;
     var deleted = DB._deleted || {};
 
+    // ── units ── (every poll for instant calendar)
+    if(unitsResult && Array.isArray(unitsResult) && unitsResult.length){
+      var newUnits = unitsResult.map(function(u){return u.name||u.id;});
+      if(!DB.unitTypes) DB.unitTypes={};
+      unitsResult.forEach(function(u){if(u.type) DB.unitTypes[u.name||u.id]=u.type;});
+      var oldU = JSON.stringify((DB.units||[]).slice().sort());
+      var newU = JSON.stringify(newUnits.slice().sort());
+      if(oldU !== newU){
+        DB.units=newUnits;
+        changed=true;
+        // Re-render calendar immediately if open
+        if(_currentPage==='calbooking' && _currentCBTab===1){
+          var el=document.getElementById('cals-container');
+          if(el) el.innerHTML=newUnits.map(function(apt){return buildCal(apt);}).join('');
+        }
+      }
+    }
+
     // ── bookings ──
+    var result = bookingsResult;
     if(Array.isArray(result)){
       var filtered = result.filter(function(b){ return !deleted['booking_'+b.id]; });
       // Check if anything changed
@@ -5562,16 +5576,7 @@ async function _pollChanges(){
         if(JSON.stringify(newSl) !== JSON.stringify(DB.sales||[])){ DB.sales=newSl; changed=true; }
       }
       if(units && Array.isArray(units) && units.length){
-        var newUnits = units.map(function(u){return u.name||u.id;});
-        if(!DB.unitTypes) DB.unitTypes={};
-        units.forEach(function(u){if(u.type) DB.unitTypes[u.name||u.id]=u.type;});
-        var oldU = JSON.stringify((DB.units||[]).sort());
-        var newU = JSON.stringify(newUnits.sort());
-        if(oldU !== newU){
-          DB.units = newUnits;
-          changed = true;
-          if(_currentPage==='calbooking') renderCalendars();
-        }
+        // Already handled above in every-poll section
       }
       if(appCfg && Array.isArray(appCfg)){
         var bn = appCfg.find(function(c){return c.key==='biz_name';});
