@@ -133,9 +133,9 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
   .nav-item {
     flex-direction: row !important;
     align-items: center !important;
-    justify-content: flex-end !important;
+    justify-content: flex-start !important;
     gap: 12px !important;
-    padding: 16px 20px !important;
+    padding: 14px 20px !important;
     height: auto !important;
     width: 100% !important;
     border-radius: 0 !important;
@@ -143,7 +143,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     box-sizing: border-box;
     font-family: 'Cairo', sans-serif;
     transition: background .15s;
-    text-align: right;
+    direction: rtl;
   }
   .nav-item:hover { background: var(--bg3) !important; }
   .nav-item.active {
@@ -152,8 +152,8 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     color: var(--accent) !important;
   }
   .nav-item.active::before { display: none !important; }
-  .nav-icon { font-size: 20px !important; order: 0; flex-shrink: 0; }
-  .nav-label { font-size: 14px !important; font-weight: 700; order: 1; flex: 1; text-align: right; }
+  .nav-icon { font-size: 20px !important; flex-shrink: 0; display:flex; align-items:center; }
+  .nav-label { font-size: 14px !important; font-weight: 700; flex: 1; text-align: right; }
   .nav-badge { top: 50%; transform: translateY(-50%); right: auto; left: 10px; }
 
   /* Sheets as modals */
@@ -2118,17 +2118,23 @@ function editSubscriber(id){
   sbFetch('biz_accounts','GET',null,'?id=eq.'+id+'&select=*').then(function(data){
     if(!data||!data.length) return;
     var a=data[0];
+    document.getElementById('es-modal')?.remove();
     var modal=document.createElement('div');
+    modal.id='es-modal';
     modal.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;';
     modal.innerHTML=
       '<div style="background:var(--card);border-radius:20px;padding:24px;max-width:380px;width:100%;direction:rtl;">'
         +'<div style="font-size:16px;font-weight:800;margin-bottom:16px;">تعديل المشترك</div>'
         +'<div class="form-group"><label class="form-label">اسم النشاط</label><input id="es-biz" class="fi" value="'+(a.biz_name||'')+'"></div>'
-        +'<div class="form-group"><label class="form-label">الباقة</label><select id="es-pkg" class="fi"><option value="free"'+(a.pkg==='free'?' selected':'')+'>المجانية</option><option value="pro"'+(a.pkg==='pro'?' selected':'')+'>الاحترافية</option><option value="all"'+(a.pkg==='all'?' selected':'')+'>الشاملة</option></select></div>'
+        +'<div class="form-group"><label class="form-label">الباقة</label><select id="es-pkg" class="fi">'
+          +'<option value="free"'+(a.pkg==='free'?' selected':'')+'>المجانية</option>'
+          +'<option value="pro"'+(a.pkg==='pro'?' selected':'')+'>الاحترافية</option>'
+          +'<option value="all"'+(a.pkg==='all'?' selected':'')+'>الشاملة</option>'
+        +'</select></div>'
         +'<div class="form-group"><label class="form-label">كلمة مرور جديدة (اختياري)</label><input id="es-pass" class="fi" placeholder="اتركه فارغاً للإبقاء على القديمة"></div>'
         +'<div style="display:flex;gap:8px;margin-top:16px;">'
-          +'<button onclick="saveSubscriberEdit(\''+id+'\')" class="btn btn-primary" style="flex:1;">حفظ</button>'
-          +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="flex:1;padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-family:inherit;font-weight:700;">إلغاء</button>'
+          +'<button id="es-save-btn" onclick="saveSubscriberEdit(\''+id+'\')" class="btn btn-primary" style="flex:1;">حفظ</button>'
+          +'<button onclick="document.getElementById(\'es-modal\').remove()" style="flex:1;padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-family:inherit;font-weight:700;color:var(--text);">إلغاء</button>'
         +'</div>'
       +'</div>';
     document.body.appendChild(modal);
@@ -2141,11 +2147,16 @@ function saveSubscriberEdit(id){
   var pass=document.getElementById('es-pass')?.value?.trim();
   var body={biz_name:biz,pkg:pkg};
   if(pass) body.password=pass;
+  var saveBtn=document.getElementById('es-save-btn');
+  if(saveBtn){saveBtn.textContent='جارٍ الحفظ...';saveBtn.disabled=true;}
   sbFetch('biz_accounts','PATCH',body,'?id=eq.'+id).then(function(){
-    document.querySelector('[style*="fixed"]')?.remove();
-    toast('تم الحفظ','success');
+    document.getElementById('es-modal')?.remove();
+    toast('تم الحفظ ✅','success');
     renderOwnerSubscribers();
-  }).catch(function(){toast('فشل الحفظ','error');});
+  }).catch(function(){
+    if(saveBtn){saveBtn.textContent='حفظ';saveBtn.disabled=false;}
+    toast('فشل الحفظ','error');
+  });
 }
 
 function renderOwnerRevenue(){
@@ -2364,9 +2375,10 @@ function logout(){
   document.getElementById('login-pass').value='';
 }
 function applyPerms(){
-  if(!currentUser)return;
-  // Admin (main or appUser with admin role) sees everything
-  if(currentUser.role==='admin')return;
+  if(!currentUser) return;
+  // Admin و subscriber يشوفون كل شيء
+  if(currentUser.role==='admin'||currentUser.role==='subscriber') return;
+  // Staff — صلاحيات محددة
   var perms=currentUser.perms||PERMS_DEFAULT;
   document.querySelectorAll('.nav-item').forEach(function(btn){
     var oc=btn.getAttribute('onclick')||'';
@@ -2574,7 +2586,18 @@ function renderCalendars(){
   var el=document.getElementById('cals-container');
   if(!el) return;
   if(!units.length){
-    el.innerHTML='<div class="empty"><div class="empty-text">لا توجد وحدات — أضف وحدة من الإعدادات</div></div>';
+    // جلب الوحدات من Supabase وإعادة الرسم
+    sbFetch('units','GET',null,'?select=*&biz_id=eq.'+getBizId()).then(function(data){
+      if(data&&data.length){
+        DB.units=data.map(function(u){return u.name||u.id;});
+        data.forEach(function(u){if(u.type)(DB.unitTypes=DB.unitTypes||{})[u.name||u.id]=u.type;});
+        el.innerHTML=DB.units.map(function(apt){return buildCal(apt);}).join('');
+      } else {
+        el.innerHTML='<div class="empty"><div class="empty-text">لا توجد وحدات — أضف وحدة من الإعدادات</div></div>';
+      }
+    }).catch(function(){
+      el.innerHTML='<div class="empty"><div class="empty-text">لا توجد وحدات — أضف وحدة من الإعدادات</div></div>';
+    });
     return;
   }
   el.innerHTML=units.map(function(apt){return buildCal(apt);}).join('');
@@ -5303,7 +5326,12 @@ function _clearSession(){ localStorage.removeItem('bodo_session'); localStorage.
 
 // ── DB init (always empty — data comes from Supabase) ──
 function _freshDB(bizId){
-  return {bookings:[],expenses:[],employees:[],units:[],unitTypes:{},monthly:[],foundation:[],sales:[],appUsers:[],adminPass:{},calStats:{},subscriberInfo:{bizId:bizId||''}};
+  // لا نحمّل من localStorage أبداً — البيانات من Supabase فقط
+  return {
+    bookings:[], expenses:[], employees:[], units:[], unitTypes:{},
+    monthly:[], foundation:[], sales:[], appUsers:[], adminPass:{},
+    calStats:{}, subscriberInfo:{bizId:bizId||''}
+  };
 }
 
 // ── Load all data for current user ───────────
@@ -5324,6 +5352,15 @@ async function loadAllData(){
     if(units?.length){
       DB.units=units.map(u=>u.name||u.id);
       units.forEach(u=>{if(u.type)(DB.unitTypes=DB.unitTypes||{})[u.name||u.id]=u.type;});
+      // إعادة رسم التقويم فوراً بعد تحميل الوحدات
+      var calEl=document.getElementById('cals-container');
+      if(calEl&&_currentPage==='calbooking'&&_currentCBTab===1){
+        calEl.innerHTML=DB.units.map(function(apt){return buildCal(apt);}).join('');
+      }
+      // إعادة رسم الوحدات في الإعدادات
+      if(_currentPage==='settings'){
+        try{renderSettings();}catch(e){}
+      }
     }
     if(sales?.length) DB.sales=sales.map(s=>({id:s.id,desc:s.description||'',amount:s.amount||0,date:s.date||'',apt:s.apt||'عام',notes:s.notes||''}));
     if(expenses?.length) DB.expenses=expenses.map(e=>({id:e.id,type:e.type||'أخرى',amount:e.amount||0,date:e.date||'',desc:e.description||'',apt:e.apt||'عام',salaryRef:e.salary_ref||'',salaryMonth:e.salary_month||''}));
