@@ -5233,6 +5233,31 @@ function getBizId(){
 const SB_URL = 'https://uoysyclcycnttnidllxc.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVveXN5Y2xjeWNudHRuaWRsbHhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNjI0MjEsImV4cCI6MjA5MzgzODQyMX0.0GJbr8bQpcZ3G__p6CIW3t8dvEZAjjQL5FXLXmQ9Jmg';
 
+async function sbFetch(table, method, body, query){
+  var url=SB_URL+'/rest/v1/'+table+(query||'');
+  var headers={
+    'apikey':SB_KEY,
+    'Authorization':'Bearer '+SB_KEY,
+    'Content-Type':'application/json',
+    'Cache-Control':'no-cache'
+  };
+  if(method==='GET') headers['Accept']='application/json';
+  if(method==='POST'&&query&&query.includes('on_conflict')){
+    headers['Prefer']='resolution=merge-duplicates,return=minimal';
+  }
+  if(method==='PATCH'||method==='DELETE') headers['Prefer']='return=minimal';
+  var opts={method:method,headers:headers};
+  if(body&&method!=='GET'&&method!=='DELETE') opts.body=JSON.stringify(body);
+  var res=await fetch(url,opts);
+  if(!res.ok){
+    var txt=await res.text().catch(function(){return '';});
+    throw new Error('sbFetch '+method+' '+table+': '+res.status+' '+txt);
+  }
+  if(res.status===204||method==='DELETE'||method==='PATCH') return null;
+  var text=await res.text();
+  return text?JSON.parse(text):null;
+}
+
 // ── Device ID ──
 var _deviceId = localStorage.getItem('bodo_device_id');
 if(!_deviceId){ _deviceId = 'dev_'+Math.random().toString(36).slice(2); localStorage.setItem('bodo_device_id',_deviceId); }
@@ -5490,12 +5515,13 @@ async function _pollChanges(){
     // Pull other tables less frequently (every 4th poll = ~12s)
     _lastKnown._pollCount = (_lastKnown._pollCount||0) + 1;
     if(_lastKnown._pollCount % 4 === 0){
-      var [expenses, monthly, foundation, employees, sales, appCfg] = await Promise.all([
+      var [expenses, monthly, foundation, employees, sales, units, appCfg] = await Promise.all([
         sbFetch('expenses','GET',null,'?select=*&biz_id=eq.'+getBizId()).catch(function(){return null;}),
         sbFetch('monthly_costs','GET',null,'?select=*&biz_id=eq.'+getBizId()).catch(function(){return null;}),
         sbFetch('foundation_costs','GET',null,'?select=*&biz_id=eq.'+getBizId()).catch(function(){return null;}),
         sbFetch('employees','GET',null,'?select=*&biz_id=eq.'+getBizId()).catch(function(){return null;}),
         sbFetch('sales','GET',null,'?select=*&biz_id=eq.'+getBizId()).catch(function(){return null;}),
+        sbFetch('units','GET',null,'?select=*&biz_id=eq.'+getBizId()).catch(function(){return null;}),
         sbFetch('app_config','GET',null,'?select=key,value&biz_id=eq.'+getBizId()).catch(function(){return null;}),
       ]);
 
@@ -5534,6 +5560,18 @@ async function _pollChanges(){
       if(sales && Array.isArray(sales)){
         var newSl = sales.map(function(s){return {id:s.id,desc:s.desc||s.description||'',amount:s.amount,date:s.date,apt:s.apt||'عام',notes:s.notes||''};});
         if(JSON.stringify(newSl) !== JSON.stringify(DB.sales||[])){ DB.sales=newSl; changed=true; }
+      }
+      if(units && Array.isArray(units) && units.length){
+        var newUnits = units.map(function(u){return u.name||u.id;});
+        if(!DB.unitTypes) DB.unitTypes={};
+        units.forEach(function(u){if(u.type) DB.unitTypes[u.name||u.id]=u.type;});
+        var oldU = JSON.stringify((DB.units||[]).sort());
+        var newU = JSON.stringify(newUnits.sort());
+        if(oldU !== newU){
+          DB.units = newUnits;
+          changed = true;
+          if(_currentPage==='calbooking') renderCalendars();
+        }
       }
       if(appCfg && Array.isArray(appCfg)){
         var bn = appCfg.find(function(c){return c.key==='biz_name';});
