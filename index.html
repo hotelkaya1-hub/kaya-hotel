@@ -2316,6 +2316,8 @@ function showApp(){
     if(foundation&&foundation.length) DB.foundation=foundation.map(function(f){return{id:f.id,name:f.name,amount:f.amount||0,date:f.date||''};});
     try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
     renderAll();
+    // لو التقويم مفتوح أعد رسمه بالبيانات الجديدة
+    if(_currentPage==='calbooking' && _currentCBTab===1) renderCalendars();
   }).catch(function(){});
 
   if(window._pollTimer) clearInterval(window._pollTimer);
@@ -2491,24 +2493,7 @@ function showCBTab(n){
       else{b.style.background='transparent';b.style.color='var(--text3)';}
     }
   });
-  if(n===1){
-    if(DB.units&&DB.units.length){
-      renderCalendars();
-    } else {
-      // جلب الوحدات من Supabase أولاً
-      var el=document.getElementById('cals-container');
-      if(el) el.innerHTML='<div class="empty"><div class="empty-text">جارٍ تحميل التقويم...</div></div>';
-      sbFetch('units','GET',null,'?select=*&biz_id=eq.'+getBizId()).then(function(data){
-        if(data&&data.length){
-          DB.units=data.map(function(u){return u.name||u.id;});
-          if(!DB.unitTypes) DB.unitTypes={};
-          data.forEach(function(u){if(u.type) DB.unitTypes[u.name||u.id]=u.type;});
-          try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-        }
-        renderCalendars();
-      }).catch(function(){renderCalendars();});
-    }
-  }
+  if(n===1) renderCalendars();
   if(n===2){fillUF();renderBookingsList();}
 }
 function renderBookingsList(){
