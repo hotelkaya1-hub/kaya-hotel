@@ -566,7 +566,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     display:flex !important;
     flex-direction:row !important;
     align-items:center !important;
-    justify-content:flex-end !important;
+    justify-content:flex-start !important;
     width:100% !important;
     padding:15px 20px !important;
     font-size:14px !important;
@@ -2126,6 +2126,17 @@ function renderOwnerHome(){
     var paid = accounts.filter(function(a){return a.id!=='kaled' && a.pkg && a.pkg!=='free';});
     var freePlan = accounts.filter(function(a){return a.id!=='kaled' && (a.pkg||'free')==='free';}).length;
 
+    // اشتراكات قاربة الانتهاء (٧ أيام أو أقل، أو منتهية)
+    var nowMs = Date.now();
+    var sevenDaysMs = 7*24*3600*1000;
+    var expiring = accounts.filter(function(a){
+      if(a.id==='kaled') return false;
+      if(!a.pkg || a.pkg==='free') return false;
+      if(!a.subscription_end) return false;
+      var endMs = new Date(a.subscription_end).getTime();
+      return (endMs - nowMs) <= sevenDaysMs; // 7 أيام أو أقل (يشمل المنتهية)
+    });
+
     // حدّث شارة الطلبات المعلّقة على تب الطلبات
     try{
       var badge=document.getElementById('otab-1-badge');
@@ -2197,7 +2208,7 @@ function renderOwnerHome(){
       +'</div>'
 
       // 4 بطاقات تفصيل
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">'
         +'<button onclick="showOwnerTab(1)" style="background:'+(pending.length?'rgba(217,119,6,.1)':'var(--card)')+';border:1px solid '+(pending.length?'rgba(217,119,6,.3)':'var(--border)')+';border-radius:12px;padding:14px;text-align:right;cursor:pointer;font-family:inherit;">'
           +'<div style="font-size:24px;font-weight:900;color:'+(pending.length?'var(--yellow)':'var(--text3)')+';">'+pending.length+'</div>'
           +'<div style="font-size:11px;color:var(--text3);">طلبات بانتظار</div>'
@@ -2215,6 +2226,19 @@ function renderOwnerHome(){
           +'<div style="font-size:11px;color:var(--text3);">مجاني</div>'
         +'</button>'
       +'</div>'
+
+      // كرت اشتراكات قاربة الانتهاء (يظهر فقط لو فيه)
+      +(expiring.length?
+        '<button onclick="showOwnerTab(2)" style="width:100%;background:linear-gradient(135deg,rgba(217,119,6,.15),rgba(217,119,6,.04));border:1px solid var(--yellow);border-radius:14px;padding:16px;margin-bottom:14px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:14px;text-align:right;">'
+          +'<div style="font-size:32px;">⏰</div>'
+          +'<div style="flex:1;">'
+            +'<div style="font-size:24px;font-weight:900;color:var(--yellow);line-height:1;">'+expiring.length+'</div>'
+            +'<div style="font-size:12px;color:var(--text2);font-weight:700;margin-top:3px;">اشتراك قارب على الانتهاء</div>'
+            +'<div style="font-size:10px;color:var(--text3);margin-top:2px;">٧ أيام أو أقل · يحتاج تجديد</div>'
+          +'</div>'
+          +'<div style="color:var(--text3);font-size:18px;">←</div>'
+        +'</button>'
+      :'')
 
       // النشاط الأخير
       +'<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">'
@@ -2781,9 +2805,8 @@ function renderOwnerSubscribers(){
       }
     });
 
-    // أضف Kaled
-    var kaledExists=accounts.find(function(a){return a.id==='kaled';});
-    if(!kaledExists) accounts.unshift({id:'kaled',email:'Kaled',biz_name:BRAND.name,owner_name:'Kaled',phone:'',pkg:'all',status:'active'});
+    // استبعد حساب المالك (Kaled) من قائمة المشتركين — هو الأدمن، مو مشترك
+    accounts = accounts.filter(function(a){ return a.id!=='kaled'; });
 
     // احتفظ بالنسخة الكاملة عشان البحث
     window._ownerAllSubs = accounts;
@@ -2893,6 +2916,7 @@ function _renderSubsList(accounts){
           +'</div>'
         +'</div>':'')
       +'<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+        +((daysLeft!==null && daysLeft<=7 && isPaidPkg && !isKaled)?'<button onclick="quickRenewSub(\''+a.id+'\',\''+(a.biz_name||a.id).replace(/'/g,"\\'")+'\',\''+(billing||'شهري')+'\')" style="flex:1;padding:8px;background:linear-gradient(135deg,var(--yellow),#f59e0b);border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;color:#fff;">⏰ تجديد</button>':'')
         +(!isKaled&&!a._fromRequest?'<button onclick="editSubscriber(\''+a.id+'\')" style="flex:1;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text);">تعديل</button>':'')
         +(!isKaled&&!a._fromRequest?'<button onclick="deleteSubscriber(\''+a.id+'\',\''+(a.biz_name||a.id).replace(/'/g,"\\'")+'\')" style="flex:1;padding:8px;background:rgba(220,38,38,.1);border:1px solid var(--red);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--red);">حذف</button>':'')
         +(a._fromRequest?'<button onclick="approveRequest(\''+a._reqId+'\')" class="btn btn-primary" style="flex:1;padding:8px;font-size:12px;">إنشاء الحساب</button>':'')
@@ -2987,6 +3011,49 @@ function _recalcAddSubEnd(){
     }
     document.getElementById('as-end').value = d.toISOString().substring(0,10);
   }catch(e){}
+}
+
+// تجديد سريع من لوحة المالك
+function quickRenewSub(id, bizName, currentBilling){
+  var modal=document.createElement('div');
+  modal.id='_quickRenewModal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML =
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:400px;width:100%;padding:22px;">'
+      +'<div style="font-size:16px;font-weight:900;color:var(--text);margin-bottom:6px;">⏰ تجديد اشتراك</div>'
+      +'<div style="font-size:13px;color:var(--text2);margin-bottom:16px;">'+bizName+'</div>'
+      +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px;">اختر مدة التجديد:</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">'
+        +'<button onclick="_doQuickRenew(\''+id+'\',\'شهري\')" style="padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;color:var(--text);">+ شهر</button>'
+        +'<button onclick="_doQuickRenew(\''+id+'\',\'سنوي\')" style="padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;color:var(--text);">+ سنة</button>'
+      +'</div>'
+      +'<button onclick="document.getElementById(\'_quickRenewModal\').remove()" style="width:100%;background:none;border:none;color:var(--text3);padding:10px;font-family:inherit;font-size:12px;cursor:pointer;margin-top:6px;">إلغاء</button>'
+    +'</div>';
+  document.body.appendChild(modal);
+}
+
+function _doQuickRenew(id, period){
+  sbFetch('biz_accounts','GET',null,'?id=eq.'+id+'&select=*').then(function(rows){
+    if(!rows||!rows.length){ toast('الحساب غير موجود','error'); return; }
+    var acct = rows[0];
+    var startFrom = new Date();
+    if(acct.subscription_end){
+      var cur = new Date(acct.subscription_end);
+      if(cur > startFrom) startFrom = cur;
+    }
+    var newEnd = new Date(startFrom);
+    if(period==='سنوي') newEnd.setFullYear(newEnd.getFullYear()+1);
+    else newEnd.setMonth(newEnd.getMonth()+1);
+    sbFetch('biz_accounts','PATCH',{
+      subscription_end: newEnd.toISOString(),
+      billing: period,
+      status: 'active'
+    },'?id=eq.'+id).then(function(){
+      document.getElementById('_quickRenewModal')?.remove();
+      toast('✅ تم التجديد حتى '+newEnd.toISOString().substring(0,10),'success');
+      renderOwnerSubscribers();
+    }).catch(function(){ toast('فشل التجديد','error'); });
+  }).catch(function(){ toast('فشل جلب الحساب','error'); });
 }
 
 function saveNewSubscriber(){
@@ -7089,12 +7156,27 @@ function _updateRtIndicator(connected){
 
 // ── Custom confirm dialog (يعمل أفضل من confirm() على الموبايل) ──
 var _confirmCallback = null;
-function showConfirm(title, message, okText, cancelText, callback){
-  _confirmCallback = callback;
+function showConfirm(title, message, okOrCallback, optionsOrCancelText, callback){
+  // كشف النمط المستخدم تلقائياً
+  var cb, okText, cancelText, okColor;
+  if(typeof okOrCallback === 'function'){
+    // النمط الجديد: showConfirm(title, message, callback, {okText, okColor})
+    cb = okOrCallback;
+    var opts = (typeof optionsOrCancelText === 'object' && optionsOrCancelText) ? optionsOrCancelText : {};
+    okText = opts.okText || 'حذف';
+    cancelText = opts.cancelText || 'إلغاء';
+    okColor = opts.okColor;
+  } else {
+    // النمط القديم: showConfirm(title, message, okText, cancelText, callback)
+    okText = okOrCallback || 'حذف';
+    cancelText = optionsOrCancelText || 'إلغاء';
+    cb = callback;
+  }
+  _confirmCallback = cb;
   var ov = document.getElementById('confirm-overlay');
   if(!ov){
     // fallback إذا الـ DOM ما جاهز
-    if(window.confirm(message||title||'هل أنت متأكد؟')) callback&&callback();
+    if(window.confirm(message||title||'هل أنت متأكد؟')) cb && cb();
     return;
   }
   var t = document.getElementById('confirm-title');
@@ -7103,8 +7185,12 @@ function showConfirm(title, message, okText, cancelText, callback){
   var cancel = document.getElementById('confirm-cancel');
   if(t) t.textContent = title || 'تأكيد';
   if(m) m.textContent = message || 'هل أنت متأكد؟';
-  if(ok) ok.textContent = okText || 'حذف';
-  if(cancel) cancel.textContent = cancelText || 'إلغاء';
+  if(ok){
+    ok.textContent = okText;
+    if(okColor) ok.style.background = okColor;
+    else ok.style.background = '';
+  }
+  if(cancel) cancel.textContent = cancelText;
   ov.style.display = 'flex';
 }
 function closeConfirm(){
