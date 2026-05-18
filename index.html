@@ -2267,33 +2267,57 @@ function doLogin(){
 }
 function showApp(){
   DB = loadDB();
-  // احتفظ بـ subscriberInfo لأنه يُضبط قبل showApp في doLogin
-  if(currentUser && currentUser.bizId && !DB.subscriberInfo){
-    DB.subscriberInfo = {bizId: currentUser.bizId, email: currentUser.username};
+  if(currentUser&&currentUser.bizId&&!DB.subscriberInfo){
+    DB.subscriberInfo={bizId:currentUser.bizId,email:currentUser.username};
   }
   if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;
   if(!DB.appUsers) DB.appUsers=[];
+
   document.getElementById('login-screen').style.display='none';
   var app=document.getElementById('app');
   app.style.display='flex';app.style.flexDirection='column';app.style.height='100dvh';app.style.overflow='hidden';
   var contentEl=document.getElementById('content');
-  if(contentEl){contentEl.style.flex='1';contentEl.style.overflowY='auto';contentEl.style.minHeight='0';}
-  var uname=currentUser.fullname||currentUser.username||'';
-  var h=new Date().getHours();
-  var greetTxt=h<12?'صباح الخير':h<17?'مرحباً':'أهلاً';
-  // Update all page user cards
-  // Fill dashboard
-  var ndash=document.getElementById('nm-dash');if(ndash)ndash.textContent=uname;
-  var gdash=document.getElementById('gr-dash');if(gdash)gdash.textContent=greetTxt;
-  // Fill settings
+  if(contentEl){contentEl.style.flex='1';contentEl.style.overflowY='auto';contentEl.style.overflowX='hidden';}
+
+  var uname=currentUser?currentUser.username:'';
+  var greetTxt=currentUser?.fullname||uname;
+  var nm=document.getElementById('nav-username');if(nm)nm.textContent=greetTxt;
   var nset=document.getElementById('nm-set');if(nset)nset.textContent=uname;
   var gset=document.getElementById('gr-set');if(gset)gset.textContent=greetTxt;
-  // Reset all nav items visibility
   document.querySelectorAll('.nav-item').forEach(function(n){n.style.display='';});
   applyPerms();
-  // عرض skeleton أثناء جلب البيانات
+
+  // عرض الواجهة أولاً بالبيانات المحلية
   renderDashboard();
   try{renderNotificationsBell();}catch(e){}
+
+  // جلب كل البيانات من Supabase فوراً
+  var bizId=getBizId();
+  Promise.all([
+    sbFetch('bookings','GET',null,'?select=*&biz_id=eq.'+bizId+'&order=checkin.desc').catch(function(){return[];}),
+    sbFetch('units','GET',null,'?select=*&biz_id=eq.'+bizId).catch(function(){return[];}),
+    sbFetch('sales','GET',null,'?select=*&biz_id=eq.'+bizId).catch(function(){return[];}),
+    sbFetch('expenses','GET',null,'?select=*&biz_id=eq.'+bizId).catch(function(){return[];}),
+    sbFetch('employees','GET',null,'?select=*&biz_id=eq.'+bizId).catch(function(){return[];}),
+    sbFetch('monthly_costs','GET',null,'?select=*&biz_id=eq.'+bizId).catch(function(){return[];}),
+    sbFetch('foundation_costs','GET',null,'?select=*&biz_id=eq.'+bizId).catch(function(){return[];})
+  ]).then(function(results){
+    var bookings=results[0],units=results[1],sales=results[2],expenses=results[3],employees=results[4],monthly=results[5],foundation=results[6];
+    if(bookings&&bookings.length) DB.bookings=bookings;
+    if(units&&units.length){
+      DB.units=units.map(function(u){return u.name||u.id;});
+      if(!DB.unitTypes) DB.unitTypes={};
+      units.forEach(function(u){if(u.type) DB.unitTypes[u.name||u.id]=u.type;});
+    }
+    if(sales&&sales.length) DB.sales=sales.map(function(s){return{id:s.id,desc:s.description||'',amount:s.amount||0,date:s.date||'',apt:s.apt||'عام',notes:s.notes||''};});
+    if(expenses&&expenses.length) DB.expenses=expenses.map(function(e){return{id:e.id,type:e.type||'أخرى',amount:e.amount||0,date:e.date||'',desc:e.description||'',apt:e.apt||'عام',salaryRef:e.salary_ref||'',salaryMonth:e.salary_month||''};});
+    if(employees&&employees.length) DB.employees=employees.map(function(e){return{id:e.id,name:e.name,role:e.role||'',salary:e.salary||0,hireDate:e.hire_date||''};});
+    if(monthly&&monthly.length) DB.monthly=monthly.map(function(m){return{id:m.id,name:m.name,amount:m.amount||0,apt:m.apt||'',dueDate:m.due_date||''};});
+    if(foundation&&foundation.length) DB.foundation=foundation.map(function(f){return{id:f.id,name:f.name,amount:f.amount||0,date:f.date||''};});
+    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    renderAll();
+  }).catch(function(){});
+
   if(window._pollTimer) clearInterval(window._pollTimer);
   if(window._syncInterval) clearInterval(window._syncInterval);
   initRealtime();
@@ -2467,7 +2491,24 @@ function showCBTab(n){
       else{b.style.background='transparent';b.style.color='var(--text3)';}
     }
   });
-  if(n===1)renderCalendars();
+  if(n===1){
+    if(DB.units&&DB.units.length){
+      renderCalendars();
+    } else {
+      // جلب الوحدات من Supabase أولاً
+      var el=document.getElementById('cals-container');
+      if(el) el.innerHTML='<div class="empty"><div class="empty-text">جارٍ تحميل التقويم...</div></div>';
+      sbFetch('units','GET',null,'?select=*&biz_id=eq.'+getBizId()).then(function(data){
+        if(data&&data.length){
+          DB.units=data.map(function(u){return u.name||u.id;});
+          if(!DB.unitTypes) DB.unitTypes={};
+          data.forEach(function(u){if(u.type) DB.unitTypes[u.name||u.id]=u.type;});
+          try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+        }
+        renderCalendars();
+      }).catch(function(){renderCalendars();});
+    }
+  }
   if(n===2){fillUF();renderBookingsList();}
 }
 function renderBookingsList(){
