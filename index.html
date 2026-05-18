@@ -516,13 +516,33 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
   font-size:13px;
   font-weight:700;
   color:var(--text3);
-  border-bottom:2px solid transparent;
+  border-bottom:3px solid transparent;
   cursor:pointer;
   white-space:nowrap;
   font-family:'Cairo',sans-serif;
-  transition:color .15s;
+  transition:color .15s, background .15s;
 }
-#owner-screen .owner-otab.active { color:var(--accent);border-bottom-color:var(--accent); }
+#owner-screen .owner-otab.active {
+  color:var(--accent);
+  border-bottom-color:var(--accent);
+  background:var(--gold);
+  font-weight:800;
+}
+.otab-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:18px;
+  height:18px;
+  padding:0 6px;
+  margin-right:6px;
+  background:var(--red);
+  color:#fff;
+  font-size:10px;
+  font-weight:900;
+  border-radius:10px;
+  line-height:1;
+}
 
 /* ─ Desktop: sidebar layout ─ */
 @media(min-width:1024px){
@@ -1062,7 +1082,8 @@ document.addEventListener('DOMContentLoaded', function(){
     <div id="owner-body" style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;">
       <!-- Nav (tabs on mobile, sidebar on desktop) -->
       <div id="owner-nav">
-        <button class="owner-otab active" id="otab-1" onclick="showOwnerTab(1)">الطلبات</button>
+        <button class="owner-otab active" id="otab-0" onclick="showOwnerTab(0)">الرئيسية</button>
+        <button class="owner-otab" id="otab-1" onclick="showOwnerTab(1)">الطلبات<span id="otab-1-badge" class="otab-badge" style="display:none;"></span></button>
         <button class="owner-otab" id="otab-2" onclick="showOwnerTab(2)">المشتركون</button>
         <button class="owner-otab" id="otab-3" onclick="showOwnerTab(3)">الإيرادات</button>
         <button class="owner-otab" id="otab-4" onclick="showOwnerTab(4)">الباقات</button>
@@ -1515,7 +1536,7 @@ function toggleRemember(val){
 // ══════════════════════════════════════════
 var OWNER_PASS = '123123';
 var _ownerLoggedIn = false;
-var _ownerTab = 0;
+var _ownerTab = -1;
 
 var PKG_PRICES = {
   free:  { monthly:0,   yearly:0,    yearlyMonth:0,   label:'ابدأ مجاناً', units:2,   employees:1   },
@@ -1716,10 +1737,30 @@ function submitJoin(){
   var units = document.getElementById('j-units')?.value  || '1-5';
   var pass  = document.getElementById('j-pass')?.value?.trim()||'';
 
-  if(!name)  { toast('أدخل اسمك الكامل','error'); return; }
-  if(!phone||phone.length<10) { toast('أدخل رقم جوال صحيح','error'); return; }
-  if(!email||!email.includes('@')) { toast('أدخل بريد إلكتروني صحيح','error'); return; }
-  if(!biz)   { toast('أدخل اسم النشاط','error'); return; }
+  // عرض خطأ ظاهر تحت الزر (مو بس toast سريع)
+  var errBox = document.getElementById('join-err');
+  if(!errBox){
+    var btn0 = document.getElementById('join-submit-btn');
+    if(btn0 && btn0.parentNode){
+      errBox = document.createElement('div');
+      errBox.id = 'join-err';
+      errBox.style.cssText = 'display:none;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);color:var(--red);font-size:12px;font-weight:700;padding:10px 14px;border-radius:10px;margin-bottom:10px;text-align:right;';
+      btn0.parentNode.insertBefore(errBox, btn0);
+    }
+  }
+  function showErr(msg){
+    if(errBox){ errBox.textContent = msg; errBox.style.display = 'block'; }
+    toast(msg,'error');
+  }
+  function clearErr(){
+    if(errBox){ errBox.style.display = 'none'; }
+  }
+
+  clearErr();
+  if(!name)  { showErr('⚠️ أدخل اسمك الكامل'); return; }
+  if(!phone||phone.length<10) { showErr('⚠️ أدخل رقم جوال صحيح (10 أرقام على الأقل)'); return; }
+  if(!email||!email.includes('@')||!email.includes('.')) { showErr('⚠️ أدخل بريد إلكتروني صحيح'); return; }
+  if(!biz)   { showErr('⚠️ أدخل اسم النشاط'); return; }
 
   if(!_selectedPkg) _selectedPkg='free';
   var pkg    = PKG_PRICES[_selectedPkg]||PKG_PRICES['free'];
@@ -1730,53 +1771,74 @@ function submitJoin(){
   var req = {id:reqId,name:name,phone:phone,city:city||'',email:email,biz:biz,biz_name:biz,biztype:btype,units:units,pkg:_selectedPkg,pkg_label:pkg.label,price:price,billing:billing,status:'pending',date:toDay(),pass:pass};
 
   var btn=document.getElementById('join-submit-btn');
+  function resetBtn(){ if(btn){ btn.textContent='إرسال طلب الاشتراك ✓'; btn.disabled=false; } }
   if(btn){btn.textContent='جارٍ الإرسال...';btn.disabled=true;}
 
+  // فحص المكرر (لو فشل الفحص، نكمّل بدون فحص)
   Promise.all([
-    sbFetch('biz_accounts','GET',null,'?email=eq.'+encodeURIComponent(email)+'&select=id').catch(function(){return[];}),
-    sbFetch('join_requests','GET',null,'?email=eq.'+encodeURIComponent(email)+'&status=eq.pending&select=id').catch(function(){return[];})
+    sbFetch('biz_accounts','GET',null,'?email=eq.'+encodeURIComponent(email)+'&select=id').catch(function(){return null;}),
+    sbFetch('join_requests','GET',null,'?email=eq.'+encodeURIComponent(email)+'&status=eq.pending&select=id').catch(function(){return null;})
   ]).then(function(results){
     var existing=results[0]||[], pending=results[1]||[];
-    if(existing.length>0){
-      if(btn){btn.textContent='إرسال طلب الاشتراك ✓';btn.disabled=false;}
-      toast('هذا البريد مسجّل مسبقاً','error'); return;
+    if(Array.isArray(existing) && existing.length>0){
+      resetBtn();
+      showErr('❌ هذا البريد مسجّل مسبقاً — جرّب الدخول بدلاً من إنشاء حساب جديد');
+      return;
     }
-    if(pending.length>0){
-      if(btn){btn.textContent='إرسال طلب الاشتراك ✓';btn.disabled=false;}
-      toast('طلبك قيد المراجعة — سنتواصل معك قريباً','error'); return;
+    if(Array.isArray(pending) && pending.length>0){
+      resetBtn();
+      showErr('⏳ طلبك قيد المراجعة — سنتواصل معك قريباً');
+      return;
     }
+
+    // الإرسال الفعلي
     sbFetch('join_requests','POST',req,'?on_conflict=id').then(function(){
-      if(btn){btn.textContent='إرسال طلب الاشتراك ✓';btn.disabled=false;}
+      resetBtn();
+      clearErr();
       if(!DB.joinRequests) DB.joinRequests=[];
       DB.joinRequests.push(req);
       DB.subscriberInfo={name:name,email:email,phone:phone,city:city,biz:biz,bizType:btype,pkg:_selectedPkg,pkgLabel:pkg.label,price:price,billing:billing,date:toDay(),status:'pending',bizId:bizId};
       if(!DB.bizName){DB.bizName=biz;updateBizLabels();}
       try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-      _showJoinStep(3);
-      var js=document.getElementById('join-screen');
-      if(js) js.scrollTop=0;
-      var pad=js?js.querySelector('#join-step-1')?.parentElement:null;
-      if(pad) pad.innerHTML=
-        '<div style="padding:32px 24px 48px;text-align:center;">'
-          +'<div style="width:72px;height:72px;border-radius:50%;background:rgba(52,211,153,.15);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px;">✅</div>'
-          +'<div style="font-size:22px;font-weight:900;margin-bottom:8px;">تم إرسال طلبك!</div>'
-          +'<div style="font-size:13px;color:var(--text3);line-height:1.8;margin-bottom:24px;">سيتواصل معك فريق BODO على<br><strong style="color:var(--accent);">'+phone+'</strong><br>خلال 24 ساعة</div>'
-          +'<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:24px;text-align:right;">'
-            +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text3);">الاسم</span><span style="font-size:12px;font-weight:700;">'+name+'</span></div>'
-            +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text3);">البريد</span><span style="font-size:12px;font-weight:700;">'+email+'</span></div>'
-            +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text3);">النشاط</span><span style="font-size:12px;font-weight:700;">'+biz+'</span></div>'
-            +'<div style="display:flex;justify-content:space-between;padding:7px 0;"><span style="font-size:12px;color:var(--text3);">الباقة</span><span style="font-size:13px;font-weight:900;color:var(--accent);">'+pkg.label+' · '+price+' ر.س/'+billing+'</span></div>'
-          +'</div>'
-          +'<button onclick="showLoginScreen()" class="btn btn-primary btn-full" style="height:50px;font-size:15px;font-weight:800;">العودة لتسجيل الدخول</button>'
-        +'</div>';
-    }).catch(function(){
-      if(btn){btn.textContent='إرسال طلب الاشتراك ✓';btn.disabled=false;}
-      toast('فشل الإرسال — تحقق من الاتصال','error');
+      _showJoinSuccessScreen(name, email, biz, phone, pkg, price, billing);
+    }).catch(function(err){
+      resetBtn();
+      var errMsg = (err && err.message) ? err.message : '';
+      console.error('Join submit failed:', errMsg);
+      // رسالة دقيقة حسب نوع الخطأ
+      if(errMsg.indexOf('401')>-1 || errMsg.indexOf('403')>-1 || errMsg.toLowerCase().indexOf('policy')>-1){
+        showErr('❌ فشل الإرسال — صلاحيات Supabase لا تسمح بالإضافة (RLS). يجب تفعيل INSERT على جدول join_requests للمستخدمين المجهولين.');
+      } else if(errMsg.toLowerCase().indexOf('network')>-1 || errMsg.toLowerCase().indexOf('failed to fetch')>-1){
+        showErr('❌ فشل الاتصال بالإنترنت — تأكد من الاتصال وحاول مرة ثانية');
+      } else {
+        showErr('❌ فشل الإرسال: '+(errMsg||'خطأ غير متوقع'));
+      }
     });
-  }).catch(function(){
-    if(btn){btn.textContent='إرسال طلب الاشتراك ✓';btn.disabled=false;}
-    toast('فشل الإرسال — تحقق من الاتصال','error');
+  }).catch(function(err){
+    resetBtn();
+    showErr('❌ فشل الاتصال — تحقق من الإنترنت وحاول مرة ثانية');
   });
+}
+
+// شاشة نجاح الانضمام (مفصولة لإعادة الاستخدام)
+function _showJoinSuccessScreen(name, email, biz, phone, pkg, price, billing){
+  _showJoinStep(3);
+  var js=document.getElementById('join-screen');
+  if(js) js.scrollTop=0;
+  var pad=js?js.querySelector('#join-step-1')?.parentElement:null;
+  if(pad) pad.innerHTML=
+    '<div style="padding:32px 24px 48px;text-align:center;">'
+      +'<div style="width:72px;height:72px;border-radius:50%;background:rgba(52,211,153,.15);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px;">✅</div>'
+      +'<div style="font-size:22px;font-weight:900;margin-bottom:8px;">تم إرسال طلبك!</div>'
+      +'<div style="font-size:13px;color:var(--text3);line-height:1.8;margin-bottom:24px;">سيتواصل معك فريق BODO على<br><strong style="color:var(--accent);">'+phone+'</strong><br>خلال 24 ساعة</div>'
+      +'<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:24px;text-align:right;">'
+        +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text3);">الاسم</span><span style="font-size:12px;font-weight:700;">'+name+'</span></div>'
+        +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text3);">البريد</span><span style="font-size:12px;font-weight:700;">'+email+'</span></div>'
+        +'<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text3);">النشاط</span><span style="font-size:12px;font-weight:700;">'+biz+'</span></div>'
+        +'<div style="display:flex;justify-content:space-between;padding:7px 0;"><span style="font-size:12px;color:var(--text3);">الباقة</span><span style="font-size:13px;font-weight:900;color:var(--accent);">'+pkg.label+' · '+price+' ر.س/'+billing+'</span></div>'
+      +'</div>'
+      +'<button onclick="showLoginScreen()" class="btn btn-primary btn-full" style="height:50px;font-size:15px;font-weight:800;">العودة لتسجيل الدخول</button>'
+    +'</div>';
 }
 
 
@@ -1828,26 +1890,42 @@ function showOwnerDashboard(){
     :'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
   sbFetch('join_requests','GET',null,'?order=created_at.desc').then(function(data){
     if(data&&Array.isArray(data)){
+      var deleted = (DB._deleted)||{};
+      data = data.filter(function(r){ return !deleted['joinreq_'+r.id]; });
       DB.joinRequests=data.map(function(r){
         return{id:r.id,name:r.name,phone:r.phone,email:r.email,biz:r.biz||r.biz_name||'',city:r.city||'',pkg:r.pkg||'free',pkgLabel:r.pkg_label||r.pkg||'مجاني',price:r.price||0,billing:r.billing||'شهري',status:r.status||'pending',date:r.date||r.created_at||'',pass:r.pass||r.password||''};
       });
+      // حدث شارة الطلبات المعلقة
+      try{
+        var pendCount = DB.joinRequests.filter(function(r){return r.status==='pending';}).length;
+        var badge=document.getElementById('otab-1-badge');
+        if(badge){
+          if(pendCount){ badge.textContent=pendCount; badge.style.display='inline-flex'; }
+          else { badge.style.display='none'; }
+        }
+      }catch(e){}
     }
-    // لا نعيد التب لـ 1 إذا المستخدم انتقل لتب ثاني
-    if(!_ownerTab) showOwnerTab(1);
+    // افتراضياً افتح "الرئيسية" عند أول دخول
+    if(_ownerTab===-1) showOwnerTab(0);
     else if(_ownerTab===1) renderOwnerRequests(); // فقط إعادة رسم إذا في تب الطلبات
-  }).catch(function(){ if(!_ownerTab) showOwnerTab(1); });
+    else if(_ownerTab===0) renderOwnerHome(); // كذلك للرئيسية
+  }).catch(function(){ if(_ownerTab===-1) showOwnerTab(0); });
 }
 
 function showOwnerTab(n){
   _ownerTab=n;
-  [1,2,3,4,5].forEach(function(i){
-    var btn=document.getElementById('otab-'+i);
-    if(!btn)return;
-    btn.classList.toggle('active',i===n);
-  });
+  // تنظيف صارم — احذف active من كل أزرار التب (حتى لو في عناصر يتيمة بمكان ثاني)
+  var allTabs = document.querySelectorAll('.owner-otab');
+  for(var k=0;k<allTabs.length;k++){ allTabs[k].classList.remove('active'); }
+  // فعّل التب المطلوب (قد يكون فيه أكثر من زر بنفس الـ id لو السكربت أضاف نسخ)
+  var activeBtns = document.querySelectorAll('#otab-'+n+', [data-otab="'+n+'"]');
+  for(var j=0;j<activeBtns.length;j++){ activeBtns[j].classList.add('active'); }
   var content=document.getElementById('owner-content');
   if(!content)return;
-  if(n===1) renderOwnerRequests();
+  // مرر للأعلى عند تبديل التب
+  content.scrollTop=0;
+  if(n===0) renderOwnerHome();
+  else if(n===1) renderOwnerRequests();
   else if(n===2) renderOwnerSubscribers();
   else if(n===3) renderOwnerRevenue();
   else if(n===4) renderOwnerPackages();
@@ -1901,17 +1979,185 @@ function saveOwnerPackages(){
   toast('✅ تم حفظ الباقات','success');
 }
 
+function renderOwnerHome(){
+  var content = document.getElementById('owner-content');
+  if(!content) return;
+  content.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3);">جارٍ التحميل...</div>';
+
+  Promise.all([
+    sbFetch('biz_accounts','GET',null,'?select=*&order=created_at.desc').catch(function(){return[];}),
+    sbFetch('join_requests','GET',null,'?select=*&order=created_at.desc').catch(function(){return[];})
+  ]).then(function(results){
+    var accounts = results[0]||[];
+    var requests = results[1]||[];
+    var deleted = (DB._deleted)||{};
+    requests = requests.filter(function(r){return !deleted['joinreq_'+r.id];});
+
+    // إحصائيات
+    var pending = requests.filter(function(r){return r.status==='pending';});
+    var active = accounts.filter(function(a){return a.id!=='kaled' && (a.status||'active')==='active';});
+    var paid = accounts.filter(function(a){return a.id!=='kaled' && a.pkg && a.pkg!=='free';});
+    var freePlan = accounts.filter(function(a){return a.id!=='kaled' && (a.pkg||'free')==='free';}).length;
+
+    // حدّث شارة الطلبات المعلّقة على تب الطلبات
+    try{
+      var badge=document.getElementById('otab-1-badge');
+      if(badge){
+        if(pending.length){ badge.textContent=pending.length; badge.style.display='inline-flex'; }
+        else { badge.style.display='none'; }
+      }
+    }catch(e){}
+
+    // MRR
+    var monthlyMRR = 0;
+    accounts.forEach(function(a){
+      if(a.id==='kaled' || !a.pkg || a.pkg==='free') return;
+      var req = requests.find(function(r){return (r.email||'').toLowerCase()===(a.email||'').toLowerCase();});
+      var pkg = PKG_PRICES[a.pkg];
+      if(!pkg) return;
+      var billing = req && req.billing ? req.billing : 'شهري';
+      var price = req && req.price ? req.price : (billing==='سنوي' ? pkg.yearly : pkg.monthly);
+      if(billing==='سنوي') monthlyMRR += price/12;
+      else monthlyMRR += price;
+    });
+
+    // طلبات اليوم وآخر 7 أيام
+    var now = new Date();
+    var todayStr = now.toISOString().slice(0,10);
+    var weekAgo = new Date(now.getTime()-7*86400000).toISOString().slice(0,10);
+    var todayReqs = requests.filter(function(r){return (r.created_at||'').slice(0,10)===todayStr;}).length;
+    var weekReqs = requests.filter(function(r){return (r.created_at||'').slice(0,10)>=weekAgo;}).length;
+
+    // آخر 3 طلبات و آخر 3 مشتركين
+    var latestReqs = requests.slice(0,3);
+    var latestSubs = accounts.filter(function(a){return a.id!=='kaled';}).slice(0,3);
+
+    function fmtRel(s){
+      if(!s) return '';
+      var d=new Date(s); if(isNaN(d)) return '';
+      var diff=Math.floor((now-d)/86400000);
+      if(diff===0) return 'اليوم';
+      if(diff===1) return 'أمس';
+      if(diff<7) return 'قبل '+diff+' أيام';
+      return d.toISOString().slice(0,10);
+    }
+
+    content.innerHTML =
+      // ترحيب
+      '<div style="margin-bottom:18px;">'
+        +'<div style="font-size:11px;color:var(--text3);">مرحباً</div>'
+        +'<div style="font-size:20px;font-weight:900;color:var(--accent);">لوحة تحكم BODO</div>'
+      +'</div>'
+
+      // الـ MRR — بطاقة مميزة
+      +'<div style="background:linear-gradient(135deg,rgba(200,169,110,.18),rgba(200,169,110,.04));border:1px solid var(--goldb);border-radius:16px;padding:18px;margin-bottom:14px;">'
+        +'<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">💰 الإيرادات الشهرية المتكررة (MRR)</div>'
+        +'<div style="font-size:30px;font-weight:900;color:var(--accent);">'+fmtM(Math.round(monthlyMRR))+' ر.س</div>'
+        +'<div style="font-size:11px;color:var(--text3);margin-top:4px;">التوقع السنوي: '+fmtM(Math.round(monthlyMRR*12))+' ر.س</div>'
+      +'</div>'
+
+      // 4 بطاقات إحصائيات
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">'
+        +'<button onclick="showOwnerTab(1)" style="background:'+(pending.length?'rgba(217,119,6,.1)':'var(--card)')+';border:1px solid '+(pending.length?'rgba(217,119,6,.3)':'var(--border)')+';border-radius:12px;padding:14px;text-align:right;cursor:pointer;font-family:inherit;">'
+          +'<div style="font-size:24px;font-weight:900;color:'+(pending.length?'var(--yellow)':'var(--text3)')+';">'+pending.length+'</div>'
+          +'<div style="font-size:11px;color:var(--text3);">طلبات بانتظار</div>'
+        +'</button>'
+        +'<button onclick="showOwnerTab(2)" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:right;cursor:pointer;font-family:inherit;">'
+          +'<div style="font-size:24px;font-weight:900;color:var(--green);">'+active.length+'</div>'
+          +'<div style="font-size:11px;color:var(--text3);">مشترك نشط</div>'
+        +'</button>'
+        +'<button onclick="showOwnerTab(2)" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:right;cursor:pointer;font-family:inherit;">'
+          +'<div style="font-size:24px;font-weight:900;color:var(--accent);">'+paid.length+'</div>'
+          +'<div style="font-size:11px;color:var(--text3);">مدفوع</div>'
+        +'</button>'
+        +'<button onclick="showOwnerTab(2)" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:right;cursor:pointer;font-family:inherit;">'
+          +'<div style="font-size:24px;font-weight:900;color:var(--text2);">'+freePlan+'</div>'
+          +'<div style="font-size:11px;color:var(--text3);">مجاني</div>'
+        +'</button>'
+      +'</div>'
+
+      // النشاط الأخير
+      +'<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">'
+          +'<div style="font-size:13px;font-weight:800;">📊 نشاط الطلبات</div>'
+          +'<button onclick="showOwnerTab(1)" style="background:none;border:none;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">عرض الكل ←</button>'
+        +'</div>'
+        +'<div style="display:flex;justify-content:space-around;text-align:center;">'
+          +'<div><div style="font-size:18px;font-weight:900;color:var(--accent);">'+todayReqs+'</div><div style="font-size:10px;color:var(--text3);">اليوم</div></div>'
+          +'<div><div style="font-size:18px;font-weight:900;color:var(--blue);">'+weekReqs+'</div><div style="font-size:10px;color:var(--text3);">آخر 7 أيام</div></div>'
+          +'<div><div style="font-size:18px;font-weight:900;color:var(--text2);">'+requests.length+'</div><div style="font-size:10px;color:var(--text3);">الإجمالي</div></div>'
+        +'</div>'
+      +'</div>'
+
+      // آخر الطلبات
+      +(latestReqs.length?
+        '<div style="margin-bottom:14px;">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+            +'<div style="font-size:12px;font-weight:800;color:var(--text2);">🆕 آخر الطلبات</div>'
+            +'<button onclick="showOwnerTab(1)" style="background:none;border:none;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">الكل ←</button>'
+          +'</div>'
+          +latestReqs.map(function(r){
+            var col = r.status==='pending'?'var(--yellow)':r.status==='approved'?'var(--green)':'var(--red)';
+            var lbl = r.status==='pending'?'بانتظار':r.status==='approved'?'مقبول':'مرفوض';
+            return '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">'
+              +'<div style="flex:1;min-width:0;">'
+                +'<div style="font-size:12px;font-weight:700;">'+(r.biz||r.biz_name||r.name||'—')+'</div>'
+                +'<div style="font-size:10px;color:var(--text3);">'+(r.name||'')+' · '+fmtRel(r.created_at)+'</div>'
+              +'</div>'
+              +'<span style="font-size:10px;color:'+col+';font-weight:800;">● '+lbl+'</span>'
+            +'</div>';
+          }).join('')
+        +'</div>':''
+      )
+
+      // آخر المشتركين
+      +(latestSubs.length?
+        '<div>'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+            +'<div style="font-size:12px;font-weight:800;color:var(--text2);">👥 آخر المشتركين</div>'
+            +'<button onclick="showOwnerTab(2)" style="background:none;border:none;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;">الكل ←</button>'
+          +'</div>'
+          +latestSubs.map(function(a){
+            var pkgLbl = a.pkg==='all'?'الشاملة':a.pkg==='pro'?'الاحترافية':'مجانية';
+            var pkgCol = a.pkg==='all'?'var(--accent)':a.pkg==='pro'?'var(--yellow)':'var(--text3)';
+            return '<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">'
+              +'<div style="flex:1;min-width:0;">'
+                +'<div style="font-size:12px;font-weight:700;">'+(a.biz_name||a.email||'—')+'</div>'
+                +'<div style="font-size:10px;color:var(--text3);">'+(a.owner_name||'')+' · '+fmtRel(a.created_at)+'</div>'
+              +'</div>'
+              +'<span style="font-size:10px;color:'+pkgCol+';font-weight:800;background:var(--bg3);padding:3px 8px;border-radius:8px;">'+pkgLbl+'</span>'
+            +'</div>';
+          }).join('')
+        +'</div>':''
+      );
+  }).catch(function(){
+    content.innerHTML='<div style="text-align:center;padding:40px;color:var(--red);">فشل التحميل</div>';
+  });
+}
+
 function renderOwnerRequests(){
   var content=document.getElementById('owner-content');
   content.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3);">جارٍ التحميل...</div>';
 
   sbFetch('join_requests','GET',null,'?select=*&order=created_at.desc').then(function(reqs){
     reqs=reqs||[];
+    // فلترة الطلبات المحذوفة محلياً (لو Supabase DELETE ما اشتغل بسبب RLS)
+    var deleted = (DB._deleted)||{};
+    reqs = reqs.filter(function(r){ return !deleted['joinreq_'+r.id]; });
     DB.joinRequests=reqs;
 
     var pending=reqs.filter(function(r){return r.status==='pending';});
     var approved=reqs.filter(function(r){return r.status==='approved';});
     var rejected=reqs.filter(function(r){return r.status==='rejected';});
+
+    // تحديث شارة الطلبات المعلّقة على التب
+    try{
+      var badge=document.getElementById('otab-1-badge');
+      if(badge){
+        if(pending.length){ badge.textContent=pending.length; badge.style.display='inline-flex'; }
+        else { badge.style.display='none'; }
+      }
+    }catch(e){}
 
     // إحصائيات زمنية
     var now=new Date();
@@ -1956,12 +2202,16 @@ function renderOwnerRequests(){
             +'<span style="font-size:10px;color:'+statusColor+';font-weight:700;">'+statusLabel+'</span>'
           +'</div>'
           +(r.status==='pending'?
-            '<div style="display:flex;gap:6px;">'
-              +'<button class="btn btn-xs btn-success" onclick="approveRequest(\''+r.id+'\')">قبول</button>'
-              +'<button class="btn btn-xs btn-danger" onclick="rejectRequest(\''+r.id+'\')">رفض</button>'
-              +'<button class="btn btn-xs btn-danger" onclick="deleteJoinRequest(\''+r.id+'\')" style="background:rgba(220,38,38,.15);">حذف</button>'
+            '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
+              +'<button onclick="approveRequest(\''+r.id+'\')" style="background:var(--green);color:#fff;border:none;font-size:12px;font-weight:800;padding:8px 14px;border-radius:9px;cursor:pointer;font-family:inherit;">✓ قبول</button>'
+              +'<button onclick="editJoinRequest(\''+r.id+'\')" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:12px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;font-family:inherit;">✎ تعديل</button>'
+              +'<button onclick="rejectRequest(\''+r.id+'\')" style="background:var(--bg3);color:var(--text2);border:1px solid var(--border);font-size:12px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;font-family:inherit;">رفض</button>'
+              +'<button onclick="deleteJoinRequest(\''+r.id+'\')" style="background:rgba(220,38,38,.12);color:var(--red);border:1px solid rgba(220,38,38,.3);font-size:12px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;font-family:inherit;">🗑 حذف</button>'
             +'</div>'
-            :'<button class="btn btn-xs btn-danger" onclick="deleteJoinRequest(\''+r.id+'\')">حذف</button>'
+            :'<div style="display:flex;gap:6px;flex-wrap:wrap;">'
+              +'<button onclick="editJoinRequest(\''+r.id+'\')" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:12px;font-weight:700;padding:8px 12px;border-radius:9px;cursor:pointer;font-family:inherit;">✎ تعديل</button>'
+              +'<button onclick="deleteJoinRequest(\''+r.id+'\')" style="background:rgba(220,38,38,.12);color:var(--red);border:1px solid rgba(220,38,38,.3);font-size:12px;font-weight:700;padding:8px 14px;border-radius:9px;cursor:pointer;font-family:inherit;">🗑 حذف</button>'
+            +'</div>'
           )
         +'</div>'
       +'</div>';
@@ -1996,7 +2246,7 @@ function renderOwnerRequests(){
       +'</div>'
       +(pending.length?'<div style="font-size:12px;font-weight:800;color:var(--yellow);margin-bottom:10px;">🟡 طلبات بانتظار الموافقة</div>'+pending.map(reqCard).join(''):'')
       +(approved.length?'<div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:10px;margin-top:16px;">🟢 تم القبول</div>'+approved.map(reqCard).join(''):'')
-      +(rejected.length?'<div style="font-size:12px;font-weight:800;color:var(--red);margin-bottom:10px;margin-top:16px;">🔴 مرفوضة</div>'+rejected.map(reqCard).join(''):'')
+      +(rejected.length?'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;margin-top:16px;"><div style="font-size:12px;font-weight:800;color:var(--red);">🔴 مرفوضة</div><button onclick="clearAllRejected()" style="background:rgba(220,38,38,.1);color:var(--red);border:1px solid rgba(220,38,38,.3);font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;cursor:pointer;font-family:inherit;">🗑 حذف الكل</button></div>'+rejected.map(reqCard).join(''):'')
       +(!reqs.length?'<div style="text-align:center;padding:40px;color:var(--text3);">لا توجد طلبات بعد</div>':'');
   }).catch(function(){
     content.innerHTML='<div style="text-align:center;padding:40px;color:var(--red);">فشل التحميل</div>';
@@ -2009,6 +2259,123 @@ function _genTempPass(){
   var pass='';
   for(var i=0;i<10;i++) pass+=chars[Math.floor(Math.random()*chars.length)];
   return pass;
+}
+
+function clearAllRejected(){
+  var rejected = (DB.joinRequests||[]).filter(function(r){return r.status==='rejected';});
+  if(!rejected.length){ toast('لا يوجد طلبات مرفوضة','info'); return; }
+  function doClear(){
+    if(!DB._deleted) DB._deleted={};
+    rejected.forEach(function(r){ DB._deleted['joinreq_'+r.id]=Date.now(); });
+    DB.joinRequests=(DB.joinRequests||[]).filter(function(r){return r.status!=='rejected';});
+    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    renderOwnerRequests();
+    var failed = 0;
+    Promise.all(rejected.map(function(r){
+      return sbFetch('join_requests','DELETE',null,'?id=eq.'+r.id).catch(function(){ failed++; });
+    })).then(function(){
+      if(failed) toast('حُذفت '+rejected.length+' محلياً ('+failed+' لم تُحذف من Supabase)','info');
+      else toast('تم حذف '+rejected.length+' طلب','success');
+    });
+  }
+  try{
+    if(typeof showConfirm === 'function' && document.getElementById('confirm-overlay')){
+      showConfirm('حذف كل المرفوضة','هل تريد حذف '+rejected.length+' طلب مرفوض نهائياً؟','حذف الكل','إلغاء',doClear);
+    } else if(window.confirm('حذف '+rejected.length+' طلب مرفوض؟')){
+      doClear();
+    }
+  } catch(e){
+    if(window.confirm('حذف '+rejected.length+' طلب مرفوض؟')) doClear();
+  }
+}
+
+// ── تعديل طلب الاشتراك ──
+function editJoinRequest(id){
+  var req = (DB.joinRequests||[]).find(function(r){return r.id===id;});
+  if(!req){ toast('الطلب غير موجود','error'); return; }
+
+  var ov = document.getElementById('edit-req-overlay');
+  if(!ov){
+    // أنشئ النموذج لأول مرة
+    var div = document.createElement('div');
+    div.id = 'edit-req-overlay';
+    div.style.cssText = 'display:none;position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;';
+    div.onclick = function(e){ if(e.target===div) closeEditReq(); };
+    div.innerHTML =
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto;">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">'
+          +'<div style="font-size:16px;font-weight:800;">تعديل الطلب</div>'
+          +'<button onclick="closeEditReq()" style="background:var(--bg3);border:none;width:32px;height:32px;border-radius:8px;font-size:18px;cursor:pointer;color:var(--text2);">×</button>'
+        +'</div>'
+        +'<input type="hidden" id="edr-id">'
+        +'<div class="form-group"><label class="form-label">اسم النشاط</label><input class="fi" id="edr-biz" type="text"></div>'
+        +'<div class="form-group"><label class="form-label">اسم المالك</label><input class="fi" id="edr-name" type="text"></div>'
+        +'<div class="form-group"><label class="form-label">رقم الجوال</label><input class="fi" id="edr-phone" type="tel"></div>'
+        +'<div class="form-group"><label class="form-label">البريد الإلكتروني</label><input class="fi" id="edr-email" type="email"></div>'
+        +'<div class="form-row">'
+          +'<div class="form-group" style="margin:0"><label class="form-label">الباقة</label>'
+            +'<select class="fi" id="edr-pkg"><option value="free">مجانية</option><option value="pro">احترافية</option><option value="all">شاملة</option></select>'
+          +'</div>'
+          +'<div class="form-group" style="margin:0"><label class="form-label">الفوترة</label>'
+            +'<select class="fi" id="edr-billing"><option value="شهري">شهري</option><option value="سنوي">سنوي</option></select>'
+          +'</div>'
+        +'</div>'
+        +'<div style="display:flex;gap:10px;margin-top:18px;">'
+          +'<button onclick="saveJoinRequestEdit()" class="btn btn-primary" style="flex:1;font-weight:800;padding:12px;">💾 حفظ</button>'
+          +'<button onclick="closeEditReq()" style="flex:1;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-weight:700;padding:12px;border-radius:10px;cursor:pointer;font-family:inherit;">إلغاء</button>'
+        +'</div>'
+      +'</div>';
+    document.body.appendChild(div);
+    ov = div;
+  }
+
+  // املأ الحقول
+  document.getElementById('edr-id').value = req.id;
+  document.getElementById('edr-biz').value = req.biz || req.biz_name || '';
+  document.getElementById('edr-name').value = req.name || '';
+  document.getElementById('edr-phone').value = req.phone || '';
+  document.getElementById('edr-email').value = req.email || '';
+  document.getElementById('edr-pkg').value = req.pkg || 'free';
+  document.getElementById('edr-billing').value = req.billing || 'شهري';
+  ov.style.display = 'flex';
+}
+
+function closeEditReq(){
+  var ov = document.getElementById('edit-req-overlay');
+  if(ov) ov.style.display='none';
+}
+
+function saveJoinRequestEdit(){
+  var id = document.getElementById('edr-id').value;
+  var updates = {
+    biz: document.getElementById('edr-biz').value.trim(),
+    biz_name: document.getElementById('edr-biz').value.trim(),
+    name: document.getElementById('edr-name').value.trim(),
+    phone: document.getElementById('edr-phone').value.trim(),
+    email: document.getElementById('edr-email').value.trim().toLowerCase(),
+    pkg: document.getElementById('edr-pkg').value,
+    billing: document.getElementById('edr-billing').value
+  };
+  // أعد حساب السعر
+  var pkg = PKG_PRICES[updates.pkg];
+  if(pkg) updates.price = updates.billing==='سنوي' ? pkg.yearly : pkg.monthly;
+
+  // تحديث محلي فوري
+  if(DB.joinRequests){
+    DB.joinRequests = DB.joinRequests.map(function(r){
+      return r.id===id ? Object.assign({},r,updates) : r;
+    });
+    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  }
+  closeEditReq();
+  renderOwnerRequests();
+
+  // تحديث في Supabase
+  sbFetch('join_requests','PATCH',updates,'?id=eq.'+id).then(function(){
+    toast('✅ تم حفظ التعديلات','success');
+  }).catch(function(){
+    toast('حُفظ محلياً — لم يُحدَّث في Supabase','info');
+  });
 }
 function approveRequest(id){
   var btn=document.querySelector('[onclick="approveRequest(\''+id+'\')"]');
@@ -2107,20 +2474,36 @@ function rejectRequest(id){
 }
 
 function deleteJoinRequest(id){
-  showConfirm('حذف الطلب', 'هل تريد حذف هذا الطلب نهائياً؟ لا يمكن التراجع.', 'حذف', 'إلغاء', function(){
-    // حذف فوري من الواجهة (Optimistic Update)
+  function doDelete(){
+    // تتبع محلي للطلبات المحذوفة — يبقى حتى لو Supabase ما سمح
+    if(!DB._deleted) DB._deleted = {};
+    DB._deleted['joinreq_'+id] = Date.now();
+
+    // حذف فوري من الواجهة
     if(DB.joinRequests){
       DB.joinRequests = DB.joinRequests.filter(function(r){return r.id!==id;});
-      try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
     }
+    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
     renderOwnerRequests();
+
     // حذف من Supabase بالخلفية
     sbFetch('join_requests','DELETE',null,'?id=eq.'+id).then(function(){
       toast('تم حذف الطلب','success');
     }).catch(function(err){
-      toast('تم الحذف محلياً — تحقق من الصلاحيات في Supabase','info');
+      toast('الحذف ظاهر هنا فقط — فعّل صلاحية DELETE في Supabase','info');
     });
-  });
+  }
+
+  // جرّب showConfirm، وإذا ما اشتغل لأي سبب استخدم confirm العادي
+  try{
+    if(typeof showConfirm === 'function' && document.getElementById('confirm-overlay')){
+      showConfirm('حذف الطلب', 'هل تريد حذف هذا الطلب نهائياً؟ لا يمكن التراجع.', 'حذف', 'إلغاء', doDelete);
+    } else if(window.confirm('هل تريد حذف هذا الطلب نهائياً؟')){
+      doDelete();
+    }
+  } catch(e){
+    if(window.confirm('هل تريد حذف هذا الطلب نهائياً؟')) doDelete();
+  }
 }
 
 function renderOwnerSubscribers(){
@@ -2134,16 +2517,20 @@ function renderOwnerSubscribers(){
     var accounts=results[0]||[];
     var approved=results[1]||[];
 
-    // دمج — أي طلب مقبول ما له حساب نضيفه
+    // دمج — أي طلب مقبول ما له حساب نضيفه + اربط بيانات الباقة (billing) بالحساب
     approved.forEach(function(r){
       var bizId=(r.email||'').toLowerCase().replace(/[^a-z0-9]/g,'_');
-      var exists=accounts.find(function(a){return a.id===bizId||a.email===(r.email||'').toLowerCase();});
-      if(!exists){
+      var existing=accounts.find(function(a){return a.id===bizId||a.email===(r.email||'').toLowerCase();});
+      if(!existing){
         accounts.push({
           id:bizId,email:r.email,biz_name:r.biz||r.biz_name||r.name,
           owner_name:r.name,phone:r.phone,pkg:r.pkg||'free',
-          status:'active',_fromRequest:true,_reqId:r.id
+          status:'active',_fromRequest:true,_reqId:r.id,
+          created_at:r.created_at, _billing:r.billing||'شهري'
         });
+      } else {
+        // اربط معلومات الباقة الشهرية/السنوية
+        existing._billing = r.billing || existing._billing || 'شهري';
       }
     });
 
@@ -2199,10 +2586,37 @@ function renderOwnerSubscribers(){
 
 function _renderSubsList(accounts){
   if(!accounts.length) return '<div style="text-align:center;padding:40px;color:var(--text3);">لا توجد نتائج</div>';
+
+  function fmtArDate(s){
+    if(!s) return '—';
+    var d = new Date(s); if(isNaN(d)) return '—';
+    var months=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    return d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear();
+  }
+  function daysBetween(end, now){
+    return Math.ceil((end - now) / 86400000);
+  }
+
   return accounts.map(function(a){
     var pkgLabel=a.pkg==='all'?'الشاملة':a.pkg==='pro'?'الاحترافية':'المجانية';
     var pkgColor=a.pkg==='all'?'var(--accent)':a.pkg==='pro'?'var(--yellow)':'var(--text3)';
     var isKaled=a.id==='kaled';
+
+    // حساب تاريخ البداية والنهاية
+    var startDate = a.created_at ? new Date(a.created_at) : null;
+    var billing = a._billing || 'شهري';
+    var isPaidPkg = a.pkg==='pro' || a.pkg==='all';
+    var endDate = null;
+    if(startDate && isPaidPkg){
+      endDate = new Date(startDate);
+      if(billing==='سنوي') endDate.setFullYear(endDate.getFullYear()+1);
+      else endDate.setMonth(endDate.getMonth()+1);
+    }
+    var now = new Date();
+    var daysLeft = endDate ? daysBetween(endDate, now) : null;
+    var expiryColor = daysLeft===null ? 'var(--text3)' : daysLeft<=0 ? 'var(--red)' : daysLeft<=7 ? 'var(--yellow)' : 'var(--green)';
+    var expiryNote = daysLeft===null ? '' : daysLeft<=0 ? ' (منتهي)' : daysLeft<=7 ? ' ('+daysLeft+' يوم)' : '';
+
     return '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:10px;">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">'
         +'<div style="flex:1;min-width:0;">'
@@ -2213,6 +2627,18 @@ function _renderSubsList(accounts){
         +'</div>'
         +'<span style="background:var(--bg3);color:'+pkgColor+';font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;flex-shrink:0;">'+pkgLabel+'</span>'
       +'</div>'
+      // تواريخ الاشتراك
+      +(!isKaled?
+        '<div style="background:var(--bg3);border-radius:10px;padding:10px 12px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+          +'<div>'
+            +'<div style="font-size:9px;color:var(--text3);margin-bottom:2px;">📅 تاريخ البداية</div>'
+            +'<div style="font-size:11px;font-weight:700;color:var(--text2);">'+fmtArDate(a.created_at)+'</div>'
+          +'</div>'
+          +'<div>'
+            +'<div style="font-size:9px;color:var(--text3);margin-bottom:2px;">⏰ تاريخ الانتهاء</div>'
+            +'<div style="font-size:11px;font-weight:700;color:'+expiryColor+';">'+(endDate?fmtArDate(endDate.toISOString()):'لا ينتهي')+expiryNote+'</div>'
+          +'</div>'
+        +'</div>':'')
       +'<div style="display:flex;gap:8px;flex-wrap:wrap;">'
         +(!isKaled&&!a._fromRequest?'<button onclick="editSubscriber(\''+a.id+'\')" style="flex:1;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text);">تعديل</button>':'')
         +(!isKaled&&!a._fromRequest?'<button onclick="deleteSubscriber(\''+a.id+'\',\''+(a.biz_name||a.id).replace(/'/g,"\\'")+'\')" style="flex:1;padding:8px;background:rgba(220,38,38,.1);border:1px solid var(--red);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--red);">حذف</button>':'')
@@ -2451,8 +2877,12 @@ function renderOwnerSettings(){
         +'<input id="ow-new-pass" class="fi" type="password" placeholder="••••••••"></div>'
       +'<button class="btn btn-primary btn-sm" onclick="changeOwnerPass()">تغيير كلمة المرور</button>'
     +'</div>'
-    +'<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px;">'
-      +'<div style="font-size:13px;font-weight:800;margin-bottom:14px;">📬 إعدادات الإشعارات</div>'
+    +'<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px;position:relative;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px;">'
+        +'<div style="font-size:13px;font-weight:800;">📬 إعدادات الإشعارات</div>'
+        +'<span style="background:rgba(217,119,6,.15);color:var(--yellow);font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px;border:1px solid rgba(217,119,6,.3);white-space:nowrap;">⏳ لم يتم التفعيل بعد</span>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--text3);background:var(--bg3);padding:9px 12px;border-radius:9px;margin-bottom:12px;line-height:1.6;">هذه الحقول محفوظة كتمهيد للميزة. سيتم تفعيل الإشعارات التلقائية لاحقاً.</div>'
       +'<div class="form-group"><label class="form-label">رقم واتساب الإشعارات</label>'
         +'<input id="ow-wa" class="fi" type="tel" placeholder="966xxxxxxxxx" value="'+(cfg.whatsapp||'')+'"></div>'
       +'<div class="form-group"><label class="form-label">البريد الإلكتروني للإشعارات</label>'
