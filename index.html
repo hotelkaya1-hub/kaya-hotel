@@ -2339,7 +2339,20 @@ function initAuth(){
     currentUser=saved;
     DB=_freshDB(saved.bizId||saved.username.toLowerCase());
     if(saved.role==='subscriber'){
-      DB.subscriberInfo={bizId:saved.bizId,email:saved.username,bizName:saved.bizName};
+      // جلب بيانات المشترك من Supabase عند الدخول التلقائي
+      sbFetch('biz_accounts','GET',null,'?id=eq.'+(saved.bizId||'')+'&select=*').then(function(data){
+        if(data&&data.length){
+          var a=data[0];
+          DB.subscriberInfo={
+            email:a.email,name:a.owner_name,bizName:a.biz_name,
+            bizType:a.biz_type||'',pkg:a.pkg||'free',
+            status:a.status||'active',bizId:saved.bizId,phone:a.phone||''
+          };
+          DB.bizName=a.biz_name;
+          if(_currentPage==='settings') renderSettings();
+        }
+      }).catch(function(){});
+      DB.subscriberInfo={bizId:saved.bizId,email:saved.username,bizName:saved.bizName,pkg:saved.pkg||'free'};
       DB.bizName=saved.bizName||'';
     }
     showApp();
@@ -2398,7 +2411,16 @@ function doLogin(){
     currentUser={username:acct.email,role:'subscriber',fullname:acct.owner_name,bizId:bizId,bizName:acct.biz_name,pkg:acct.pkg};
     _clearSession();
     DB=_freshDB(bizId);
-    DB.subscriberInfo={email:acct.email,name:acct.owner_name,bizName:acct.biz_name,bizType:acct.biz_type,pkg:acct.pkg,status:'active',bizId:bizId};
+    DB.subscriberInfo={
+      email:acct.email,
+      name:acct.owner_name,
+      bizName:acct.biz_name,
+      bizType:acct.biz_type||'',
+      pkg:acct.pkg||'free',
+      status:acct.status||'active',
+      bizId:bizId,
+      phone:acct.phone||''
+    };
     DB.bizName=acct.biz_name;
     _saveSession(currentUser);
     showApp();
@@ -5546,49 +5568,19 @@ function initRealtime(){
   });
   _startWS();
 }
-var _ws=null;
-var _wsRetry=0;
-function _startWS(){
-  try{
-    if(_ws){try{_ws.close();}catch(e){} _ws=null;}
-    const url=SB_URL.replace('https://','wss://')+'/realtime/v1/websocket?apikey='+SB_KEY+'&vsn=1.0.0';
-    const ws=new WebSocket(url);
-    _ws=ws;
-    let hb=null,ref=1;
+var _pollTimer=null;
 
-    ws.onopen=function(){
-      _wsRetry=0; // reset on success
-      hb=setInterval(function(){
-        if(ws.readyState===1) ws.send(JSON.stringify({topic:'phoenix',event:'heartbeat',payload:{},ref:String(ref++)}));
-      },25000);
-      ws.send(JSON.stringify({
-        topic:'realtime:public',event:'phx_join',ref:String(ref++),
-        payload:{config:{postgres_changes:[{event:'*',schema:'public'}]}}
-      }));
-    };
-
-    ws.onmessage=function(e){
-      try{
-        const m=JSON.parse(e.data);
-        if(m.event==='postgres_changes'||(m.payload&&m.payload.commit_timestamp)) loadAllData();
-      }catch(x){}
-    };
-
-    ws.onclose=function(){
-      clearInterval(hb);
-      // Exponential backoff: 1s, 2s, 4s, 8s, max 30s
-      const delay=Math.min(1000*Math.pow(2,_wsRetry),30000);
-      _wsRetry++;
-      setTimeout(_startWS,delay);
-    };
-
-    ws.onerror=function(){try{ws.close();}catch(e){}};
-  }catch(e){
-    const delay=Math.min(1000*Math.pow(2,_wsRetry),30000);
-    _wsRetry++;
-    setTimeout(_startWS,delay);
-  }
+function initRealtime(){
+  clearInterval(_pollTimer);
+  // Poll every 3 seconds - reliable without WebSocket
+  _pollTimer=setInterval(loadAllData, 3000);
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState==='visible') loadAllData();
+  });
 }
+
+// No WebSocket - polling is sufficient for free plan
+function _startWS(){ /* disabled - using polling */ }
 
 // pending saves helpers
 var _pendingSaves={};
