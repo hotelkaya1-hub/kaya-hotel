@@ -2662,7 +2662,10 @@ function _renderSubsList(accounts){
     var billing = a._billing || 'شهري';
     var isPaidPkg = a.pkg==='pro' || a.pkg==='all';
     var endDate = null;
-    if(startDate && isPaidPkg){
+    // الأولوية: تاريخ النهاية المحفوظ في DB، ثم حساب تقديري
+    if(a.subscription_end){
+      endDate = new Date(a.subscription_end);
+    } else if(startDate && isPaidPkg){
       endDate = new Date(startDate);
       if(billing==='سنوي') endDate.setFullYear(endDate.getFullYear()+1);
       else endDate.setMonth(endDate.getMonth()+1);
@@ -5344,8 +5347,9 @@ function renderSubscriberInfo(){
   var sub=DB.subscriberInfo||{};
   var pkg=sub.pkg?PKG_PRICES[sub.pkg]:null;
 
-  // جلب البيانات إذا كانت ناقصة (الباقة أو الاسم أو الجوال أو نوع النشاط أو التاريخ)
-  var dataIncomplete = !pkg || !sub.name || !sub.phone || !sub.bizType || !sub.date;
+  // جلب البيانات إذا كانت ناقصة (الباقة أو الاسم أو الجوال أو نوع النشاط أو التاريخ أو تاريخ الانتهاء للباقات المدفوعة)
+  var hasPaidPkg = sub.pkg==='pro' || sub.pkg==='all';
+  var dataIncomplete = !pkg || !sub.name || !sub.phone || !sub.bizType || !sub.date || (hasPaidPkg && !sub.expiryDate);
   if(dataIncomplete && currentUser && currentUser.role==='subscriber'){
     sbFetch('biz_accounts','GET',null,'?id=eq.'+getBizId()+'&select=*').then(function(data){
       if(data&&data.length){
@@ -5409,8 +5413,7 @@ function renderSubscriberInfo(){
   el.innerHTML = expiryWarning
     +'<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">'
     +'<div style="background:linear-gradient(135deg,rgba(200,169,110,.1),transparent);padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">'
-      +'<div><div style="font-size:15px;font-weight:900;color:var(--accent);">'+pkg.label+'</div>'
-      +'<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+(sub.billing==='سنوي'?sub.yearly+' ر.س/سنة':(sub.price||pkg.monthly)+' ر.س/شهر')+'</div></div>'
+      +'<div style="font-size:15px;font-weight:900;color:var(--accent);">باقة '+pkg.label+'</div>'
       +'<span style="font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;background:rgba(0,0,0,.06);color:'+st.c+';">'+st.l+'</span>'
     +'</div>'
     +'<div style="padding:6px 16px 14px;">'
