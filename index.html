@@ -1,8 +1,4 @@
-<button class="owner-otab active" id="otab-1" onclick="showOwnerTab(1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>الطلبات</span></button>
-        <button class="owner-otab" id="otab-2" onclick="showOwnerTab(2)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>المشتركون</span></button>
-        <button class="owner-otab" id="otab-3" onclick="showOwnerTab(3)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>الإيرادات</span></button>
-        <button class="owner-otab" id="otab-4" onclick="showOwnerTab(4)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg><span>الباقات</span></button>
-        <button class="owner-otab" id="otab-5" onclick="showOwnerTab(5)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>الإعدادات</span></button><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl" style="scroll-behavior:smooth;">
 <head>
 <meta charset="UTF-8">
@@ -490,7 +486,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
   overflow:hidden;
 }
 /* ─ Mobile nav: horizontal tabs ─ */
-#owner-nav {
+#owner-screen #owner-nav {
   display:flex;
   flex-direction:row;
   flex-shrink:0;
@@ -500,15 +496,15 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
   background:var(--card);
   border-bottom:1px solid var(--border);
 }
-#owner-nav::-webkit-scrollbar{display:none;}
-#owner-content {
+#owner-screen #owner-nav::-webkit-scrollbar{display:none;}
+#owner-screen #owner-content {
   flex:1;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
   padding:20px 16px calc(env(safe-area-inset-bottom,0px) + 32px);
   min-height:0;
 }
-.owner-otab {
+#owner-screen .owner-otab {
   flex-shrink:0;
   display:flex;
   flex-direction:row-reverse;
@@ -526,15 +522,15 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
   font-family:'Cairo',sans-serif;
   transition:color .15s;
 }
-.owner-otab.active { color:var(--accent);border-bottom-color:var(--accent); }
+#owner-screen .owner-otab.active { color:var(--accent);border-bottom-color:var(--accent); }
 
 /* ─ Desktop: sidebar layout ─ */
 @media(min-width:1024px){
   #owner-screen { overflow:hidden; }
-  #owner-body {
+  #owner-screen #owner-body {
     flex-direction:row-reverse !important;
   }
-  #owner-nav {
+  #owner-screen #owner-nav {
     flex-direction:column !important;
     flex-shrink:0 !important;
     width:240px !important;
@@ -546,7 +542,7 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     padding-top:8px !important;
     background:var(--bg2) !important;
   }
-  .owner-otab {
+  #owner-screen .owner-otab {
     display:flex !important;
     flex-direction:row !important;
     align-items:center !important;
@@ -560,14 +556,14 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
     gap:10px !important;
     direction:ltr !important;
   }
-  .owner-otab span { flex:1; text-align:right; }
-  .owner-otab.active {
+  #owner-screen .owner-otab span { flex:1; text-align:right; }
+  #owner-screen .owner-otab.active {
     background:var(--gold) !important;
     border-right-color:var(--accent) !important;
     color:var(--accent) !important;
   }
-  .owner-otab:hover:not(.active){ background:var(--bg3) !important; }
-  #owner-content {
+  #owner-screen .owner-otab:hover:not(.active){ background:var(--bg3) !important; }
+  #owner-screen #owner-content {
     padding:28px 40px 60px !important;
     flex:1 !important;
     min-width:0 !important;
@@ -2349,10 +2345,19 @@ function initAuth(){
             status:a.status||'active',bizId:saved.bizId,phone:a.phone||''
           };
           DB.bizName=a.biz_name;
+          if(a.biz_type) DB.bizType=a.biz_type;
+          try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
           if(_currentPage==='settings') renderSettings();
         }
       }).catch(function(){});
-      DB.subscriberInfo={bizId:saved.bizId,email:saved.username,bizName:saved.bizName,pkg:saved.pkg||'free'};
+      // بيانات مبدئية من الجلسة (قبل ما يرجع الفتش)
+      DB.subscriberInfo={
+        bizId:saved.bizId,
+        email:saved.username,
+        bizName:saved.bizName||'',
+        name:saved.fullname||'',
+        pkg:saved.pkg||'free'
+      };
       DB.bizName=saved.bizName||'';
     }
     showApp();
@@ -4508,20 +4513,30 @@ function renderSubscriberInfo(){
   var sub=DB.subscriberInfo||{};
   var pkg=sub.pkg?PKG_PRICES[sub.pkg]:null;
 
-  if(!pkg&&currentUser&&currentUser.role==='subscriber'){
-    // جلب بيانات الاشتراك من Supabase
+  // جلب البيانات إذا كانت ناقصة (الباقة أو الاسم أو الجوال أو نوع النشاط)
+  var dataIncomplete = !pkg || !sub.name || !sub.phone || !sub.bizType;
+  if(dataIncomplete && currentUser && currentUser.role==='subscriber'){
     sbFetch('biz_accounts','GET',null,'?id=eq.'+getBizId()+'&select=*').then(function(data){
       if(data&&data.length){
         var a=data[0];
         DB.subscriberInfo=Object.assign(DB.subscriberInfo||{},{
-          pkg:a.pkg,bizName:a.biz_name,name:a.owner_name,
-          email:a.email,phone:a.phone,status:a.status,bizId:getBizId()
+          pkg:a.pkg, bizName:a.biz_name, name:a.owner_name,
+          email:a.email, phone:a.phone, status:a.status,
+          bizType:a.biz_type||'', bizId:getBizId()
         });
+        if(a.biz_name) DB.bizName=a.biz_name;
+        if(a.biz_type) DB.bizType=a.biz_type;
+        try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
         renderSubscriberInfo();
+        renderProfileFields();
       }
-    });
-    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">جارٍ تحميل بيانات الحساب...</div>';
-    return;
+    }).catch(function(){});
+    // إذا ما عندنا حتى الباقة، نعرض حالة التحميل
+    if(!pkg){
+      el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;">جارٍ تحميل بيانات الحساب...</div>';
+      return;
+    }
+    // عندنا الباقة بس ناقص حقول أخرى — نكمل عرض الكرت والـ fetch يحدثها بالخلفية
   }
   if(!pkg){
     el.innerHTML='<div style="background:linear-gradient(135deg,rgba(200,169,110,.1),rgba(200,169,110,.04));border:1px solid var(--goldb);border-radius:14px;padding:16px;margin-bottom:4px;display:flex;align-items:center;gap:12px;">'
