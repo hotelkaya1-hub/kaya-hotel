@@ -2057,6 +2057,19 @@ function renderOwnerHome(){
       +'</div>'
 
       // 4 بطاقات إحصائيات
+      // بطاقتان كبيرتان: إجمالي الطلبات + إجمالي المشتركين
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">'
+        +'<button onclick="showOwnerTab(1)" style="background:linear-gradient(135deg,rgba(124,140,248,.12),rgba(124,140,248,.03));border:1px solid rgba(124,140,248,.3);border-radius:14px;padding:16px;text-align:right;cursor:pointer;font-family:inherit;">'
+          +'<div style="font-size:11px;color:var(--text3);margin-bottom:4px;">📋 إجمالي الطلبات</div>'
+          +'<div style="font-size:28px;font-weight:900;color:var(--blue);line-height:1;">'+requests.length+'</div>'
+        +'</button>'
+        +'<button onclick="showOwnerTab(2)" style="background:linear-gradient(135deg,rgba(52,211,153,.12),rgba(52,211,153,.03));border:1px solid rgba(52,211,153,.3);border-radius:14px;padding:16px;text-align:right;cursor:pointer;font-family:inherit;">'
+          +'<div style="font-size:11px;color:var(--text3);margin-bottom:4px;">👥 إجمالي المشتركين</div>'
+          +'<div style="font-size:28px;font-weight:900;color:var(--green);line-height:1;">'+(accounts.filter(function(a){return a.id!=='kaled';}).length)+'</div>'
+        +'</button>'
+      +'</div>'
+
+      // 4 بطاقات تفصيل
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">'
         +'<button onclick="showOwnerTab(1)" style="background:'+(pending.length?'rgba(217,119,6,.1)':'var(--card)')+';border:1px solid '+(pending.length?'rgba(217,119,6,.3)':'var(--border)')+';border-radius:12px;padding:14px;text-align:right;cursor:pointer;font-family:inherit;">'
           +'<div style="font-size:24px;font-weight:900;color:'+(pending.length?'var(--yellow)':'var(--text3)')+';">'+pending.length+'</div>'
@@ -2264,29 +2277,20 @@ function _genTempPass(){
 function clearAllRejected(){
   var rejected = (DB.joinRequests||[]).filter(function(r){return r.status==='rejected';});
   if(!rejected.length){ toast('لا يوجد طلبات مرفوضة','info'); return; }
-  function doClear(){
-    if(!DB._deleted) DB._deleted={};
-    rejected.forEach(function(r){ DB._deleted['joinreq_'+r.id]=Date.now(); });
-    DB.joinRequests=(DB.joinRequests||[]).filter(function(r){return r.status!=='rejected';});
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-    renderOwnerRequests();
-    var failed = 0;
-    Promise.all(rejected.map(function(r){
-      return sbFetch('join_requests','DELETE',null,'?id=eq.'+r.id).catch(function(){ failed++; });
-    })).then(function(){
-      if(failed) toast('حُذفت '+rejected.length+' محلياً ('+failed+' لم تُحذف من Supabase)','info');
-      else toast('تم حذف '+rejected.length+' طلب','success');
-    });
-  }
-  try{
-    if(typeof showConfirm === 'function' && document.getElementById('confirm-overlay')){
-      showConfirm('حذف كل المرفوضة','هل تريد حذف '+rejected.length+' طلب مرفوض نهائياً؟','حذف الكل','إلغاء',doClear);
-    } else if(window.confirm('حذف '+rejected.length+' طلب مرفوض؟')){
-      doClear();
-    }
-  } catch(e){
-    if(window.confirm('حذف '+rejected.length+' طلب مرفوض؟')) doClear();
-  }
+  if(!window.confirm('حذف '+rejected.length+' طلب مرفوض نهائياً؟')) return;
+
+  if(!DB._deleted) DB._deleted={};
+  rejected.forEach(function(r){ DB._deleted['joinreq_'+r.id]=Date.now(); });
+  DB.joinRequests=(DB.joinRequests||[]).filter(function(r){return r.status!=='rejected';});
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  renderOwnerRequests();
+  var failed = 0;
+  Promise.all(rejected.map(function(r){
+    return sbFetch('join_requests','DELETE',null,'?id=eq.'+r.id).catch(function(){ failed++; });
+  })).then(function(){
+    if(failed) toast('حُذفت '+rejected.length+' محلياً ('+failed+' لم تُحذف من Supabase)','info');
+    else toast('تم حذف '+rejected.length+' طلب','success');
+  });
 }
 
 // ── تعديل طلب الاشتراك ──
@@ -2308,10 +2312,13 @@ function editJoinRequest(id){
           +'<button onclick="closeEditReq()" style="background:var(--bg3);border:none;width:32px;height:32px;border-radius:8px;font-size:18px;cursor:pointer;color:var(--text2);">×</button>'
         +'</div>'
         +'<input type="hidden" id="edr-id">'
+        +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px;letter-spacing:1px;">معلومات العميل</div>'
         +'<div class="form-group"><label class="form-label">اسم النشاط</label><input class="fi" id="edr-biz" type="text"></div>'
         +'<div class="form-group"><label class="form-label">اسم المالك</label><input class="fi" id="edr-name" type="text"></div>'
         +'<div class="form-group"><label class="form-label">رقم الجوال</label><input class="fi" id="edr-phone" type="tel"></div>'
         +'<div class="form-group"><label class="form-label">البريد الإلكتروني</label><input class="fi" id="edr-email" type="email"></div>'
+
+        +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:16px 0 8px;letter-spacing:1px;">الباقة والفوترة</div>'
         +'<div class="form-row">'
           +'<div class="form-group" style="margin:0"><label class="form-label">الباقة</label>'
             +'<select class="fi" id="edr-pkg"><option value="free">مجانية</option><option value="pro">احترافية</option><option value="all">شاملة</option></select>'
@@ -2320,6 +2327,18 @@ function editJoinRequest(id){
             +'<select class="fi" id="edr-billing"><option value="شهري">شهري</option><option value="سنوي">سنوي</option></select>'
           +'</div>'
         +'</div>'
+
+        +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:16px 0 8px;letter-spacing:1px;">📅 تواريخ الاشتراك</div>'
+        +'<div class="form-row">'
+          +'<div class="form-group" style="margin:0"><label class="form-label">تاريخ البداية</label>'
+            +'<input class="fi" id="edr-start" type="date">'
+          +'</div>'
+          +'<div class="form-group" style="margin:0"><label class="form-label">تاريخ النهاية</label>'
+            +'<input class="fi" id="edr-end" type="date">'
+          +'</div>'
+        +'</div>'
+        +'<div style="font-size:10px;color:var(--text3);margin-bottom:6px;background:var(--bg3);padding:7px 10px;border-radius:8px;line-height:1.5;">💡 تاريخ النهاية يُحسب تلقائياً من البداية + الفوترة. غيّره يدوياً للتمديد.</div>'
+
         +'<div style="display:flex;gap:10px;margin-top:18px;">'
           +'<button onclick="saveJoinRequestEdit()" class="btn btn-primary" style="flex:1;font-weight:800;padding:12px;">💾 حفظ</button>'
           +'<button onclick="closeEditReq()" style="flex:1;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-weight:700;padding:12px;border-radius:10px;cursor:pointer;font-family:inherit;">إلغاء</button>'
@@ -2337,6 +2356,20 @@ function editJoinRequest(id){
   document.getElementById('edr-email').value = req.email || '';
   document.getElementById('edr-pkg').value = req.pkg || 'free';
   document.getElementById('edr-billing').value = req.billing || 'شهري';
+
+  // التواريخ
+  var startISO = (req.created_at||req.date||'').slice(0,10);
+  document.getElementById('edr-start').value = startISO;
+  // احسب تاريخ النهاية المتوقع
+  var endVal = req.subscription_end || req.end_date;
+  if(!endVal && startISO){
+    var s = new Date(startISO);
+    if(req.billing==='سنوي') s.setFullYear(s.getFullYear()+1);
+    else s.setMonth(s.getMonth()+1);
+    endVal = s.toISOString().slice(0,10);
+  }
+  document.getElementById('edr-end').value = endVal||'';
+
   ov.style.display = 'flex';
 }
 
@@ -2347,6 +2380,8 @@ function closeEditReq(){
 
 function saveJoinRequestEdit(){
   var id = document.getElementById('edr-id').value;
+  var startVal = document.getElementById('edr-start').value;
+  var endVal = document.getElementById('edr-end').value;
   var updates = {
     biz: document.getElementById('edr-biz').value.trim(),
     biz_name: document.getElementById('edr-biz').value.trim(),
@@ -2360,6 +2395,10 @@ function saveJoinRequestEdit(){
   var pkg = PKG_PRICES[updates.pkg];
   if(pkg) updates.price = updates.billing==='سنوي' ? pkg.yearly : pkg.monthly;
 
+  // التواريخ — نحفظها في created_at + subscription_end (إذا الأعمدة موجودة)
+  if(startVal) updates.created_at = new Date(startVal+'T00:00:00').toISOString();
+  if(endVal) updates.subscription_end = new Date(endVal+'T23:59:59').toISOString();
+
   // تحديث محلي فوري
   if(DB.joinRequests){
     DB.joinRequests = DB.joinRequests.map(function(r){
@@ -2370,11 +2409,21 @@ function saveJoinRequestEdit(){
   closeEditReq();
   renderOwnerRequests();
 
-  // تحديث في Supabase
+  // تحديث في Supabase — حاول مع subscription_end، ولو فشل أعد المحاولة بدونه
   sbFetch('join_requests','PATCH',updates,'?id=eq.'+id).then(function(){
     toast('✅ تم حفظ التعديلات','success');
   }).catch(function(){
-    toast('حُفظ محلياً — لم يُحدَّث في Supabase','info');
+    // ربما عمود subscription_end غير موجود — احذفه وأعد المحاولة
+    if(updates.subscription_end){
+      var u2 = Object.assign({},updates); delete u2.subscription_end;
+      sbFetch('join_requests','PATCH',u2,'?id=eq.'+id).then(function(){
+        toast('✅ حُفظ (تاريخ النهاية محلياً فقط — أضف عمود subscription_end)','info');
+      }).catch(function(){
+        toast('حُفظ محلياً — تحقق من صلاحيات Supabase','info');
+      });
+    } else {
+      toast('حُفظ محلياً — تحقق من صلاحيات Supabase','info');
+    }
   });
 }
 function approveRequest(id){
@@ -2474,36 +2523,25 @@ function rejectRequest(id){
 }
 
 function deleteJoinRequest(id){
-  function doDelete(){
-    // تتبع محلي للطلبات المحذوفة — يبقى حتى لو Supabase ما سمح
-    if(!DB._deleted) DB._deleted = {};
-    DB._deleted['joinreq_'+id] = Date.now();
+  if(!window.confirm('هل تريد حذف هذا الطلب نهائياً؟ لا يمكن التراجع.')) return;
 
-    // حذف فوري من الواجهة
-    if(DB.joinRequests){
-      DB.joinRequests = DB.joinRequests.filter(function(r){return r.id!==id;});
-    }
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-    renderOwnerRequests();
+  // تتبع محلي للطلبات المحذوفة — يبقى حتى لو Supabase ما سمح
+  if(!DB._deleted) DB._deleted = {};
+  DB._deleted['joinreq_'+id] = Date.now();
 
-    // حذف من Supabase بالخلفية
-    sbFetch('join_requests','DELETE',null,'?id=eq.'+id).then(function(){
-      toast('تم حذف الطلب','success');
-    }).catch(function(err){
-      toast('الحذف ظاهر هنا فقط — فعّل صلاحية DELETE في Supabase','info');
-    });
+  // حذف فوري من الواجهة
+  if(DB.joinRequests){
+    DB.joinRequests = DB.joinRequests.filter(function(r){return r.id!==id;});
   }
+  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  renderOwnerRequests();
 
-  // جرّب showConfirm، وإذا ما اشتغل لأي سبب استخدم confirm العادي
-  try{
-    if(typeof showConfirm === 'function' && document.getElementById('confirm-overlay')){
-      showConfirm('حذف الطلب', 'هل تريد حذف هذا الطلب نهائياً؟ لا يمكن التراجع.', 'حذف', 'إلغاء', doDelete);
-    } else if(window.confirm('هل تريد حذف هذا الطلب نهائياً؟')){
-      doDelete();
-    }
-  } catch(e){
-    if(window.confirm('هل تريد حذف هذا الطلب نهائياً؟')) doDelete();
-  }
+  // حذف من Supabase بالخلفية
+  sbFetch('join_requests','DELETE',null,'?id=eq.'+id).then(function(){
+    toast('تم حذف الطلب','success');
+  }).catch(function(err){
+    toast('الحذف ظاهر هنا فقط — فعّل صلاحية DELETE في Supabase','info');
+  });
 }
 
 function renderOwnerSubscribers(){
@@ -2665,76 +2703,183 @@ function filterSubscribers(query){
 }
 
 function deleteSubscriber(id, name){
-  showConfirm('حذف المشترك', 'حذف مشترك "'+name+'"؟ لا يمكن التراجع.', 'حذف', 'إلغاء', function(){
-    sbFetch('biz_accounts','DELETE',null,'?id=eq.'+id).then(function(){
-      sbFetch('join_requests','PATCH',{status:'deleted'},'?email=eq.'+id).catch(function(){});
-      toast('تم حذف المشترك','success');
-      renderOwnerSubscribers();
-    }).catch(function(){toast('فشل الحذف','error');});
-  });
+  if(!window.confirm('حذف مشترك "'+name+'"؟ لا يمكن التراجع.')) return;
+  sbFetch('biz_accounts','DELETE',null,'?id=eq.'+id).then(function(){
+    sbFetch('join_requests','PATCH',{status:'deleted'},'?email=eq.'+id).catch(function(){});
+    toast('تم حذف المشترك','success');
+    renderOwnerSubscribers();
+  }).catch(function(){toast('فشل الحذف','error');});
 }
 
 function editSubscriber(id){
-  sbFetch('biz_accounts','GET',null,'?id=eq.'+id+'&select=*').then(function(data){
+  // اجلب بيانات الحساب + بيانات الطلب المقبول (للحصول على billing)
+  Promise.all([
+    sbFetch('biz_accounts','GET',null,'?id=eq.'+id+'&select=*'),
+    sbFetch('join_requests','GET',null,'?email=eq.'+encodeURIComponent(id)+'&status=eq.approved&select=*').catch(function(){return[];})
+  ]).then(function(results){
+    var data = results[0];
+    var reqs = results[1]||[];
     if(!data||!data.length) return;
     var a=data[0];
-    document.getElementById('es-modal')?.remove();
-    var modal=document.createElement('div');
-    modal.id='es-modal';
-    modal.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;';
-    modal.innerHTML=
-      '<div style="background:var(--card);border-radius:20px;padding:24px;max-width:420px;width:100%;direction:rtl;margin:auto;">'
-        +'<div style="font-size:16px;font-weight:800;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">'
-          +'<span>تعديل المشترك</span>'
-          +'<button onclick="document.getElementById(\'es-modal\').remove()" style="background:var(--bg3);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:16px;color:var(--text);">✕</button>'
-        +'</div>'
+    // اربط الحساب بالإيميل لو الـ id لا يطابق
+    var req = reqs[0] || [];
+    // كذلك جرّب البحث بالإيميل
+    if(!reqs.length && a.email){
+      sbFetch('join_requests','GET',null,'?email=eq.'+encodeURIComponent(a.email)+'&status=eq.approved&select=*').then(function(r2){
+        if(r2&&r2.length){ req = r2[0]; _renderEditSubscriberModal(a, req); }
+        else _renderEditSubscriberModal(a, {});
+      });
+    } else {
+      _renderEditSubscriberModal(a, req);
+    }
+  }).catch(function(){toast('فشل تحميل بيانات المشترك','error');});
+}
 
-        +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px;letter-spacing:1px;">معلومات النشاط</div>'
-        +'<div class="form-group"><label class="form-label">اسم النشاط</label><input id="es-biz" class="fi" value="'+(a.biz_name||'')+'"></div>'
-        +'<div class="form-group"><label class="form-label">نوع النشاط</label>'
-          +'<select id="es-biztype" class="fi">'
-            +'<option value="">اختر النوع</option>'
-            +'<option value="hotel"'+(a.biz_type==='hotel'?' selected':'')+'>فندق</option>'
-            +'<option value="apartments"'+(a.biz_type==='apartments'?' selected':'')+'>شقق مفروشة</option>'
-            +'<option value="chalets"'+(a.biz_type==='chalets'?' selected':'')+'>شاليهات</option>'
-            +'<option value="villas"'+(a.biz_type==='villas'?' selected':'')+'>فيلل</option>'
-            +'<option value="mixed"'+(a.biz_type==='mixed'?' selected':'')+'>متنوع</option>'
-          +'</select>'
-        +'</div>'
+function _renderEditSubscriberModal(a, req){
+  document.getElementById('es-modal')?.remove();
+  var billing = req.billing || 'شهري';
+  // احسب تاريخ النهاية الافتراضي
+  var startISO = (a.created_at||'').slice(0,10);
+  var endVal = a.subscription_end || '';
+  if(!endVal && startISO){
+    var s = new Date(startISO);
+    if(billing==='سنوي') s.setFullYear(s.getFullYear()+1);
+    else s.setMonth(s.getMonth()+1);
+    endVal = s.toISOString().slice(0,10);
+  } else if(endVal){
+    endVal = endVal.slice(0,10);
+  }
 
-        +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:16px 0 8px;letter-spacing:1px;">معلومات المالك</div>'
-        +'<div class="form-group"><label class="form-label">اسم المالك</label><input id="es-name" class="fi" value="'+(a.owner_name||'')+'"></div>'
-        +'<div class="form-group"><label class="form-label">رقم الجوال</label><input id="es-phone" class="fi" type="tel" value="'+(a.phone||'')+'"></div>'
-        +'<div class="form-group"><label class="form-label">البريد الإلكتروني</label><input id="es-email" class="fi" value="'+(a.email||'')+'" disabled style="opacity:.6;"></div>'
+  var modal=document.createElement('div');
+  modal.id='es-modal';
+  modal.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;';
+  modal.onclick=function(e){ if(e.target===modal) modal.remove(); };
 
-        +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:16px 0 8px;letter-spacing:1px;">الاشتراك</div>'
-        +'<div class="form-group"><label class="form-label">الباقة</label>'
+  var aId = a.id;
+  modal.innerHTML=
+    '<div style="background:var(--card);border-radius:20px;padding:24px;max-width:440px;width:100%;direction:rtl;margin:auto;">'
+      +'<div style="font-size:16px;font-weight:800;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">'
+        +'<span>تعديل المشترك</span>'
+        +'<button onclick="document.getElementById(\'es-modal\').remove()" style="background:var(--bg3);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:16px;color:var(--text);">✕</button>'
+      +'</div>'
+
+      +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px;letter-spacing:1px;">معلومات النشاط</div>'
+      +'<div class="form-group"><label class="form-label">اسم النشاط</label><input id="es-biz" class="fi" value="'+(a.biz_name||'').replace(/"/g,'&quot;')+'"></div>'
+      +'<div class="form-group"><label class="form-label">نوع النشاط</label>'
+        +'<select id="es-biztype" class="fi">'
+          +'<option value="">اختر النوع</option>'
+          +'<option value="hotel"'+(a.biz_type==='hotel'?' selected':'')+'>فندق</option>'
+          +'<option value="apartments"'+(a.biz_type==='apartments'?' selected':'')+'>شقق مفروشة</option>'
+          +'<option value="chalets"'+(a.biz_type==='chalets'?' selected':'')+'>شاليهات</option>'
+          +'<option value="villas"'+(a.biz_type==='villas'?' selected':'')+'>فيلل</option>'
+          +'<option value="mixed"'+(a.biz_type==='mixed'?' selected':'')+'>متنوع</option>'
+        +'</select>'
+      +'</div>'
+
+      +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:16px 0 8px;letter-spacing:1px;">معلومات المالك</div>'
+      +'<div class="form-group"><label class="form-label">اسم المالك</label><input id="es-name" class="fi" value="'+(a.owner_name||'').replace(/"/g,'&quot;')+'"></div>'
+      +'<div class="form-group"><label class="form-label">رقم الجوال</label><input id="es-phone" class="fi" type="tel" value="'+(a.phone||'')+'"></div>'
+      +'<div class="form-group"><label class="form-label">البريد الإلكتروني</label><input id="es-email" class="fi" value="'+(a.email||'')+'" disabled style="opacity:.6;"></div>'
+
+      +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:16px 0 8px;letter-spacing:1px;">الاشتراك</div>'
+      +'<div class="form-row">'
+        +'<div class="form-group" style="margin:0"><label class="form-label">الباقة</label>'
           +'<select id="es-pkg" class="fi">'
             +'<option value="free"'+(a.pkg==='free'?' selected':'')+'>المجانية</option>'
-            +'<option value="pro"'+(a.pkg==='pro'?' selected':'')+'>الاحترافية — 199 ر.س/شهر</option>'
-            +'<option value="all"'+(a.pkg==='all'?' selected':'')+'>الشاملة — 399 ر.س/شهر</option>'
+            +'<option value="pro"'+(a.pkg==='pro'?' selected':'')+'>الاحترافية</option>'
+            +'<option value="all"'+(a.pkg==='all'?' selected':'')+'>الشاملة</option>'
           +'</select>'
         +'</div>'
-        +'<div class="form-group"><label class="form-label">حالة الحساب</label>'
-          +'<select id="es-status" class="fi">'
-            +'<option value="active"'+(a.status==='active'?' selected':'')+'>نشط</option>'
-            +'<option value="suspended"'+(a.status==='suspended'?' selected':'')+'>موقوف</option>'
-            +'<option value="expired"'+(a.status==='expired'?' selected':'')+'>منتهي</option>'
+        +'<div class="form-group" style="margin:0"><label class="form-label">الفوترة</label>'
+          +'<select id="es-billing" class="fi">'
+            +'<option value="شهري"'+(billing==='شهري'?' selected':'')+'>شهري</option>'
+            +'<option value="سنوي"'+(billing==='سنوي'?' selected':'')+'>سنوي</option>'
           +'</select>'
         +'</div>'
+      +'</div>'
+      +'<div class="form-group"><label class="form-label">حالة الحساب</label>'
+        +'<select id="es-status" class="fi">'
+          +'<option value="active"'+(a.status==='active'?' selected':'')+'>● نشط</option>'
+          +'<option value="suspended"'+(a.status==='suspended'?' selected':'')+'>⏸ موقوف</option>'
+          +'<option value="expired"'+(a.status==='expired'?' selected':'')+'>● منتهي</option>'
+        +'</select>'
+      +'</div>'
 
-        +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:16px 0 8px;letter-spacing:1px;">الأمان</div>'
-        +'<div class="form-group"><label class="form-label">كلمة مرور جديدة <span style="color:var(--text3);font-weight:400;">(اتركها فارغة للإبقاء)</span></label>'
-          +'<input id="es-pass" class="fi" type="password" placeholder="••••••••">'
+      +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:16px 0 8px;letter-spacing:1px;">📅 تواريخ الاشتراك</div>'
+      +'<div class="form-row">'
+        +'<div class="form-group" style="margin:0"><label class="form-label">تاريخ البداية</label>'
+          +'<input id="es-start" class="fi" type="date" value="'+startISO+'">'
         +'</div>'
+        +'<div class="form-group" style="margin:0"><label class="form-label">تاريخ النهاية</label>'
+          +'<input id="es-end" class="fi" type="date" value="'+endVal+'">'
+        +'</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">'
+        +'<button onclick="extendSubscriptionUI(30)" type="button" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:11px;font-weight:700;padding:7px;border-radius:8px;cursor:pointer;font-family:inherit;">+ 30 يوم</button>'
+        +'<button onclick="extendSubscriptionUI(90)" type="button" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:11px;font-weight:700;padding:7px;border-radius:8px;cursor:pointer;font-family:inherit;">+ 3 شهور</button>'
+        +'<button onclick="extendSubscriptionUI(365)" type="button" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:11px;font-weight:700;padding:7px;border-radius:8px;cursor:pointer;font-family:inherit;">+ سنة</button>'
+      +'</div>'
 
-        +'<div style="display:flex;gap:8px;margin-top:20px;">'
-          +'<button id="es-save-btn" onclick="saveSubscriberEdit(\''+id+'\')" class="btn btn-primary" style="flex:1;height:46px;">حفظ التعديلات</button>'
-          +'<button onclick="document.getElementById(\'es-modal\').remove()" style="padding:0 20px;height:46px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;cursor:pointer;font-family:inherit;font-weight:700;color:var(--text);">إلغاء</button>'
-        +'</div>'
-      +'</div>';
-    document.body.appendChild(modal);
-  }).catch(function(){toast('فشل تحميل بيانات المشترك','error');});
+      +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:16px 0 8px;letter-spacing:1px;">🔐 الأمان</div>'
+      +'<div class="form-group"><label class="form-label">كلمة مرور جديدة <span style="color:var(--text3);font-weight:400;">(اتركها فارغة للإبقاء)</span></label>'
+        +'<input id="es-pass" class="fi" type="text" placeholder="اكتب كلمة مرور جديدة أو ولّد واحدة">'
+      +'</div>'
+      +'<button onclick="generateNewPass()" type="button" style="background:var(--gold);border:1px solid var(--goldb);color:var(--accent);font-size:12px;font-weight:700;padding:8px 14px;border-radius:9px;cursor:pointer;font-family:inherit;margin-bottom:8px;width:100%;">🎲 ولّد كلمة مرور عشوائية</button>'
+
+      +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:16px 0 8px;letter-spacing:1px;">⚡ إجراءات سريعة</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">'
+        +'<button onclick="quickActionSubscriber(\''+aId+'\',\'toggle\')" type="button" style="background:'+(a.status==='active'?'rgba(217,119,6,.12)':'rgba(52,211,153,.12)')+';border:1px solid '+(a.status==='active'?'rgba(217,119,6,.3)':'rgba(52,211,153,.3)')+';color:'+(a.status==='active'?'var(--yellow)':'var(--green)')+';font-size:12px;font-weight:700;padding:9px;border-radius:9px;cursor:pointer;font-family:inherit;">'+(a.status==='active'?'⏸ تعليق الحساب':'▶ تفعيل الحساب')+'</button>'
+        +'<button onclick="quickActionSubscriber(\''+aId+'\',\'send_wa\')" type="button" style="background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.3);color:#25d366;font-size:12px;font-weight:700;padding:9px;border-radius:9px;cursor:pointer;font-family:inherit;">📱 إرسال واتساب</button>'
+      +'</div>'
+
+      +'<div style="display:flex;gap:8px;margin-top:20px;">'
+        +'<button id="es-save-btn" onclick="saveSubscriberEdit(\''+aId+'\')" class="btn btn-primary" style="flex:1;height:46px;">💾 حفظ التعديلات</button>'
+        +'<button onclick="document.getElementById(\'es-modal\').remove()" style="padding:0 20px;height:46px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;cursor:pointer;font-family:inherit;font-weight:700;color:var(--text);">إلغاء</button>'
+      +'</div>'
+    +'</div>';
+  document.body.appendChild(modal);
+}
+
+// ولّد كلمة مرور عشوائية وضعها في الحقل
+function generateNewPass(){
+  var inp=document.getElementById('es-pass');
+  if(inp) inp.value = _genTempPass();
+}
+
+// مدد تاريخ النهاية بعدد أيام محدد
+function extendSubscriptionUI(days){
+  var end=document.getElementById('es-end');
+  if(!end) return;
+  var base = end.value ? new Date(end.value) : new Date();
+  base.setDate(base.getDate()+days);
+  end.value = base.toISOString().slice(0,10);
+  toast('تم تمديد التاريخ '+days+' يوم','info');
+}
+
+// إجراءات سريعة على المشترك
+function quickActionSubscriber(id, action){
+  if(action==='toggle'){
+    var statusEl = document.getElementById('es-status');
+    if(!statusEl) return;
+    var newStatus = statusEl.value==='active' ? 'suspended' : 'active';
+    statusEl.value = newStatus;
+    toast('الحالة الآن: '+(newStatus==='active'?'نشط':'موقوف')+' — اضغط حفظ للتطبيق','info');
+  } else if(action==='send_wa'){
+    sbFetch('biz_accounts','GET',null,'?id=eq.'+id+'&select=*').then(function(d){
+      if(!d||!d.length) return;
+      var a = d[0];
+      var pass = document.getElementById('es-pass')?.value || '(كلمة مرورك الحالية)';
+      var phone = (a.phone||'').replace(/[^0-9]/g,'');
+      if(phone.startsWith('0')) phone='966'+phone.slice(1);
+      if(!phone){ toast('لا يوجد رقم جوال','error'); return; }
+      var msg = 'مرحباً '+(a.owner_name||'')+' 👋\n\n'
+        +'بيانات حسابك في BODO:\n'
+        +'📧 الإيميل: '+a.email+'\n'
+        +'🔑 كلمة المرور: '+pass+'\n\n'
+        +'🌐 https://kaya-hotel.vercel.app';
+      window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
+    });
+  }
 }
 
 function saveSubscriberEdit(id){
@@ -2748,19 +2893,54 @@ function saveSubscriberEdit(id){
   };
   var pass=document.getElementById('es-pass')?.value?.trim();
   if(pass) body.password=pass;
+
+  // التواريخ
+  var startVal = document.getElementById('es-start')?.value;
+  var endVal = document.getElementById('es-end')?.value;
+  if(startVal) body.created_at = new Date(startVal+'T00:00:00').toISOString();
+  if(endVal) body.subscription_end = new Date(endVal+'T23:59:59').toISOString();
+
+  // الفوترة (تنحفظ في join_requests إذا في طلب مرتبط)
+  var billing = document.getElementById('es-billing')?.value;
+
   // إزالة القيم الفارغة
-  Object.keys(body).forEach(function(k){if(!body[k]) delete body[k];});
+  Object.keys(body).forEach(function(k){if(body[k]===undefined||body[k]==='') delete body[k];});
 
   var saveBtn=document.getElementById('es-save-btn');
   if(saveBtn){saveBtn.textContent='جارٍ الحفظ...';saveBtn.disabled=true;}
 
+  function fallbackPatch(){
+    // أعد المحاولة بدون subscription_end (لو العمود غير موجود)
+    var b2 = Object.assign({},body); delete b2.subscription_end;
+    return sbFetch('biz_accounts','PATCH',b2,'?id=eq.'+id);
+  }
+
   sbFetch('biz_accounts','PATCH',body,'?id=eq.'+id).then(function(){
+    // حدّث billing في join_requests المرتبط (لو موجود)
+    if(billing){
+      var email = document.getElementById('es-email')?.value;
+      if(email){
+        sbFetch('join_requests','PATCH',{billing:billing},'?email=eq.'+encodeURIComponent(email)+'&status=eq.approved').catch(function(){});
+      }
+    }
     document.getElementById('es-modal')?.remove();
     toast('✅ تم حفظ التعديلات','success');
     renderOwnerSubscribers();
   }).catch(function(){
-    if(saveBtn){saveBtn.textContent='حفظ التعديلات';saveBtn.disabled=false;}
-    toast('فشل الحفظ','error');
+    // ربما عمود subscription_end غير موجود
+    if(body.subscription_end){
+      fallbackPatch().then(function(){
+        document.getElementById('es-modal')?.remove();
+        toast('✅ حُفظ (تاريخ النهاية محلياً فقط — أضف عمود subscription_end في Supabase)','info');
+        renderOwnerSubscribers();
+      }).catch(function(){
+        if(saveBtn){saveBtn.textContent='💾 حفظ التعديلات';saveBtn.disabled=false;}
+        toast('فشل الحفظ','error');
+      });
+    } else {
+      if(saveBtn){saveBtn.textContent='💾 حفظ التعديلات';saveBtn.disabled=false;}
+      toast('فشل الحفظ','error');
+    }
   });
 }
 
