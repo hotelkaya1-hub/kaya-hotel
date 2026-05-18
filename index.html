@@ -1444,15 +1444,80 @@ function initIcons(){
 }
 
 // ══ DB ══
-function loadDB(){
-  try{var s=localStorage.getItem('kaya_v9');if(s){var d=JSON.parse(s);if(!d.calState)d.calState={};if(!d.calStats)d.calStats={};return d;}}catch{}
+// ── ترحيل آمن من الأسماء القديمة (kaya_*) إلى الجديدة (bodo_*) ──
+// يشتغل مرة واحدة عند تحميل الصفحة، ويرحّل البيانات الموجودة دون فقدانها
+(function _migrateKayaToBodo(){
+  try{
+    var map = {
+      'kaya_v9'      : 'bodo_v9',
+      'kaya_notif'   : 'bodo_notif',
+      'bodo_session' : 'bodo_session',
+      'bodo_theme'   : 'bodo_theme',
+      'bodo_remember': 'bodo_remember'
+    };
+    // مفاتيح ثابتة
+    Object.keys(map).forEach(function(oldKey){
+      var newKey = map[oldKey];
+      var oldVal = localStorage.getItem(oldKey);
+      if(oldVal !== null && localStorage.getItem(newKey) === null){
+        localStorage.setItem(newKey, oldVal);
+      }
+      localStorage.removeItem(oldKey);
+    });
+    // مفاتيح ديناميكية (bodo_v9_<bizId>, bodo_notif_<bizId>)
+    Object.keys(localStorage).forEach(function(k){
+      if(k.indexOf('kaya_v9_')===0){
+        var nk = 'bodo_v9_'+k.substring(8);
+        if(localStorage.getItem(nk) === null) localStorage.setItem(nk, localStorage.getItem(k));
+        localStorage.removeItem(k);
+      } else if(k.indexOf('kaya_notif_')===0){
+        var nk2 = 'bodo_notif_'+k.substring(11);
+        if(localStorage.getItem(nk2) === null) localStorage.setItem(nk2, localStorage.getItem(k));
+        localStorage.removeItem(k);
+      }
+    });
+  }catch(e){ console.warn('migration failed', e); }
+})();
+
+// ── مفاتيح localStorage معزولة لكل اشتراك ──
+function _dbKey(){
+  try{
+    if(typeof currentUser !== 'undefined' && currentUser && (currentUser.bizId || currentUser.username)){
+      var bid = (currentUser.bizId || currentUser.username || '').toLowerCase().replace(/[^a-z0-9_]/g,'_');
+      if(bid) return 'bodo_v9_'+bid;
+    }
+  }catch(e){}
+  return 'bodo_v9';
+}
+function _saveDB(){
+  try{ localStorage.setItem(_dbKey(), JSON.stringify(DB)); }catch(e){}
+}
+
+function loadDB(bizId){
+  if(bizId){
+    var key = 'bodo_v9_'+bizId.toLowerCase().replace(/[^a-z0-9_]/g,'_');
+    try{
+      var s=localStorage.getItem(key);
+      if(s){
+        var d=JSON.parse(s);
+        if(!d.calState)d.calState={};
+        if(!d.calStats)d.calStats={};
+        return d;
+      }
+    }catch{}
+  } else {
+    try{
+      var s2=localStorage.getItem('bodo_v9');
+      if(s2){var d2=JSON.parse(s2);if(!d2.calState)d2.calState={};if(!d2.calStats)d2.calStats={};return d2;}
+    }catch{}
+  }
   return{bookings:[],expenses:[],employees:[],units:[],unitTypes:{},monthly:[],foundation:[],sales:[],appUsers:[],adminPass:{},calState:{},calStats:{}};
 }
 var DB=loadDB();
 function save(){
   if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;
   if(DB.adminPass&&DB.adminPass.username) ADMIN.username=DB.adminPass.username;
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   // Note: each save function calls sbFetch directly - no batch sync needed
 }
 
@@ -1507,18 +1572,18 @@ function toggleTheme(){
   var isDark=document.body.classList.contains('dark-mode');
   if(isDark){
     document.body.classList.remove('dark-mode');
-    localStorage.setItem('kaya_theme','light');
+    localStorage.setItem('bodo_theme','light');
     var btn=document.getElementById('theme-btn');
     if(btn)btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
   } else {
     document.body.classList.add('dark-mode');
-    localStorage.setItem('kaya_theme','dark');
+    localStorage.setItem('bodo_theme','dark');
     var btn=document.getElementById('theme-btn');
     if(btn)btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
   }
 }
 function loadTheme(){
-  var t=localStorage.getItem('kaya_theme');
+  var t=localStorage.getItem('bodo_theme');
   var btn=document.getElementById('theme-btn');
   if(t==='dark'){
     document.body.classList.add('dark-mode');
@@ -1528,7 +1593,7 @@ function loadTheme(){
   }
 }
 function toggleRemember(val){
-  localStorage.setItem('kaya_remember', val?'1':'0');
+  localStorage.setItem('bodo_remember', val?'1':'0');
 }
 
 // ══════════════════════════════════════════
@@ -1816,7 +1881,7 @@ function submitJoin(){
       DB.joinRequests.push(req);
       DB.subscriberInfo={name:name,email:email,phone:phone,city:city,biz:biz,bizType:btype,pkg:_selectedPkg,pkgLabel:pkg.label,price:price,billing:billing,date:toDay(),status:'pending',bizId:bizId};
       if(!DB.bizName){DB.bizName=biz;updateBizLabels();}
-      try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+      try{_saveDB();}catch(e){}
       _showJoinSuccessScreen(name, email, biz, phone, pkg, price, billing);
     }).catch(function(err){
       resetBtn();
@@ -2299,7 +2364,7 @@ function clearAllRejected(){
   if(!DB._deleted) DB._deleted={};
   rejected.forEach(function(r){ DB._deleted['joinreq_'+r.id]=Date.now(); });
   DB.joinRequests=(DB.joinRequests||[]).filter(function(r){return r.status!=='rejected';});
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   renderOwnerRequests();
   var failed = 0;
   Promise.all(rejected.map(function(r){
@@ -2421,7 +2486,7 @@ function saveJoinRequestEdit(){
     DB.joinRequests = DB.joinRequests.map(function(r){
       return r.id===id ? Object.assign({},r,updates) : r;
     });
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    try{_saveDB();}catch(e){}
   }
   closeEditReq();
   renderOwnerRequests();
@@ -2479,7 +2544,7 @@ function approveRequest(id){
       DB.joinRequests=DB.joinRequests.map(function(r){
         return r.id===id?Object.assign({},r,{status:'approved'}):r;
       });
-      try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+      try{_saveDB();}catch(e){}
       // إظهار واتساب مع كلمة المرور
       _sendWhatsApp(req, tempPass);
       renderOwnerRequests();
@@ -2533,7 +2598,7 @@ function rejectRequest(id){
   DB.joinRequests = DB.joinRequests.map(function(r){
     return r.id===id ? Object.assign({},r,{status:'rejected'}) : r;
   });
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   sbFetch('join_requests','PATCH',{status:'rejected'},'?id=eq.'+id).catch(function(){});
   toast('تم رفض الطلب','info');
   renderOwnerRequests();
@@ -2550,7 +2615,7 @@ function deleteJoinRequest(id){
   if(DB.joinRequests){
     DB.joinRequests = DB.joinRequests.filter(function(r){return r.id!==id;});
   }
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   renderOwnerRequests();
 
   // حذف من Supabase بالخلفية
@@ -3110,7 +3175,7 @@ function changeOwnerPass(){
   OWNER_PASS = nw;
   if(!DB.ownerConfig) DB.ownerConfig={};
   DB.ownerConfig.pass = nw;
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   toast('✅ تم تغيير كلمة المرور','success');
 }
 
@@ -3120,7 +3185,7 @@ function saveOwnerConfig(){
   if(!DB.ownerConfig) DB.ownerConfig={};
   DB.ownerConfig.whatsapp = wa;
   DB.ownerConfig.email = em;
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   sbFetch('app_config','POST',{key:'owner_config',value:JSON.stringify(DB.ownerConfig)},'?on_conflict=key').catch(function(){});
   toast('✅ تم الحفظ — الإشعارات ستُفعَّل قريباً','success');
 }
@@ -3140,7 +3205,14 @@ function initAuth(){
   var saved=_loadSession();
   if(saved&&saved.username){
     currentUser=saved;
-    DB=_freshDB(saved.bizId||saved.username.toLowerCase());
+    var sbid = saved.bizId||saved.username.toLowerCase();
+    // اقرأ DB من المفتاح الخاص بهذا المستخدم — عزل كامل
+    var loaded = loadDB(sbid);
+    if(loaded && (loaded.bookings || loaded.units)){
+      DB = loaded;
+    } else {
+      DB = _freshDB(sbid);
+    }
     if(saved.role==='subscriber'){
       // جلب بيانات المشترك من Supabase عند الدخول التلقائي
       sbFetch('biz_accounts','GET',null,'?id=eq.'+(saved.bizId||'')+'&select=*').then(function(data){
@@ -3155,7 +3227,7 @@ function initAuth(){
           };
           DB.bizName=a.biz_name;
           if(a.biz_type) DB.bizType=a.biz_type;
-          try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+          try{_saveDB();}catch(e){}
           if(_currentPage==='settings') renderSettings();
         }
       }).catch(function(){});
@@ -3177,7 +3249,7 @@ function initAuth(){
   if(DB.adminPass&&DB.adminPass.password) ADMIN.password=DB.adminPass.password;
   if(DB.adminPass&&DB.adminPass.username) ADMIN.username=DB.adminPass.username;
   if(!DB.appUsers) DB.appUsers=[];
-  var saved=localStorage.getItem('kaya_session');
+  var saved=localStorage.getItem('bodo_session');
   if(saved){try{currentUser=JSON.parse(saved);showApp();return;}catch{}}
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('app').style.display='none';
@@ -3192,29 +3264,60 @@ function doLogin(){
   if(u===ADMIN.username&&p===ADMIN.password){
     currentUser={username:u,role:'admin',bizId:'kaled'};
     _clearSession();
-    DB=_freshDB('kaled');
+    var loadedAdmin = loadDB('kaled');
+    DB = (loadedAdmin && (loadedAdmin.bookings || loadedAdmin.units)) ? loadedAdmin : _freshDB('kaled');
     _saveSession(currentUser);
     showApp();
     return;
   }
 
-  // ── 2. Staff (local) ──────────────────────────
-  var found=(DB.appUsers||[]).find(x=>x.username===u&&x.password===p);
+  // ── 2. Staff (محلي — للتوافق القديم) ──
+  var found=(DB.appUsers||[]).find(x=>(x.email===u.toLowerCase()||x.username===u)&&x.password===p);
   if(found){
-    currentUser={username:u,role:found.role||'staff',fullname:found.fullname,perms:found.perms,id:found.id,bizId:found.bizId||getBizId()};
+    currentUser={username:found.email||found.username||u,role:found.role||'staff',fullname:found.fullname,perms:found.perms,id:found.id,bizId:found.bizId||getBizId()};
     _saveSession(currentUser);
     showApp();
     return;
   }
 
-  // ── 3. Subscriber (Supabase) ──────────────────
+  // ── 3. Subscriber أو Staff (Supabase) ──
   var btn=document.getElementById('login-btn');
   if(btn){btn.textContent='جاري التحقق...';btn.disabled=true;}
-  sbFetch('biz_accounts','GET',null,'?email=eq.'+encodeURIComponent(u.toLowerCase())+'&select=*')
-  .then(function(res){
+
+  // ابحث في حسابات أصحاب الأنشطة (المشتركين) و حسابات الموظفين بالتوازي
+  Promise.all([
+    sbFetch('biz_accounts','GET',null,'?email=eq.'+encodeURIComponent(u.toLowerCase())+'&select=*').catch(function(){return [];}),
+    sbFetch('app_users','GET',null,'?email=eq.'+encodeURIComponent(u.toLowerCase())+'&select=*').catch(function(){return [];})
+  ])
+  .then(function(results){
     if(btn){btn.textContent='دخول';btn.disabled=false;}
-    if(!res||!res.length){err.style.display='block';setTimeout(()=>{err.style.display='none';},3000);return;}
-    var acct=res[0];
+    var bizMatch  = results[0] || [];
+    var staffMatch = results[1] || [];
+
+    // أولوية الموظف (لو طابق إيميل وكلمة سر)
+    var staffRec = staffMatch.find(function(s){ return (s.password||'').trim()===p.trim(); });
+    if(staffRec){
+      // ادخل كموظف — استخدم biz_id الخاص بنشاطه
+      currentUser={
+        username: staffRec.email,
+        role: staffRec.role || 'staff',
+        fullname: staffRec.fullname || staffRec.email,
+        perms: staffRec.perms || {},
+        id: staffRec.id,
+        bizId: staffRec.biz_id,
+        employeeId: staffRec.employee_id
+      };
+      _clearSession();
+      var loadedStaff = loadDB(staffRec.biz_id);
+      DB = (loadedStaff && (loadedStaff.bookings || loadedStaff.units)) ? loadedStaff : _freshDB(staffRec.biz_id);
+      _saveSession(currentUser);
+      showApp();
+      return;
+    }
+
+    // وإلا، صاحب نشاط (مشترك)
+    if(!bizMatch.length){ err.style.display='block';setTimeout(()=>{err.style.display='none';},3000);return; }
+    var acct=bizMatch[0];
     if((acct.password||'').trim()!==p.trim()){err.style.display='block';setTimeout(()=>{err.style.display='none';},3000);return;}
     if(acct.status!=='active'){
       err.textContent='الحساب غير مفعّل بعد';err.style.display='block';
@@ -3224,7 +3327,8 @@ function doLogin(){
     var bizId=(acct.id||acct.email.toLowerCase().replace(/[^a-z0-9]/g,'_'));
     currentUser={username:acct.email,role:'subscriber',fullname:acct.owner_name,bizId:bizId,bizName:acct.biz_name,pkg:acct.pkg};
     _clearSession();
-    DB=_freshDB(bizId);
+    var loadedSub = loadDB(bizId);
+    DB = (loadedSub && (loadedSub.bookings || loadedSub.units)) ? loadedSub : _freshDB(bizId);
     DB.subscriberInfo={
       email:acct.email,
       name:acct.owner_name,
@@ -3263,8 +3367,33 @@ function showApp(){
   var gset=document.getElementById('gr-set');if(gset)gset.textContent=uname;
   document.querySelectorAll('.nav-item').forEach(n=>n.style.display='');
   applyPerms();
-  renderDashboard();
+
+  // استرجع التبويبات المحفوظة
+  try{
+    var cbTab = parseInt(localStorage.getItem('bodo_cbtab')||'1');
+    if(!isNaN(cbTab)) _currentCBTab = cbTab;
+    var finTab = parseInt(localStorage.getItem('bodo_fintab')||'1');
+    if(!isNaN(finTab)) _currentFinTab = finTab;
+  }catch(e){}
+
+  // استرجع آخر صفحة كان فيها المستخدم
+  var lastPage = 'dashboard';
+  try{
+    var saved = localStorage.getItem('bodo_lastpage');
+    if(saved && ['dashboard','calbooking','revenue','expenses','settings'].indexOf(saved)>=0){
+      lastPage = saved;
+    }
+  }catch(e){}
+
+  if(lastPage === 'dashboard'){
+    renderDashboard();
+  } else {
+    showPage(lastPage);
+  }
   try{renderNotificationsBell();}catch(e){}
+
+  // فعّل سحب للأسفل للتحديث (Pull to refresh)
+  _initPullToRefresh();
 
   // جلب البيانات فوراً
   loadAllData();
@@ -3273,13 +3402,118 @@ function showApp(){
   initRealtime();
 }
 
+// ══ PULL TO REFRESH ══
+var _ptrStartY = 0;
+var _ptrPulling = false;
+var _ptrIndicator = null;
+function _initPullToRefresh(){
+  if(_ptrIndicator) return; // مفعّل مسبقاً
+  // أنشئ مؤشر السحب
+  _ptrIndicator = document.createElement('div');
+  _ptrIndicator.id = 'ptr-indicator';
+  _ptrIndicator.style.cssText = 'position:fixed;top:-60px;left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:50%;background:var(--card);border:1px solid var(--border);box-shadow:0 4px 12px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;z-index:9999;transition:top .2s ease;pointer-events:none;';
+  _ptrIndicator.innerHTML = '<svg id="ptr-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>';
+  document.body.appendChild(_ptrIndicator);
+
+  var content = document.getElementById('content');
+  if(!content) return;
+
+  content.addEventListener('touchstart', function(e){
+    // السحب يشتغل فقط لما الـ scroll فوق
+    if(content.scrollTop > 0) return;
+    _ptrStartY = e.touches[0].clientY;
+    _ptrPulling = true;
+  }, {passive:true});
+
+  content.addEventListener('touchmove', function(e){
+    if(!_ptrPulling) return;
+    var diff = e.touches[0].clientY - _ptrStartY;
+    if(diff > 0 && content.scrollTop === 0){
+      var pull = Math.min(diff * 0.5, 80);
+      _ptrIndicator.style.transition = 'none';
+      _ptrIndicator.style.top = (pull - 60) + 'px';
+      var svg = document.getElementById('ptr-svg');
+      if(svg) svg.style.transform = 'rotate('+ (pull * 3) +'deg)';
+    }
+  }, {passive:true});
+
+  content.addEventListener('touchend', function(e){
+    if(!_ptrPulling) return;
+    _ptrPulling = false;
+    var top = parseFloat(_ptrIndicator.style.top || '-60');
+    _ptrIndicator.style.transition = 'top .3s ease';
+    if(top >= 0){
+      // كافي — سوّ التحديث
+      _ptrIndicator.style.top = '20px';
+      var svg = document.getElementById('ptr-svg');
+      if(svg){
+        svg.style.animation = 'ptrSpin .8s linear infinite';
+      }
+      _refreshNow().then(function(){
+        setTimeout(function(){
+          _ptrIndicator.style.top = '-60px';
+          if(svg){ svg.style.animation = ''; svg.style.transform = ''; }
+        }, 300);
+      }).catch(function(){
+        _ptrIndicator.style.top = '-60px';
+        if(svg){ svg.style.animation = ''; svg.style.transform = ''; }
+      });
+    } else {
+      _ptrIndicator.style.top = '-60px';
+      var svg2 = document.getElementById('ptr-svg');
+      if(svg2) svg2.style.transform = '';
+    }
+  }, {passive:true});
+
+  // أضف keyframe للدوران
+  if(!document.getElementById('ptr-style')){
+    var st = document.createElement('style');
+    st.id = 'ptr-style';
+    st.textContent = '@keyframes ptrSpin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}';
+    document.head.appendChild(st);
+  }
+}
+
+// تحديث فوري للبيانات
+function _refreshNow(){
+  return new Promise(function(resolve){
+    try{
+      // جلب فوري لكل شيء
+      Promise.all([
+        typeof loadAllData==='function' ? loadAllData() : Promise.resolve(),
+        typeof renderNotificationsBell==='function' ? Promise.resolve(renderNotificationsBell()) : Promise.resolve()
+      ]).then(function(){
+        // أعد رسم الصفحة الحالية
+        try{
+          var p=_currentPage;
+          if(p==='dashboard') renderDashboard();
+          else if(p==='calbooking') renderCalBooking();
+          else if(p==='revenue') renderRevenue();
+          else if(p==='expenses') renderExpenses();
+          else if(p==='settings') renderSettings();
+        }catch(e){}
+        setTimeout(resolve, 400);
+      }).catch(function(){ setTimeout(resolve, 400); });
+    }catch(e){ setTimeout(resolve, 400); }
+  });
+}
+
 function logout(){
-  // امسح الجلسة + كل بيانات localStorage الخاصة بالحساب السابق
-  _clearSession(); // يمسح bodo_session و kaya_v9
-  localStorage.removeItem('kaya_session'); // legacy
+  // امسح الجلسة الحالية + المفاتيح القديمة المشتركة (legacy)
+  // ⚠ لا نمسح bodo_v9_<bizId> ولا bodo_notif_<bizId> — هذي معزولة لكل اشتراك
+  // وتبقى محفوظة لو نفس المستخدم رجع سجل دخول
+  localStorage.removeItem('bodo_session');
+  localStorage.removeItem('bodo_session'); // legacy
+  localStorage.removeItem('bodo_v9');      // legacy shared
+  localStorage.removeItem('bodo_notif');   // legacy shared
+  // امسح آخر صفحة عشان المستخدم الجديد يبدأ من الرئيسية
+  localStorage.removeItem('bodo_lastpage');
+  localStorage.removeItem('bodo_cbtab');
+  localStorage.removeItem('bodo_fintab');
   // أعد تهيئة المتغيرات في الذاكرة
   currentUser=null;
   DB=_freshDB('');
+  _notifHistory=[];
   // أوقف الـ polling الحالي عشان ما يكمل يجلب بيانات
   try{ clearInterval(_pollTimer); }catch(e){}
   // Reset nav and pages to default state
@@ -3321,6 +3555,8 @@ function showPage(id,btn){
   document.getElementById('content').scrollTop=0;
   var map={dashboard:renderDashboard,calbooking:renderCalBooking,revenue:renderRevenue,expenses:renderExpenses,settings:renderSettings};
   if(map[id])map[id]();
+  // احفظ الصفحة الحالية عشان لو حدث المتصفح يرجع لها
+  try{ localStorage.setItem('bodo_lastpage', id); }catch(e){}
 }
 
 // ══ SHEETS ══
@@ -3465,6 +3701,7 @@ function renderCalBooking(){
 }
 function showCBTab(n){
   _currentCBTab=n;
+  try{ localStorage.setItem('bodo_cbtab', String(n)); }catch(e){}
   [1,2].forEach(function(i){
     var c=document.getElementById('cb-content-'+i);
     var b=document.getElementById('cb-tab-'+i);
@@ -3904,7 +4141,7 @@ function savB(){
     checkin:b.checkin,checkout:b.checkout,nights:b.nights,price:b.price,
     total:b.total,status:b.status,notes:b.notes||'',code:b.code||''
   }),'?on_conflict=id').catch(function(){});
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   closeSheet('booking');toast(_eid?'✅ تم تعديل الحجز':'✅ تم حفظ الحجز','success');renderAll();
 }
 function openEB(id){var b=DB.bookings.find(function(x){return x.id===id;});if(!b)return;buildBookingForm(b);document.getElementById('sheet-booking').classList.add('open');}
@@ -3920,7 +4157,7 @@ function delB(id){
       DB.bookings=(DB.bookings||[]).filter(function(b){return b.id!==id;});
       if(!DB._deleted) DB._deleted={};
       DB._deleted['booking_'+id]=true;
-      try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+      try{_saveDB();}catch(e){}
       renderAll();
       showToast('✅ تم الحذف','success');
       // ── حذف فوري من Supabase ──
@@ -3952,7 +4189,7 @@ function savP(){
   DB.bookings=DB.bookings.map(function(b){return b.id===_pid?Object.assign({},b,{price:p,total:b.nights*p}):b;});
   var updated=DB.bookings.find(function(b){return b.id===_pid;});
   sbFetch('bookings','PATCH',{price:p,total:updated?updated.total:0},'?id=eq.'+_pid+'&biz_id=eq.'+getBizId()).catch(function(){});
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   closeSheet('booking');toast('✅ تم حفظ السعر','success');renderAll();
 }
 
@@ -4079,7 +4316,7 @@ function savExp(){
   },'?on_conflict=id')
     .then(function(){_clearPending('expenses',exp.id);})
     .catch(function(){_clearPending('expenses',exp.id);});
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   closeSheet('expense');toast('✅ تم حفظ المصروف','success');renderExpenses();renderDashboard();
 }
 
@@ -4115,6 +4352,7 @@ function renderRevenue(){
 // ══ SALES ══
 function showFinTab(n){
   _currentFinTab=n;
+  try{ localStorage.setItem('bodo_fintab', String(n)); }catch(e){}
   [1,2,3].forEach(function(i){
     var c=document.getElementById('fin-tab-content-'+i);
     var b=document.getElementById('fin-tab-'+i);
@@ -4294,14 +4532,14 @@ function saveSale(){
       .then(function(){_clearPending('sales',entry.id);})
       .catch(function(){_clearPending('sales',entry.id);});
   }
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   closeSheet('sale');toast(_saleId?'✅ تم التعديل':'✅ تم الحفظ','success');renderRevenue();renderDashboard();
 }
 function delSale(id){
   showConfirm('حذف الإيراد','سيتم الحذف نهائياً.',function(){
     if(!DB.sales)return;
     DB.sales=DB.sales.filter(function(s){return s.id!==id;});
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    try{_saveDB();}catch(e){}
     sbFetch('sales','DELETE',null,'?id=eq.'+id+'&biz_id=eq.'+getBizId()).catch(function(){});
     renderRevenue();renderDashboard();showToast('✅ تم الحذف','success');
   },{okText:'حذف',okColor:'#dc2626'});
@@ -4495,7 +4733,7 @@ function payDueCost(monthlyId){
   if(!DB.expenses) DB.expenses=[];
   DB.expenses.push(exp);
   sbFetch('expenses','POST',{id:exp.id,type:exp.type,amount:exp.amount,date:exp.date,apt:exp.apt,description:exp.desc,notes:exp.desc,salary_ref:exp.salaryRef||null,salary_month:exp.salaryMonth||null,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   toast('✅ تم تسجيل دفع '+m.name,'success');
   renderAll();
   renderNotificationsBell();
@@ -4520,11 +4758,16 @@ function renderNotificationsBell(){
 // ══ NOTIFICATION HISTORY ══
 var _notifHistory = [];
 
+function _notifKey(){
+  var bid = (typeof getBizId==='function' ? getBizId() : '') || '_';
+  return 'bodo_notif_'+bid;
+}
+
 function _loadNotifHistory(){
-  try{ _notifHistory = JSON.parse(localStorage.getItem('kaya_notif')||'[]'); }catch(e){ _notifHistory=[]; }
+  try{ _notifHistory = JSON.parse(localStorage.getItem(_notifKey())||'[]'); }catch(e){ _notifHistory=[]; }
 }
 function _saveNotifHistory(){
-  try{ localStorage.setItem('kaya_notif', JSON.stringify(_notifHistory)); }catch(e){}
+  try{ localStorage.setItem(_notifKey(), JSON.stringify(_notifHistory)); }catch(e){}
 }
 
 function _addToHistory(note){
@@ -4576,6 +4819,9 @@ function openNotifications(){
     var payBtn = (isUnread && n.type==='due' && n.monthlyId)
       ? '<button onclick="payDueCost(\''+n.monthlyId+'\');_markRead(\''+n.id+'\',\''+n.date+'\');openNotifications();" class="btn btn-primary btn-sm" style="white-space:nowrap;flex-shrink:0;">تسجيل الدفع</button>'
       : '';
+    var renewBtn = (isUnread && n.type==='subscription')
+      ? '<button onclick="document.getElementById(\'notif-overlay\').style.display=\'none\';_markRead(\''+n.id+'\',\''+n.date+'\');showRenewSubscription();" style="white-space:nowrap;flex-shrink:0;background:linear-gradient(135deg,var(--yellow),#f59e0b);color:#fff;border:none;font-size:11px;font-weight:800;padding:8px 14px;border-radius:8px;cursor:pointer;font-family:inherit;">⏰ جدّد الآن</button>'
+      : '';
     var readBtn = isUnread
       ? '<button onclick="_markRead(\''+n.id+'\',\''+n.date+'\');openNotifications();" style="background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;padding:4px;font-family:inherit;">تم</button>'
       : '';
@@ -4585,7 +4831,7 @@ function openNotifications(){
         +'<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+n.body+'</div>'
         +'<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+n.date+'</div>'
       +'</div>'
-      +payBtn+readBtn
+      +payBtn+renewBtn+readBtn
     +'</div>';
   }
 
@@ -4817,7 +5063,7 @@ function renderExpenses(){
 function delE(id){
   showConfirm('حذف المصروف','سيتم حذف هذا المصروف نهائياً.',function(){
     DB.expenses=(DB.expenses||[]).filter(function(e){return e.id!==id;});
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    try{_saveDB();}catch(e){}
     renderExpenses();renderDashboard();
     showToast('✅ تم الحذف','success');
     // ── حذف فوري من Supabase ──
@@ -4888,7 +5134,7 @@ function saveSalaryEdit(expId, empId){
     return e.id===expId?Object.assign({},e,{amount:amount,salaryMonth:salaryMonth,desc:desc}):e;
   });
   sbFetch('expenses','PATCH',{amount:amount,description:desc,notes:desc},'?id=eq.'+expId+'&biz_id=eq.'+getBizId()).catch(function(){});
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(err){}
+  try{_saveDB();}catch(err){}
   closeSheet('expense');toast('✅ تم التعديل','success');renderExpensesList();renderDashboard();
 }
 function savExpEdit(){
@@ -4899,7 +5145,7 @@ function savExpEdit(){
   DB.expenses=(DB.expenses||[]).map(function(e){return e.id===_expId?Object.assign({},e,{type:type,apt:apt,date:date,desc:desc,amount:amount}):e;});
   // ── تحديث فوري في Supabase ──
   sbFetch('expenses','PATCH',{type:type,apt:apt,date:date,description:desc,notes:desc,amount:amount},'?id=eq.'+_expId+'&biz_id=eq.'+getBizId()).catch(function(err){showToast('⚠️ التحديث السحابي فشل','error');});
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   closeSheet('expense');_expId=null;toast('✅ تم التعديل','success');renderExpenses();renderDashboard();
 }
 
@@ -5094,7 +5340,7 @@ function updateBizLabels(){
 function clearBizName(){
   try{
     if(DB) DB.bizName='';
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    try{_saveDB();}catch(e){}
     try{updateBizLabels();}catch(e){}
     try{
       var cn=document.getElementById('current-biz-name');
@@ -5114,7 +5360,7 @@ function saveBizInfo(){
   if(type) DB.bizType=type.value;
   if(phone) DB.bizPhone=phone.value;
   if(loc) DB.bizLocation=loc.value;
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
 }
 function saveBusinessName(){
   try{
@@ -5124,7 +5370,7 @@ function saveBusinessName(){
     if(!name){showToast('أدخل اسم النشاط','error');return;}
     if(!DB) DB={};
     DB.bizName=name;
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    try{_saveDB();}catch(e){}
     updateBizLabels();
     // Sync instantly to Supabase so ALL devices update immediately
     sbFetch('app_config','POST',{key:'biz_name',value:name,biz_id:getBizId()},'?on_conflict=key').catch(function(){});
@@ -5239,7 +5485,7 @@ function saveFieldEdit(id){
       if(ok){ DB.appUsers=DB.appUsers.map(function(x){return x.id===u.id?Object.assign({},x,{password:nw}):x;}); }
     }
     if(!ok){ toast('كلمة المرور الحالية غير صحيحة','error'); return; }
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    try{_saveDB();}catch(e){}
     cancelFieldEdit(id);
     toast('✅ تم تغيير كلمة المرور','success');
     return;
@@ -5270,7 +5516,7 @@ function saveFieldEdit(id){
   } else if(id==='biz-phone'){
     DB.bizPhone=val;
   }
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   view.textContent=val; view.style.color='var(--text)';
   cancelFieldEdit(id);
   toast('✅ تم الحفظ','success');
@@ -5316,7 +5562,7 @@ function changeMyPassword(){
     if(ok){ DB.appUsers=DB.appUsers.map(function(x){return x.id===u.id?Object.assign({},x,{password:nw}):x;}); }
   }
   if(!ok){ toast('كلمة المرور الحالية غير صحيحة','error'); return; }
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   document.getElementById('sec-cur').value='';
   document.getElementById('sec-new').value='';
   document.getElementById('sec-con').value='';
@@ -5374,7 +5620,7 @@ function renderSubscriberInfo(){
         });
         if(a.biz_name) DB.bizName=a.biz_name;
         if(a.biz_type) DB.bizType=a.biz_type;
-        try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+        try{_saveDB();}catch(e){}
         renderSubscriberInfo();
         renderProfileFields();
       }
@@ -5756,7 +6002,7 @@ function saveMo(editId){
     toast('✅ تم الحفظ','success');
     sbFetch('monthly_costs','POST',{id:rec.id,name:rec.name,apt:rec.apt,amount:rec.amount,due_date:rec.dueDate||null,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
   }
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   closeSheet('monthly');
   renderExpenses();
   renderDashboard();
@@ -5765,7 +6011,7 @@ function saveMo(editId){
 function delMo(id){
   showConfirm('حذف التكلفة','سيتم حذف هذه التكلفة الشهرية نهائياً.',function(){
     DB.monthly=(DB.monthly||[]).filter(function(m){return m.id!==id;});
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    try{_saveDB();}catch(e){}
     sbFetch('monthly_costs','DELETE',null,'?id=eq.'+id+'&biz_id=eq.'+getBizId()).catch(function(){});
     renderExpenses();renderDashboard();showToast('✅ تم الحذف','success');
   },{okText:'حذف',okColor:'#dc2626'});
@@ -5796,13 +6042,13 @@ function saveFo(editId){
     sbFetch('foundation_costs','POST',{id:rec.id,name:rec.name,date:rec.date,amount:rec.amount,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
     toast('✅ تم الحفظ','success');
   }
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   closeSheet('foundation');renderExpenses();renderDashboard();
 }
 function delFo(id){
   showConfirm('حذف تكلفة التأسيس','سيتم الحذف نهائياً.',function(){
     DB.foundation=(DB.foundation||[]).filter(function(f){return f.id!==id;});
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    try{_saveDB();}catch(e){}
     sbFetch('foundation_costs','DELETE',null,'?id=eq.'+id+'&biz_id=eq.'+getBizId()).catch(function(){});
     renderExpenses();renderDashboard();showToast('✅ تم الحذف','success');
   },{okText:'حذف',okColor:'#dc2626'});
@@ -5867,9 +6113,9 @@ function buildEmployeeForm(pre){
       +'</div>'
 
       // ── بيانات الحساب ──
-      +'<div class="form-group"><label class="form-label">اسم المستخدم للدخول</label>'
-        +'<input id="em-usr" class="fi" placeholder="اكتب اسم المستخدم هنا" autocomplete="off" style="background:var(--bg2);border:1.5px solid var(--accent);opacity:1;" value="'+(acc?acc.username:'')+'" style="direction:ltr;text-align:right;"></div>'
-      +'<div class="form-group"><label class="form-label">كلمة المرور '+(acc?'<span style="font-size:10px;color:var(--text3);font-weight:400;">(اتركها فارغة إذا لا تريد تغييرها)</span>':'')+'</label>'
+      +'<div class="form-group"><label class="form-label">البريد الإلكتروني للدخول <span style="color:var(--red);">*</span></label>'
+        +'<input id="em-eml" type="email" class="fi" placeholder="employee@example.com" autocomplete="off" style="background:var(--bg2);border:1.5px solid var(--accent);opacity:1;direction:ltr;text-align:right;" value="'+(acc?(acc.email||acc.username||''):'')+'"></div>'
+      +'<div class="form-group"><label class="form-label">كلمة المرور '+(acc?'<span style="font-size:10px;color:var(--text3);font-weight:400;">(اتركها فارغة إذا لا تريد تغييرها)</span>':'<span style="color:var(--red);">*</span>')+'</label>'
         +'<input type="text" id="em-pwd" class="fi" placeholder="اكتب كلمة المرور هنا" autocomplete="new-password" style="background:var(--bg2);border:1.5px solid var(--accent);"></div>'
 
       // ── الصلاحيات (تظهر للموظف فقط) ──
@@ -5989,40 +6235,90 @@ function saveEm(){
   var existingAcc = (DB.appUsers||[]).find(function(u){return u.employeeId===empId;});
 
   if(accessEnabled){
-    var username = document.getElementById('em-usr')?.value?.trim();
+    var email    = document.getElementById('em-eml')?.value?.trim().toLowerCase();
     var password = document.getElementById('em-pwd')?.value?.trim();
     var empRole  = _empRole || 'staff';
     var perms    = empRole === 'admin' ? {calendars:true,bookings:true,revenue:true,expenses:true,settings:true} : _getEmpPerms();
 
-    if(!username){ toast('أدخل اسم المستخدم للحساب','error'); return; }
+    if(!email){ toast('أدخل البريد الإلكتروني للموظف','error'); return; }
+    // تحقق من صيغة الإيميل
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ toast('صيغة البريد غير صحيحة','error'); return; }
     if(!existingAcc && !password){ toast('أدخل كلمة المرور','error'); return; }
 
     if(!DB.appUsers) DB.appUsers = [];
 
-    if(existingAcc){
-      DB.appUsers = DB.appUsers.map(function(u){
-        if(u.employeeId !== empId) return u;
-        var upd = Object.assign({},u,{username:username,fullname:name,role:'staff',perms:perms,employeeId:empId});
-        if(password) upd.password = password;
-        return upd;
+    // تحقق من تفرّد الإيميل سحابياً (عبر كل الاشتراكات + المالك)
+    var checkEmailUnique = function(){
+      return Promise.all([
+        sbFetch('app_users','GET',null,'?email=eq.'+encodeURIComponent(email)+'&select=id,biz_id,employee_id').catch(function(){return [];}),
+        sbFetch('biz_accounts','GET',null,'?email=eq.'+encodeURIComponent(email)+'&select=id').catch(function(){return [];})
+      ]).then(function(res){
+        var staff = res[0] || [];
+        var owners = res[1] || [];
+        // لو في حسابات مالكين بنفس الإيميل → ممنوع
+        if(owners.length > 0) return {ok:false, msg:'البريد مستخدم في حساب صاحب نشاط'};
+        // لو فيه موظف بنفس الإيميل لكن لنفس الموظف هذا (تحديث) → مسموح
+        var conflict = staff.find(function(u){
+          return !(u.biz_id===getBizId() && u.employee_id===empId);
+        });
+        if(conflict) return {ok:false, msg:'البريد مستخدم بالفعل لموظف آخر'};
+        return {ok:true};
       });
-    } else {
-      if(DB.appUsers.find(function(u){return u.username===username;})){
-        toast('اسم المستخدم مستخدم بالفعل','error'); return;
+    };
+
+    checkEmailUnique().then(function(check){
+      if(!check.ok){ toast(check.msg,'error'); return; }
+
+      var userId = existingAcc ? existingAcc.id : uid();
+      var rec = {
+        id: userId,
+        biz_id: getBizId(),
+        email: email,
+        fullname: name,
+        role: empRole,
+        perms: perms,
+        employee_id: empId
+      };
+      if(password) rec.password = password;
+
+      // محلياً
+      if(existingAcc){
+        DB.appUsers = DB.appUsers.map(function(u){
+          if(u.employeeId !== empId) return u;
+          var upd = Object.assign({},u,{email:email,username:email,fullname:name,role:empRole,perms:perms,employeeId:empId,id:userId});
+          if(password) upd.password = password;
+          return upd;
+        });
+        // سحابياً — PATCH
+        var patchData = {email:email,fullname:name,role:empRole,perms:perms,employee_id:empId,biz_id:getBizId()};
+        if(password) patchData.password = password;
+        sbFetch('app_users','PATCH',patchData,'?id=eq.'+userId).catch(function(){
+          toast('⚠️ حُفظ محلياً — تحقق من اتصال السحابة','info');
+        });
+      } else {
+        DB.appUsers.push({id:userId,email:email,username:email,password:password,fullname:name,role:empRole,perms:perms,employeeId:empId});
+        // سحابياً — POST
+        sbFetch('app_users','POST',rec,'?on_conflict=id').catch(function(){
+          toast('⚠️ حُفظ محلياً — تحقق من اتصال السحابة','info');
+        });
       }
-      DB.appUsers.push({id:uid(),username:username,password:password,fullname:name,role:empRole,perms:perms,employeeId:empId});
-    }
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-    toast('✅ تم الحفظ مع تفعيل الدخول','success');
+      try{_saveDB();}catch(e){}
+      toast('✅ تم الحفظ مع تفعيل الدخول','success');
+      closeSheet('employee');
+      renderSettings();
+    });
+    return; // ننتظر الـ async
   } else {
     // تعطيل الدخول إذا كان موجوداً
     if(existingAcc){
       DB.appUsers = DB.appUsers.filter(function(u){return u.employeeId !== empId;});
+      // احذف من السحابة أيضاً
+      sbFetch('app_users','DELETE',null,'?id=eq.'+existingAcc.id+'&biz_id=eq.'+getBizId()).catch(function(){});
     }
     toast('✅ تم الحفظ','success');
   }
 
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
   closeSheet('employee');
   renderSettings();
 }
@@ -6031,7 +6327,7 @@ function delEm(id){
   showConfirm('حذف الموظف','سيتم حذف الموظف وحسابه نهائياً.',function(){
     DB.employees = (DB.employees||[]).filter(function(e){return e.id!==id;});
     DB.appUsers  = (DB.appUsers||[]).filter(function(u){return u.employeeId!==id;});
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    try{_saveDB();}catch(e){}
     sbFetch('employees','DELETE',null,'?id=eq.'+id+'&biz_id=eq.'+getBizId()).catch(function(){});
     renderSettings();
     showToast('✅ تم الحذف','success');
@@ -6130,7 +6426,7 @@ function confirmPaySalary(empId){
   };
   if(!DB.expenses) DB.expenses=[];
   DB.expenses.push(rec);
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(err){}
+  try{_saveDB();}catch(err){}
   sbFetch('expenses','POST',rec,'?on_conflict=id').catch(function(){});
   closeSheet('expense');
   toast('✅ تم صرف راتب '+e.name+' — '+mLabel,'success');
@@ -6221,8 +6517,8 @@ function saveU(){
     sbFetch('units','POST',{id:name,name:name,type:type,persons:persons,city:city,district:district,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
     toast('✅ تم الإضافة','success');
   }
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-  try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+  try{_saveDB();}catch(e){}
+  try{_saveDB();}catch(e){}
   closeSheet('unit'); renderSettings();
 }
 function delU(name){
@@ -6230,7 +6526,7 @@ function delU(name){
   showConfirm('حذف الوحدة','سيتم حذف وحدة "'+name+'" نهائياً.',function(){
     DB.units=(DB.units||[]).filter(function(u){return u!==name;});
     if(DB.unitTypes)delete DB.unitTypes[name];
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    try{_saveDB();}catch(e){}
     sbFetch('units','DELETE',null,'?id=eq.'+encodeURIComponent(name)+'&biz_id=eq.'+getBizId()).catch(function(){});
     renderSettings();showToast('✅ تم الحذف','success');
   },{okText:'حذف',okColor:'#dc2626'});
@@ -6457,7 +6753,7 @@ function injectGmailBookings(){
   });
   
   if(added>0){
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch{}
+    try{_saveDB();}catch{}
     showToast('✅ تم استيراد '+added+' حجز','success');
     renderAll();
   } else {
@@ -6544,7 +6840,11 @@ function getBizId(){
 // ── Session helpers ───────────────────────────
 function _saveSession(user){ localStorage.setItem('bodo_session',JSON.stringify(user)); }
 function _loadSession(){ try{const s=localStorage.getItem('bodo_session');return s?JSON.parse(s):null;}catch{return null;} }
-function _clearSession(){ localStorage.removeItem('bodo_session'); localStorage.removeItem('kaya_v9'); }
+function _clearSession(){
+  localStorage.removeItem('bodo_session');
+  // امسح المفتاح القديم المشترك (legacy) — البيانات الجديدة معزولة في bodo_v9_<bizId>
+  localStorage.removeItem('bodo_v9');
+}
 
 // ── DB init (always empty — data comes from Supabase) ──
 function _freshDB(bizId){
@@ -6591,7 +6891,7 @@ async function loadAllData(){
     DB.employees = Array.isArray(employees) ? employees.map(e=>({id:e.id,name:e.name,role:e.role||'',salary:e.salary||0,phone:e.phone||'',hireDate:e.hire_date||''})) : [];
     DB.monthly = Array.isArray(monthly) ? monthly.map(m=>({id:m.id,name:m.name,amount:m.amount||0,apt:m.apt||'',dueDate:m.due_date||''})) : [];
     DB.foundation = Array.isArray(foundation) ? foundation.map(f=>({id:f.id,name:f.name,amount:f.amount||0,date:f.date||''})) : [];
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    try{_saveDB();}catch(e){}
     renderAll();
     if(_currentPage==='calbooking'&&_currentCBTab===1) renderCalendars();
   }catch(e){ console.warn('loadAllData error',e); }
@@ -6745,7 +7045,7 @@ async function _pollChanges(){
     }
 
     if(changed){
-      try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+      try{_saveDB();}catch(e){}
       // Skip re-render if a sheet is open (prevents resetting form inputs)
       if(!document.querySelector('.sheet-overlay.open')) renderAll();
     }
@@ -6850,7 +7150,7 @@ function handleRealtimeChange(table, payload){
       // Live business name sync across all devices
       if(rec && rec.key === 'biz_name' && rec.value){
         DB.bizName = rec.value;
-        try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+        try{_saveDB();}catch(e){}
         updateBizLabels();
         var cn=document.getElementById('current-biz-name');
         if(cn) cn.textContent=rec.value;
@@ -6865,7 +7165,7 @@ function handleRealtimeChange(table, payload){
     }
     
     // Save locally and re-render
-    try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
+    try{_saveDB();}catch(e){}
     renderAll();
   }catch(err){}
 }
