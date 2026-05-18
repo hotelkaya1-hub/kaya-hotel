@@ -3274,8 +3274,14 @@ function showApp(){
 }
 
 function logout(){
-  localStorage.removeItem('kaya_session');
+  // امسح الجلسة + كل بيانات localStorage الخاصة بالحساب السابق
+  _clearSession(); // يمسح bodo_session و kaya_v9
+  localStorage.removeItem('kaya_session'); // legacy
+  // أعد تهيئة المتغيرات في الذاكرة
   currentUser=null;
+  DB=_freshDB('');
+  // أوقف الـ polling الحالي عشان ما يكمل يجلب بيانات
+  try{ clearInterval(_pollTimer); }catch(e){}
   // Reset nav and pages to default state
   document.querySelectorAll('.nav-item').forEach(function(n){n.style.display='';n.classList.remove('active');});
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
@@ -3285,6 +3291,11 @@ function logout(){
   document.getElementById('app').style.display='none';
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
+  // امسح أي شارة تنبيهات
+  try{
+    var badge=document.querySelector('.notif-badge');
+    if(badge){badge.style.display='none';badge.textContent='';}
+  }catch(e){}
 }
 function applyPerms(){
   if(!currentUser) return;
@@ -3913,7 +3924,7 @@ function delB(id){
       renderAll();
       showToast('✅ تم الحذف','success');
       // ── حذف فوري من Supabase ──
-      sbFetch('bookings','DELETE',null,'?id=eq.'+id).catch(function(){});
+      sbFetch('bookings','DELETE',null,'?id=eq.'+id+'&biz_id=eq.'+getBizId()).catch(function(){});
     },
     {okText:'حذف',okColor:'#dc2626'}
   );
@@ -3940,7 +3951,7 @@ function savP(){
   var p=parseFloat(document.getElementById('pr')?.value)||0;
   DB.bookings=DB.bookings.map(function(b){return b.id===_pid?Object.assign({},b,{price:p,total:b.nights*p}):b;});
   var updated=DB.bookings.find(function(b){return b.id===_pid;});
-  sbFetch('bookings','PATCH',{price:p,total:updated?updated.total:0},'?id=eq.'+_pid).catch(function(){});
+  sbFetch('bookings','PATCH',{price:p,total:updated?updated.total:0},'?id=eq.'+_pid+'&biz_id=eq.'+getBizId()).catch(function(){});
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('booking');toast('✅ تم حفظ السعر','success');renderAll();
 }
@@ -4275,7 +4286,7 @@ function saveSale(){
   var entry={id:_saleId||uid(),desc:desc,date:date,apt:apt,amount:amount,notes:notes};
   if(_saleId){
     DB.sales=DB.sales.map(function(s){return s.id===_saleId?entry:s;});
-    sbFetch('sales','PATCH',{description:desc,date:date,apt:apt,amount:amount,notes:notes},'?id=eq.'+_saleId).catch(function(){});
+    sbFetch('sales','PATCH',{description:desc,date:date,apt:apt,amount:amount,notes:notes},'?id=eq.'+_saleId+'&biz_id=eq.'+getBizId()).catch(function(){});
   } else {
     _markPending('sales',entry.id);
     DB.sales.push(entry);
@@ -4291,7 +4302,7 @@ function delSale(id){
     if(!DB.sales)return;
     DB.sales=DB.sales.filter(function(s){return s.id!==id;});
     try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-    sbFetch('sales','DELETE',null,'?id=eq.'+id).catch(function(){});
+    sbFetch('sales','DELETE',null,'?id=eq.'+id+'&biz_id=eq.'+getBizId()).catch(function(){});
     renderRevenue();renderDashboard();showToast('✅ تم الحذف','success');
   },{okText:'حذف',okColor:'#dc2626'});
 }
@@ -4810,7 +4821,7 @@ function delE(id){
     renderExpenses();renderDashboard();
     showToast('✅ تم الحذف','success');
     // ── حذف فوري من Supabase ──
-    sbFetch('expenses','DELETE',null,'?id=eq.'+id).catch(function(){});
+    sbFetch('expenses','DELETE',null,'?id=eq.'+id+'&biz_id=eq.'+getBizId()).catch(function(){});
   },{okText:'حذف',okColor:'#dc2626'});
 }
 var _expId=null;
@@ -4876,7 +4887,7 @@ function saveSalaryEdit(expId, empId){
   DB.expenses=(DB.expenses||[]).map(function(e){
     return e.id===expId?Object.assign({},e,{amount:amount,salaryMonth:salaryMonth,desc:desc}):e;
   });
-  sbFetch('expenses','PATCH',{amount:amount,description:desc,notes:desc},'?id=eq.'+expId).catch(function(){});
+  sbFetch('expenses','PATCH',{amount:amount,description:desc,notes:desc},'?id=eq.'+expId+'&biz_id=eq.'+getBizId()).catch(function(){});
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(err){}
   closeSheet('expense');toast('✅ تم التعديل','success');renderExpensesList();renderDashboard();
 }
@@ -4887,7 +4898,7 @@ function savExpEdit(){
   if(!amount){toast('أدخل المبلغ','error');return;}
   DB.expenses=(DB.expenses||[]).map(function(e){return e.id===_expId?Object.assign({},e,{type:type,apt:apt,date:date,desc:desc,amount:amount}):e;});
   // ── تحديث فوري في Supabase ──
-  sbFetch('expenses','PATCH',{type:type,apt:apt,date:date,description:desc,notes:desc,amount:amount},'?id=eq.'+_expId).catch(function(err){showToast('⚠️ التحديث السحابي فشل','error');});
+  sbFetch('expenses','PATCH',{type:type,apt:apt,date:date,description:desc,notes:desc,amount:amount},'?id=eq.'+_expId+'&biz_id=eq.'+getBizId()).catch(function(err){showToast('⚠️ التحديث السحابي فشل','error');});
   try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
   closeSheet('expense');_expId=null;toast('✅ تم التعديل','success');renderExpenses();renderDashboard();
 }
@@ -5206,7 +5217,7 @@ function cancelFieldEdit(id){
   var btn  = document.getElementById('btn-'+id);
   if(view) view.style.display = 'block';
   if(edit) edit.style.display = 'none';
-  if(btn)  btn.textContent = '✏️';
+  if(btn) btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
 }
 
 function saveFieldEdit(id){
@@ -5413,7 +5424,7 @@ function renderSubscriberInfo(){
   el.innerHTML = expiryWarning
     +'<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">'
     +'<div style="background:linear-gradient(135deg,rgba(200,169,110,.1),transparent);padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">'
-      +'<div style="font-size:15px;font-weight:900;color:var(--accent);">باقة '+pkg.label+'</div>'
+      +'<div style="font-size:15px;font-weight:900;color:var(--accent);">باقتك: '+pkg.label+'</div>'
       +'<span style="font-size:11px;font-weight:800;padding:4px 12px;border-radius:20px;background:rgba(0,0,0,.06);color:'+st.c+';">'+st.l+'</span>'
     +'</div>'
     +'<div style="padding:6px 16px 14px;">'
@@ -5738,7 +5749,7 @@ function saveMo(editId){
   if(editId&&editId!=='null'){
     DB.monthly=DB.monthly.map(function(m){if(m.id===editId){rec=Object.assign({},m,{name:name,apt:apt,amount:amount,dueDate:dueDate});return rec;}return m;});
     toast('✅ تم التعديل','success');
-    sbFetch('monthly_costs','PATCH',{name:name,apt:apt,amount:amount,due_date:dueDate||null,biz_id:getBizId()},'?id=eq.'+editId).catch(function(){});
+    sbFetch('monthly_costs','PATCH',{name:name,apt:apt,amount:amount,due_date:dueDate||null,biz_id:getBizId()},'?id=eq.'+editId+'&biz_id=eq.'+getBizId()).catch(function(){});
   } else {
     rec={id:uid(),name:name,apt:apt,amount:amount,dueDate:dueDate};
     DB.monthly.push(rec);
@@ -5755,7 +5766,7 @@ function delMo(id){
   showConfirm('حذف التكلفة','سيتم حذف هذه التكلفة الشهرية نهائياً.',function(){
     DB.monthly=(DB.monthly||[]).filter(function(m){return m.id!==id;});
     try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-    sbFetch('monthly_costs','DELETE',null,'?id=eq.'+id).catch(function(){});
+    sbFetch('monthly_costs','DELETE',null,'?id=eq.'+id+'&biz_id=eq.'+getBizId()).catch(function(){});
     renderExpenses();renderDashboard();showToast('✅ تم الحذف','success');
   },{okText:'حذف',okColor:'#dc2626'});
 }
@@ -5777,7 +5788,7 @@ function saveFo(editId){
   if(!DB.foundation)DB.foundation=[];
   if(editId&&editId!=='null'){
     DB.foundation=DB.foundation.map(function(f){return f.id===editId?Object.assign({},f,{name:name,date:date,amount:amount}):f;});
-    sbFetch('foundation_costs','PATCH',{name:name,date:date,amount:amount},'?id=eq.'+editId).catch(function(){});
+    sbFetch('foundation_costs','PATCH',{name:name,date:date,amount:amount,biz_id:getBizId()},'?id=eq.'+editId+'&biz_id=eq.'+getBizId()).catch(function(){});
     toast('✅ تم التعديل','success');
   } else {
     var rec={id:uid(),name:name,date:date,amount:amount};
@@ -5792,7 +5803,7 @@ function delFo(id){
   showConfirm('حذف تكلفة التأسيس','سيتم الحذف نهائياً.',function(){
     DB.foundation=(DB.foundation||[]).filter(function(f){return f.id!==id;});
     try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-    sbFetch('foundation_costs','DELETE',null,'?id=eq.'+id).catch(function(){});
+    sbFetch('foundation_costs','DELETE',null,'?id=eq.'+id+'&biz_id=eq.'+getBizId()).catch(function(){});
     renderExpenses();renderDashboard();showToast('✅ تم الحذف','success');
   },{okText:'حذف',okColor:'#dc2626'});
 }
@@ -5963,13 +5974,13 @@ function saveEm(){
     DB.employees = DB.employees.map(function(e){
       return e.id===_emId ? Object.assign({},e,{name:name,role:role,salary:salary,phone:phone,hireDate:hireDate}) : e;
     });
-    sbFetch('employees','PATCH',{name:name,role:role,salary:salary,phone:phone,hire_date:hireDate},'?id=eq.'+_emId).catch(function(){});
+    sbFetch('employees','PATCH',{name:name,role:role,salary:salary,phone:phone,hire_date:hireDate,biz_id:getBizId()},'?id=eq.'+_emId+'&biz_id=eq.'+getBizId()).catch(function(){});
   } else {
     // فحص حد الباقة
     if(!checkEmployeeLimit()) return;
     var rec = {id:empId,name:name,role:role,salary:salary,phone:phone,hireDate:hireDate};
     DB.employees.push(rec);
-    sbFetch('employees','POST',rec,'?on_conflict=id').catch(function(){});
+    sbFetch('employees','POST',{id:empId,name:name,role:role,salary:salary,phone:phone,hire_date:hireDate,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
   }
 
   // ── حفظ / تحديث / حذف حساب الدخول ──
@@ -6021,7 +6032,7 @@ function delEm(id){
     DB.employees = (DB.employees||[]).filter(function(e){return e.id!==id;});
     DB.appUsers  = (DB.appUsers||[]).filter(function(u){return u.employeeId!==id;});
     try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-    sbFetch('employees','DELETE',null,'?id=eq.'+id).catch(function(){});
+    sbFetch('employees','DELETE',null,'?id=eq.'+id+'&biz_id=eq.'+getBizId()).catch(function(){});
     renderSettings();
     showToast('✅ تم الحذف','success');
   },{okText:'حذف',okColor:'#dc2626'});
@@ -6198,7 +6209,7 @@ function saveU(){
     delete DB.unitData[_uEditOld];
     DB.unitTypes[name] = type;
     DB.unitData[name]  = {persons:persons, city:city, district:district};
-    sbFetch('units','DELETE',null,'?id=eq.'+encodeURIComponent(_uEditOld)).catch(function(){});
+    sbFetch('units','DELETE',null,'?id=eq.'+encodeURIComponent(_uEditOld)+'&biz_id=eq.'+getBizId()).catch(function(){});
     sbFetch('units','POST',{id:name,name:name,type:type,persons:persons,city:city,district:district,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
     toast('✅ تم التعديل','success');
   } else {
@@ -6220,7 +6231,7 @@ function delU(name){
     DB.units=(DB.units||[]).filter(function(u){return u!==name;});
     if(DB.unitTypes)delete DB.unitTypes[name];
     try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
-    sbFetch('units','DELETE',null,'?id=eq.'+encodeURIComponent(name)).catch(function(){});
+    sbFetch('units','DELETE',null,'?id=eq.'+encodeURIComponent(name)+'&biz_id=eq.'+getBizId()).catch(function(){});
     renderSettings();showToast('✅ تم الحذف','success');
   },{okText:'حذف',okColor:'#dc2626'});
 }
@@ -6558,25 +6569,28 @@ async function loadAllData(){
       sbFetch('monthly_costs','GET',null,'?select=*&biz_id=eq.'+bizId).catch(()=>[]),
       sbFetch('foundation_costs','GET',null,'?select=*&biz_id=eq.'+bizId).catch(()=>[]),
     ]);
-    if(bookings?.length) DB.bookings=bookings;
-    if(units?.length){
-      DB.units=units.map(u=>u.name||u.id);
-      units.forEach(u=>{if(u.type)(DB.unitTypes=DB.unitTypes||{})[u.name||u.id]=u.type;});
+    // ضع البيانات دائماً حتى لو رجعت فاضية (يمسح بيانات قديمة من حساب سابق)
+    DB.bookings = Array.isArray(bookings) ? bookings : [];
+    if(Array.isArray(units)){
+      DB.units = units.map(u=>u.name||u.id);
+      DB.unitTypes = {};
+      units.forEach(u=>{if(u.type) DB.unitTypes[u.name||u.id]=u.type;});
       // إعادة رسم التقويم فوراً بعد تحميل الوحدات
       var calEl=document.getElementById('cals-container');
       if(calEl&&_currentPage==='calbooking'&&_currentCBTab===1){
         calEl.innerHTML=DB.units.map(function(apt){return buildCal(apt);}).join('');
       }
-      // إعادة رسم الوحدات في الإعدادات
       if(_currentPage==='settings'){
         try{renderSettings();}catch(e){}
       }
+    } else {
+      DB.units=[]; DB.unitTypes={};
     }
-    if(sales?.length) DB.sales=sales.map(s=>({id:s.id,desc:s.description||'',amount:s.amount||0,date:s.date||'',apt:s.apt||'عام',notes:s.notes||''}));
-    if(expenses?.length) DB.expenses=expenses.map(e=>({id:e.id,type:e.type||'أخرى',amount:e.amount||0,date:e.date||'',desc:e.description||'',apt:e.apt||'عام',salaryRef:e.salary_ref||'',salaryMonth:e.salary_month||''}));
-    if(employees?.length) DB.employees=employees.map(e=>({id:e.id,name:e.name,role:e.role||'',salary:e.salary||0,phone:e.phone||'',hireDate:e.hire_date||''}));
-    if(monthly?.length) DB.monthly=monthly.map(m=>({id:m.id,name:m.name,amount:m.amount||0,apt:m.apt||'',dueDate:m.due_date||''}));
-    if(foundation?.length) DB.foundation=foundation.map(f=>({id:f.id,name:f.name,amount:f.amount||0,date:f.date||''}));
+    DB.sales = Array.isArray(sales) ? sales.map(s=>({id:s.id,desc:s.description||'',amount:s.amount||0,date:s.date||'',apt:s.apt||'عام',notes:s.notes||''})) : [];
+    DB.expenses = Array.isArray(expenses) ? expenses.map(e=>({id:e.id,type:e.type||'أخرى',amount:e.amount||0,date:e.date||'',desc:e.description||'',apt:e.apt||'عام',salaryRef:e.salary_ref||'',salaryMonth:e.salary_month||''})) : [];
+    DB.employees = Array.isArray(employees) ? employees.map(e=>({id:e.id,name:e.name,role:e.role||'',salary:e.salary||0,phone:e.phone||'',hireDate:e.hire_date||''})) : [];
+    DB.monthly = Array.isArray(monthly) ? monthly.map(m=>({id:m.id,name:m.name,amount:m.amount||0,apt:m.apt||'',dueDate:m.due_date||''})) : [];
+    DB.foundation = Array.isArray(foundation) ? foundation.map(f=>({id:f.id,name:f.name,amount:f.amount||0,date:f.date||''})) : [];
     try{localStorage.setItem('kaya_v9',JSON.stringify(DB));}catch(e){}
     renderAll();
     if(_currentPage==='calbooking'&&_currentCBTab===1) renderCalendars();
@@ -6677,31 +6691,41 @@ async function _pollChanges(){
         });
         if(JSON.stringify(newExp) !== JSON.stringify(DB.expenses||[])){ DB.expenses=newExp; changed=true; }
       }
-      if(monthly && Array.isArray(monthly) && monthly.length){
-        var newMo = monthly.map(function(m){
-          var local = (DB.monthly||[]).find(function(x){return x.id===m.id;});
-          // Always keep local dueDate - server may not have it
-          return {id:m.id,name:m.name,amount:m.amount,apt:m.apt||'',dueDate:m.due_date||(local?local.dueDate:'')};
-        });
-        // Compare only name/amount/apt - ignore dueDate to prevent overwriting local value
-        var oldKey = (DB.monthly||[]).map(function(m){return m.id+m.name+m.amount+m.apt;}).sort().join('|');
-        var newKey = newMo.map(function(m){return m.id+m.name+m.amount+m.apt;}).sort().join('|');
-        if(oldKey !== newKey){ DB.monthly=newMo; changed=true; }
-        else {
-          // Same records - just ensure dueDate is kept from local
-          DB.monthly = (DB.monthly||[]).map(function(m){
-            var srv = newMo.find(function(x){return x.id===m.id;});
-            return srv ? Object.assign({},srv,{dueDate:m.dueDate||srv.dueDate}) : m;
+      if(monthly && Array.isArray(monthly)){
+        if(monthly.length){
+          var newMo = monthly.map(function(m){
+            var local = (DB.monthly||[]).find(function(x){return x.id===m.id;});
+            return {id:m.id,name:m.name,amount:m.amount,apt:m.apt||'',dueDate:m.due_date||(local?local.dueDate:'')};
           });
+          var oldKey = (DB.monthly||[]).map(function(m){return m.id+m.name+m.amount+m.apt;}).sort().join('|');
+          var newKey = newMo.map(function(m){return m.id+m.name+m.amount+m.apt;}).sort().join('|');
+          if(oldKey !== newKey){ DB.monthly=newMo; changed=true; }
+          else {
+            DB.monthly = (DB.monthly||[]).map(function(m){
+              var srv = newMo.find(function(x){return x.id===m.id;});
+              return srv ? Object.assign({},srv,{dueDate:m.dueDate||srv.dueDate}) : m;
+            });
+          }
+        } else if((DB.monthly||[]).length){
+          // الخادم رجّع فاضي ← امسح المحلي (يخص حساب سابق)
+          DB.monthly=[]; changed=true;
         }
       }
-      if(foundation && Array.isArray(foundation) && foundation.length){
-        var newFo = foundation.map(function(f){return {id:f.id,name:f.name,amount:f.amount,date:f.date||''};});
-        if(JSON.stringify(newFo) !== JSON.stringify(DB.foundation||[])){ DB.foundation=newFo; changed=true; }
+      if(foundation && Array.isArray(foundation)){
+        if(foundation.length){
+          var newFo = foundation.map(function(f){return {id:f.id,name:f.name,amount:f.amount,date:f.date||''};});
+          if(JSON.stringify(newFo) !== JSON.stringify(DB.foundation||[])){ DB.foundation=newFo; changed=true; }
+        } else if((DB.foundation||[]).length){
+          DB.foundation=[]; changed=true;
+        }
       }
-      if(employees && Array.isArray(employees) && employees.length){
-        var newEm = employees.map(function(e){return {id:e.id,name:e.name,role:e.role,salary:e.salary};});
-        if(JSON.stringify(newEm) !== JSON.stringify(DB.employees||[])){ DB.employees=newEm; changed=true; }
+      if(employees && Array.isArray(employees)){
+        if(employees.length){
+          var newEm = employees.map(function(e){return {id:e.id,name:e.name,role:e.role,salary:e.salary};});
+          if(JSON.stringify(newEm) !== JSON.stringify(DB.employees||[])){ DB.employees=newEm; changed=true; }
+        } else if((DB.employees||[]).length){
+          DB.employees=[]; changed=true;
+        }
       }
       if(sales && Array.isArray(sales)){
         var newSl = sales.map(function(s){return {id:s.id,desc:s.desc||s.description||'',amount:s.amount,date:s.date,apt:s.apt||'عام',notes:s.notes||''};});
