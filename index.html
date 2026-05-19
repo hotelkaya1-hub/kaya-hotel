@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b1220">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>BODO</title>
 <link rel="icon" id="favicon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231a1a2e'/><text x='16' y='24' font-family='Georgia,serif' font-size='24' font-weight='900' text-anchor='middle' fill='%23c8a96e'>B</text></svg>">
 <link rel="shortcut icon" href="data:image/x-icon;base64,AAABAAEAEBAQAAEABAAoAQAAFgAAACgAAAAQAAAAIAAAAAEABAAAAAAAgAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA/4QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAERERAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA">
@@ -3048,6 +3049,7 @@ function _recalcAddSubEnd(){
 
 // تجديد سريع من لوحة المالك
 function quickRenewSub(id, bizName, currentBilling){
+  console.log('[تجديد] فتح نافذة التجديد:', {id, bizName, currentBilling});
   var modal=document.createElement('div');
   modal.id='_quickRenewModal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
@@ -3066,27 +3068,78 @@ function quickRenewSub(id, bizName, currentBilling){
 }
 
 function _doQuickRenew(id, period){
-  sbFetch('biz_accounts','GET',null,'?id=eq.'+id+'&select=*').then(function(rows){
-    if(!rows||!rows.length){ toast('الحساب غير موجود','error'); return; }
+  console.log('[تجديد] بدء التجديد:', {id, period});
+  var modal = document.getElementById('_quickRenewModal');
+  // علامة تحميل
+  if(modal){
+    modal.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:30px;text-align:center;"><div style="font-size:14px;color:var(--text2);">جاري التجديد...</div></div>';
+  }
+  
+  // 1. جلب الحساب من Supabase
+  console.log('[تجديد] جلب الحساب من Supabase...');
+  sbFetch('biz_accounts','GET',null,'?id=eq.'+encodeURIComponent(id)+'&select=*').then(function(rows){
+    console.log('[تجديد] الاستجابة:', rows);
+    if(!rows || !rows.length){ 
+      if(modal) modal.remove();
+      toast('الحساب غير موجود في القاعدة','error'); 
+      return; 
+    }
     var acct = rows[0];
+    
+    // 2. احسب تاريخ النهاية الجديد
     var startFrom = new Date();
     if(acct.subscription_end){
       var cur = new Date(acct.subscription_end);
       if(cur > startFrom) startFrom = cur;
     }
     var newEnd = new Date(startFrom);
-    if(period==='سنوي') newEnd.setFullYear(newEnd.getFullYear()+1);
-    else newEnd.setMonth(newEnd.getMonth()+1);
-    sbFetch('biz_accounts','PATCH',{
-      subscription_end: newEnd.toISOString(),
-      billing: period,
-      status: 'active'
-    },'?id=eq.'+id).then(function(){
-      document.getElementById('_quickRenewModal')?.remove();
-      toast('✅ تم التجديد حتى '+newEnd.toISOString().substring(0,10),'success');
-      renderOwnerSubscribers();
-    }).catch(function(){ toast('فشل التجديد','error'); });
-  }).catch(function(){ toast('فشل جلب الحساب','error'); });
+    if(period === 'سنوي') newEnd.setFullYear(newEnd.getFullYear() + 1);
+    else newEnd.setMonth(newEnd.getMonth() + 1);
+    
+    var newEndISO = newEnd.toISOString();
+    console.log('[تجديد] تاريخ النهاية الجديد:', newEndISO);
+    
+    // 3. PATCH للقاعدة — نرسل فقط subscription_end (الحقل الأساسي)
+    var patchBody = {
+      subscription_end: newEndISO
+    };
+    // أضف billing فقط لو موجود في الحساب الحالي
+    if(acct.hasOwnProperty('billing')){
+      patchBody.billing = period;
+    }
+    console.log('[تجديد] إرسال PATCH:', patchBody);
+    sbFetch('biz_accounts','PATCH',patchBody,'?id=eq.'+encodeURIComponent(id)).then(function(res){
+      console.log('[تجديد] ✅ PATCH نجح:', res);
+      // 4. حدّث DB المحلي فوراً
+      if(DB && DB.bizAccounts){
+        for(var i=0;i<DB.bizAccounts.length;i++){
+          if(DB.bizAccounts[i].id === id){
+            DB.bizAccounts[i].subscription_end = newEndISO;
+            if(DB.bizAccounts[i].hasOwnProperty('billing')){
+              DB.bizAccounts[i].billing = period;
+            }
+            break;
+          }
+        }
+      }
+      var m = document.getElementById('_quickRenewModal');
+      if(m) m.remove();
+      var dateStr = newEndISO.substring(0,10);
+      toast('✅ تم التجديد حتى ' + dateStr, 'success');
+      try{ renderOwnerSubscribers(); }catch(e){ console.error('[تجديد] خطأ في render:', e); }
+      try{ renderOwnerHome(); }catch(e){}
+    }).catch(function(err){
+      console.error('[تجديد] ❌ فشل PATCH:', err);
+      var m = document.getElementById('_quickRenewModal');
+      if(m) m.remove();
+      toast('فشل التجديد: ' + (err && err.message ? err.message : 'تحقق من الاتصال'), 'error');
+    });
+  }).catch(function(err){
+    console.error('[تجديد] ❌ فشل GET:', err);
+    var m = document.getElementById('_quickRenewModal');
+    if(m) m.remove();
+    toast('فشل جلب الحساب: ' + (err && err.message ? err.message : 'تحقق من الاتصال'), 'error');
+  });
 }
 
 function saveNewSubscriber(){
@@ -6472,17 +6525,36 @@ function saveFo(editId){
   if(!name||!amount){toast('أدخل الاسم والمبلغ','error');return;}
   if(!DB.foundation)DB.foundation=[];
   if(editId&&editId!=='null'){
+    console.log('[تأسيس] تعديل:', {editId, name, date, amount});
+    // تحديث محلي فوراً
     DB.foundation=DB.foundation.map(function(f){return f.id===editId?Object.assign({},f,{name:name,date:date,amount:amount}):f;});
-    sbFetch('foundation_costs','PATCH',{name:name,date:date,amount:amount,biz_id:getBizId()},'?id=eq.'+editId+'&biz_id=eq.'+getBizId()).catch(function(){});
+    // أعد رسم الواجهة فوراً
+    try{_saveDB();}catch(e){}
+    closeSheet('foundation');
+    renderExpenses();
+    renderDashboard();
     toast('✅ تم التعديل','success');
+    // ثم PATCH للقاعدة (بدون biz_id في الـ body)
+    sbFetch('foundation_costs','PATCH',{name:name,date:date,amount:amount},'?id=eq.'+encodeURIComponent(editId)+'&biz_id=eq.'+encodeURIComponent(getBizId())).then(function(res){
+      console.log('[تأسيس] ✅ PATCH نجح:', res);
+    }).catch(function(err){
+      console.error('[تأسيس] ❌ فشل PATCH:', err);
+      toast('فشل المزامنة مع السحابة','error');
+    });
   } else {
     var rec={id:uid(),name:name,date:date,amount:amount};
     DB.foundation.push(rec);
-    sbFetch('foundation_costs','POST',{id:rec.id,name:rec.name,date:rec.date,amount:rec.amount,biz_id:getBizId()},'?on_conflict=id').catch(function(){});
+    try{_saveDB();}catch(e){}
+    closeSheet('foundation');
+    renderExpenses();
+    renderDashboard();
     toast('✅ تم الحفظ','success');
+    sbFetch('foundation_costs','POST',{id:rec.id,name:rec.name,date:rec.date,amount:rec.amount,biz_id:getBizId()},'?on_conflict=id').then(function(res){
+      console.log('[تأسيس] ✅ POST نجح:', res);
+    }).catch(function(err){
+      console.error('[تأسيس] ❌ فشل POST:', err);
+    });
   }
-  try{_saveDB();}catch(e){}
-  closeSheet('foundation');renderExpenses();renderDashboard();
 }
 function delFo(id){
   showConfirm('حذف تكلفة التأسيس','سيتم الحذف نهائياً.',function(){
