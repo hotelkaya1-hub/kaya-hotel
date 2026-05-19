@@ -2067,14 +2067,31 @@ function showOwnerDashboard(){
       }catch(e){}
     }
     // افتراضياً افتح "الرئيسية" عند أول دخول
+    // لكن أولاً استعد التبويب المحفوظ لو موجود
+    try{
+      var savedTab = parseInt(localStorage.getItem('bodo_owner_tab'));
+      if(!isNaN(savedTab) && savedTab >= 0 && savedTab <= 5 && _ownerTab === -1){
+        _ownerTab = savedTab;
+      }
+    }catch(e){}
     if(_ownerTab===-1) showOwnerTab(0);
-    else if(_ownerTab===1) renderOwnerRequests(); // فقط إعادة رسم إذا في تب الطلبات
-    else if(_ownerTab===0) renderOwnerHome(); // كذلك للرئيسية
-  }).catch(function(){ if(_ownerTab===-1) showOwnerTab(0); });
+    else showOwnerTab(_ownerTab); // استعد التبويب المحفوظ
+  }).catch(function(){ 
+    try{
+      var savedTab = parseInt(localStorage.getItem('bodo_owner_tab'));
+      if(!isNaN(savedTab) && savedTab >= 0 && savedTab <= 5 && _ownerTab === -1){
+        _ownerTab = savedTab;
+      }
+    }catch(e){}
+    if(_ownerTab===-1) showOwnerTab(0); 
+    else showOwnerTab(_ownerTab);
+  });
 }
 
 function showOwnerTab(n){
   _ownerTab=n;
+  // احفظ التبويب الحالي عشان لو حدث الصفحة يرجع له
+  try{ localStorage.setItem('bodo_owner_tab', String(n)); }catch(e){}
   // تنظيف صارم — احذف active من كل أزرار التب (حتى لو في عناصر يتيمة بمكان ثاني)
   var allTabs = document.querySelectorAll('.owner-otab');
   for(var k=0;k<allTabs.length;k++){ allTabs[k].classList.remove('active'); }
@@ -4802,7 +4819,7 @@ function renderRevenue(){
   document.getElementById('rev-chart').innerHTML=months.map(function(m){return'<div class="bar-col"><div class="bar-v">'+(m.rev>0?Math.round(m.rev/1000)+'k':'')+'</div><div class="bar-fill" style="height:'+Math.max(4,Math.round((m.rev/maxR)*75))+'px;background:'+(m.cur?'linear-gradient(180deg,var(--accent),rgba(200,169,110,.4))':'linear-gradient(180deg,rgba(200,169,110,.5),rgba(200,169,110,.15))') +'"></div><div class="bar-lbl" style="color:'+(m.cur?'var(--accent)':'var(--text3)')+';">'+m.label+'</div></div>';}).join('');
   var maxRev=Math.max.apply(null,(DB.units||[]).map(function(a){return conf.filter(function(b){return b.apt===a;}).reduce(function(s,b){return s+b.total;},0);}).concat([1]));
   document.getElementById('rev-by-apt').innerHTML=(DB.units||[]).map(function(apt){var r=conf.filter(function(b){return b.apt===apt;}).reduce(function(s,b){return s+b.total;},0);var n=conf.filter(function(b){return b.apt===apt;}).reduce(function(s,b){return s+b.nights;},0);var c=conf.filter(function(b){return b.apt===apt;}).length;return'<div class="perf-row"><div class="perf-hd"><span class="perf-name">'+apt+'</span><span class="perf-val">'+c+' حجز · '+n+' ليلة · <strong style="color:var(--text);">'+fmtM(r)+' ر.س</strong></span></div><div class="perf-track"><div class="perf-fill" style="width:'+Math.round((r/maxRev)*100)+'%"></div></div></div>';}).join('');
-  showFinTab(1);
+  showFinTab(_currentFinTab||1);
 }
 
 // ══ SALES ══
