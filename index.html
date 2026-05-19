@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" style="scroll-behavior:smooth;">
+<html lang="ar-u-nu-latn" dir="rtl" style="scroll-behavior:smooth;">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -49,17 +49,48 @@ input[type="tel"] {
   direction: ltr;
   text-align: right;
 }
+
+/* ══════════ فرض الأرقام الإنجليزية في كل التطبيق ══════════ */
+html, body {
+  -webkit-locale: "en-US";
+  font-variant-numeric: lining-nums tabular-nums;
+}
+* {
+  font-variant-numeric: lining-nums tabular-nums;
+}
+input, textarea, select, button {
+  -webkit-locale: "en-US";
+  font-variant-numeric: lining-nums tabular-nums;
+}
+/* ═════════════════════════════════════════════════════════ */
+
 input[type="date"] {
-  direction: ltr;
-  text-align: center;
+  direction: ltr !important;
+  text-align: left !important;
   font-family: 'Cairo', sans-serif;
   -webkit-locale: "en-US";
   color-scheme: light dark;
   min-height: 44px;
+  unicode-bidi: plaintext;
 }
-input[type="date"]::-webkit-datetime-edit { direction: ltr; }
-input[type="date"]::-webkit-datetime-edit-fields-wrapper { direction: ltr; }
-input[type="date"]::-webkit-date-and-time-value { text-align: center; }
+input[type="date"]::-webkit-datetime-edit { 
+  direction: ltr !important; 
+  text-align: left !important;
+  padding-left: 8px;
+}
+input[type="date"]::-webkit-datetime-edit-fields-wrapper { 
+  direction: ltr !important; 
+  justify-content: flex-start !important;
+}
+input[type="date"]::-webkit-datetime-edit-year-field,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field {
+  direction: ltr !important;
+}
+input[type="date"]::-webkit-date-and-time-value { 
+  text-align: left !important; 
+  direction: ltr !important;
+}
 input,select,button,textarea{font-family:'Cairo',sans-serif;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
@@ -2011,6 +2042,8 @@ function showOwnerDashboard(){
   if(scr){scr.style.display='flex';}
   if(login){login.style.display='none';}
   if(db){db.style.display='flex';}
+  // فعّل Pull-to-Refresh للوحة المالك
+  try{ _initPullToRefresh('owner-content'); }catch(e){}
   var tb=document.getElementById('owner-theme-btn');
   if(tb) tb.innerHTML=document.body.classList.contains('light')
     ?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
@@ -3745,29 +3778,42 @@ function showApp(){
 var _ptrStartY = 0;
 var _ptrPulling = false;
 var _ptrIndicator = null;
-function _initPullToRefresh(){
-  if(_ptrIndicator) return; // مفعّل مسبقاً
-  // أنشئ مؤشر السحب
-  _ptrIndicator = document.createElement('div');
-  _ptrIndicator.id = 'ptr-indicator';
-  _ptrIndicator.style.cssText = 'position:fixed;top:-60px;left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:50%;background:var(--card);border:1px solid var(--border);box-shadow:0 4px 12px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;z-index:9999;transition:top .2s ease;pointer-events:none;';
-  _ptrIndicator.innerHTML = '<svg id="ptr-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>';
-  document.body.appendChild(_ptrIndicator);
+var _ptrAttached = {}; // عناصر مفعّل عليها السحب
 
-  var content = document.getElementById('content');
-  if(!content) return;
+function _initPullToRefresh(targetId){
+  targetId = targetId || 'content';
+  // أنشئ المؤشر مرة واحدة فقط
+  if(!_ptrIndicator){
+    _ptrIndicator = document.createElement('div');
+    _ptrIndicator.id = 'ptr-indicator';
+    _ptrIndicator.style.cssText = 'position:fixed;top:-60px;left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:50%;background:var(--card);border:1px solid var(--border);box-shadow:0 4px 12px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;z-index:9999;transition:top .2s ease;pointer-events:none;';
+    _ptrIndicator.innerHTML = '<svg id="ptr-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>';
+    document.body.appendChild(_ptrIndicator);
+    // أضف keyframe للدوران
+    if(!document.getElementById('ptr-style')){
+      var st = document.createElement('style');
+      st.id = 'ptr-style';
+      st.textContent = '@keyframes ptrSpin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}';
+      document.head.appendChild(st);
+    }
+  }
 
-  content.addEventListener('touchstart', function(e){
-    // السحب يشتغل فقط لما الـ scroll فوق
-    if(content.scrollTop > 0) return;
+  // لا تربط نفس العنصر مرتين
+  if(_ptrAttached[targetId]) return;
+  var container = document.getElementById(targetId);
+  if(!container) return;
+  _ptrAttached[targetId] = true;
+
+  container.addEventListener('touchstart', function(e){
+    if(container.scrollTop > 0) return;
     _ptrStartY = e.touches[0].clientY;
     _ptrPulling = true;
   }, {passive:true});
 
-  content.addEventListener('touchmove', function(e){
+  container.addEventListener('touchmove', function(e){
     if(!_ptrPulling) return;
     var diff = e.touches[0].clientY - _ptrStartY;
-    if(diff > 0 && content.scrollTop === 0){
+    if(diff > 0 && container.scrollTop === 0){
       var pull = Math.min(diff * 0.5, 80);
       _ptrIndicator.style.transition = 'none';
       _ptrIndicator.style.top = (pull - 60) + 'px';
@@ -3776,19 +3822,16 @@ function _initPullToRefresh(){
     }
   }, {passive:true});
 
-  content.addEventListener('touchend', function(e){
+  container.addEventListener('touchend', function(e){
     if(!_ptrPulling) return;
     _ptrPulling = false;
     var top = parseFloat(_ptrIndicator.style.top || '-60');
     _ptrIndicator.style.transition = 'top .3s ease';
     if(top >= 0){
-      // كافي — سوّ التحديث
       _ptrIndicator.style.top = '20px';
       var svg = document.getElementById('ptr-svg');
-      if(svg){
-        svg.style.animation = 'ptrSpin .8s linear infinite';
-      }
-      _refreshNow().then(function(){
+      if(svg) svg.style.animation = 'ptrSpin .8s linear infinite';
+      _refreshNow(targetId).then(function(){
         setTimeout(function(){
           _ptrIndicator.style.top = '-60px';
           if(svg){ svg.style.animation = ''; svg.style.transform = ''; }
@@ -3803,26 +3846,46 @@ function _initPullToRefresh(){
       if(svg2) svg2.style.transform = '';
     }
   }, {passive:true});
-
-  // أضف keyframe للدوران
-  if(!document.getElementById('ptr-style')){
-    var st = document.createElement('style');
-    st.id = 'ptr-style';
-    st.textContent = '@keyframes ptrSpin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}';
-    document.head.appendChild(st);
-  }
 }
 
 // تحديث فوري للبيانات
-function _refreshNow(){
+function _refreshNow(context){
   return new Promise(function(resolve){
     try{
-      // جلب فوري لكل شيء
+      // لوحة المالك
+      if(context === 'owner-content'){
+        Promise.all([
+          new Promise(function(r){
+            sbFetch('join_requests','GET',null,'?order=created_at.desc').then(function(reqs){
+              try{ DB.joinRequests = Array.isArray(reqs)?reqs:[]; }catch(e){}
+              r();
+            }).catch(function(){r();});
+          }),
+          new Promise(function(r){
+            sbFetch('biz_accounts','GET',null,'?order=created_at.desc').then(function(accs){
+              try{ DB.bizAccounts = Array.isArray(accs)?accs:[]; }catch(e){}
+              r();
+            }).catch(function(){r();});
+          })
+        ]).then(function(){
+          try{
+            var t = _currentOwnerTab || 0;
+            if(t===0) renderOwnerHome();
+            else if(t===1) renderOwnerRequests();
+            else if(t===2) renderOwnerSubscribers();
+            else if(t===3) renderOwnerRevenue();
+            else if(t===4) renderOwnerPackages();
+            else if(t===5) renderOwnerSettings();
+          }catch(e){}
+          setTimeout(resolve, 400);
+        });
+        return;
+      }
+      // التطبيق العادي
       Promise.all([
         typeof loadAllData==='function' ? loadAllData() : Promise.resolve(),
         typeof renderNotificationsBell==='function' ? Promise.resolve(renderNotificationsBell()) : Promise.resolve()
       ]).then(function(){
-        // أعد رسم الصفحة الحالية
         try{
           var p=_currentPage;
           if(p==='dashboard') renderDashboard();
