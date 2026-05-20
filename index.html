@@ -105,6 +105,12 @@ input,select,button,textarea{font-family:'Cairo',sans-serif;}
 /* ── Desktop ── */
 /* ═══ DESKTOP (≥1024px) ═══ */
 @media (min-width: 1024px) {
+  /* عرض المشتركين كجدول على الديسكتوب */
+  .subs-cards-view { display: none !important; }
+  .subs-table-view { display: block !important; }
+}
+
+@media (min-width: 1024px) {
   /* Layout: sidebar on RIGHT for Arabic */
   #app {
     flex-direction: row !important;
@@ -2921,17 +2927,15 @@ function _renderSubsList(accounts){
     return Math.ceil((end - now) / 86400000);
   }
 
-  return accounts.map(function(a){
+  // حضّر بيانات كل مشترك
+  var rows = accounts.map(function(a){
     var pkgLabel=a.pkg==='all'?'الشاملة':a.pkg==='pro'?'الاحترافية':'المجانية';
     var pkgColor=a.pkg==='all'?'var(--accent)':a.pkg==='pro'?'var(--yellow)':'var(--text3)';
     var isKaled=a.id==='kaled';
-
-    // حساب تاريخ البداية والنهاية
     var startDate = a.created_at ? new Date(a.created_at) : null;
     var billing = a._billing || 'شهري';
     var isPaidPkg = a.pkg==='pro' || a.pkg==='all';
     var endDate = null;
-    // الأولوية: تاريخ النهاية المحفوظ في DB، ثم حساب تقديري
     if(a.subscription_end){
       endDate = new Date(a.subscription_end);
     } else if(startDate && isPaidPkg){
@@ -2943,7 +2947,12 @@ function _renderSubsList(accounts){
     var daysLeft = endDate ? daysBetween(endDate, now) : null;
     var expiryColor = daysLeft===null ? 'var(--text3)' : daysLeft<=0 ? 'var(--red)' : daysLeft<=7 ? 'var(--yellow)' : 'var(--green)';
     var expiryNote = daysLeft===null ? '' : daysLeft<=0 ? ' (منتهي)' : daysLeft<=7 ? ' ('+daysLeft+' يوم)' : '';
+    return {a:a,pkgLabel:pkgLabel,pkgColor:pkgColor,isKaled:isKaled,startDate:startDate,billing:billing,isPaidPkg:isPaidPkg,endDate:endDate,daysLeft:daysLeft,expiryColor:expiryColor,expiryNote:expiryNote};
+  });
 
+  // ═══ JS لبناء الصف ═══
+  function buildCard(r){
+    var a=r.a;
     return '<div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:10px;">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">'
         +'<div style="flex:1;min-width:0;">'
@@ -2952,10 +2961,9 @@ function _renderSubsList(accounts){
           +'<div style="font-size:11px;color:var(--text3);">'+(a.email||'')+'</div>'
           +(a._fromRequest?'<div style="font-size:10px;color:var(--yellow);margin-top:3px;">⚠️ بدون حساب — اضغط قبول مرة ثانية</div>':'')
         +'</div>'
-        +'<span style="background:var(--bg3);color:'+pkgColor+';font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;flex-shrink:0;">'+pkgLabel+'</span>'
+        +'<span style="background:var(--bg3);color:'+r.pkgColor+';font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;flex-shrink:0;">'+r.pkgLabel+'</span>'
       +'</div>'
-      // تواريخ الاشتراك
-      +(!isKaled?
+      +(!r.isKaled?
         '<div style="background:var(--bg3);border-radius:10px;padding:10px 12px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
           +'<div>'
             +'<div style="font-size:9px;color:var(--text3);margin-bottom:2px;">📅 تاريخ البداية</div>'
@@ -2963,18 +2971,72 @@ function _renderSubsList(accounts){
           +'</div>'
           +'<div>'
             +'<div style="font-size:9px;color:var(--text3);margin-bottom:2px;">⏰ تاريخ الانتهاء</div>'
-            +'<div style="font-size:11px;font-weight:700;color:'+expiryColor+';">'+(endDate?fmtArDate(endDate.toISOString()):'لا ينتهي')+expiryNote+'</div>'
+            +'<div style="font-size:11px;font-weight:700;color:'+r.expiryColor+';">'+(r.endDate?fmtArDate(r.endDate.toISOString()):'لا ينتهي')+r.expiryNote+'</div>'
           +'</div>'
         +'</div>':'')
       +'<div style="display:flex;gap:8px;flex-wrap:wrap;">'
-        +((daysLeft!==null && daysLeft<=7 && isPaidPkg && !isKaled)?'<button onclick="quickRenewSub(\''+a.id+'\',\''+(a.biz_name||a.id).replace(/'/g,"\\'")+'\',\''+(billing||'شهري')+'\')" style="flex:1;padding:8px;background:linear-gradient(135deg,var(--yellow),#f59e0b);border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;color:#fff;">⏰ تجديد</button>':'')
-        +(!isKaled&&!a._fromRequest?'<button onclick="editSubscriber(\''+a.id+'\')" style="flex:1;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text);">تعديل</button>':'')
-        +(!isKaled&&!a._fromRequest?'<button onclick="deleteSubscriber(\''+a.id+'\',\''+(a.biz_name||a.id).replace(/'/g,"\\'")+'\')" style="flex:1;padding:8px;background:rgba(220,38,38,.1);border:1px solid var(--red);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--red);">حذف</button>':'')
+        +((r.daysLeft!==null && r.daysLeft<=7 && r.isPaidPkg && !r.isKaled)?'<button onclick="quickRenewSub(\''+a.id+'\',\''+(a.biz_name||a.id).replace(/'/g,"\\'")+'\',\''+(r.billing||'شهري')+'\')" style="flex:1;padding:8px;background:linear-gradient(135deg,var(--yellow),#f59e0b);border:none;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;color:#fff;">⏰ تجديد</button>':'')
+        +(!r.isKaled&&!a._fromRequest?'<button onclick="editSubscriber(\''+a.id+'\')" style="flex:1;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text);">تعديل</button>':'')
+        +(!r.isKaled&&!a._fromRequest?'<button onclick="deleteSubscriber(\''+a.id+'\',\''+(a.biz_name||a.id).replace(/'/g,"\\'")+'\')" style="flex:1;padding:8px;background:rgba(220,38,38,.1);border:1px solid var(--red);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--red);">حذف</button>':'')
         +(a._fromRequest?'<button onclick="approveRequest(\''+a._reqId+'\')" class="btn btn-primary" style="flex:1;padding:8px;font-size:12px;">إنشاء الحساب</button>':'')
-        +(isKaled?'<div style="font-size:11px;color:var(--text3);padding:4px 0;">الحساب الرئيسي</div>':'')
+        +(r.isKaled?'<div style="font-size:11px;color:var(--text3);padding:4px 0;">الحساب الرئيسي</div>':'')
       +'</div>'
     +'</div>';
-  }).join('');
+  }
+
+  // ═══ صف الجدول للديسكتوب ═══
+  function buildRow(r){
+    var a=r.a;
+    var actions = '';
+    if(r.isKaled){
+      actions = '<span style="font-size:11px;color:var(--text3);">الرئيسي</span>';
+    } else if(a._fromRequest){
+      actions = '<button onclick="approveRequest(\''+a._reqId+'\')" class="btn btn-primary" style="padding:5px 10px;font-size:11px;">إنشاء الحساب</button>';
+    } else {
+      var btns = [];
+      if(r.daysLeft!==null && r.daysLeft<=7 && r.isPaidPkg){
+        btns.push('<button onclick="quickRenewSub(\''+a.id+'\',\''+(a.biz_name||a.id).replace(/'/g,"\\'")+'\',\''+(r.billing||'شهري')+'\')" style="padding:5px 9px;background:linear-gradient(135deg,var(--yellow),#f59e0b);border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;color:#fff;">⏰ تجديد</button>');
+      }
+      btns.push('<button onclick="editSubscriber(\''+a.id+'\')" style="padding:5px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text);">تعديل</button>');
+      btns.push('<button onclick="deleteSubscriber(\''+a.id+'\',\''+(a.biz_name||a.id).replace(/'/g,"\\'")+'\')" style="padding:5px 10px;background:rgba(220,38,38,.1);border:1px solid var(--red);border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--red);">حذف</button>');
+      actions = '<div style="display:flex;gap:5px;justify-content:flex-start;">'+btns.join('')+'</div>';
+    }
+    return '<tr style="border-bottom:1px solid var(--border);">'
+      +'<td style="padding:11px 8px;font-size:13px;font-weight:700;color:var(--text);">'+(a.biz_name||a.id)+(a._fromRequest?' <span style="color:var(--yellow);font-size:10px;">⚠️</span>':'')+'</td>'
+      +'<td style="padding:11px 8px;font-size:12px;color:var(--text2);">'+(a.owner_name||'—')+'</td>'
+      +'<td style="padding:11px 8px;font-size:12px;color:var(--text2);" dir="ltr">'+(a.phone||'—')+'</td>'
+      +'<td style="padding:11px 8px;font-size:12px;color:var(--text2);" dir="ltr">'+(a.email||'—')+'</td>'
+      +'<td style="padding:11px 8px;font-size:11px;"><span style="background:var(--bg3);color:'+r.pkgColor+';font-weight:800;padding:3px 8px;border-radius:20px;">'+r.pkgLabel+'</span></td>'
+      +'<td style="padding:11px 8px;font-size:12px;color:var(--text2);">'+(r.isKaled?'—':fmtArDate(a.created_at))+'</td>'
+      +'<td style="padding:11px 8px;font-size:12px;font-weight:700;color:'+r.expiryColor+';">'+(r.isKaled?'—':(r.endDate?fmtArDate(r.endDate.toISOString())+r.expiryNote:'لا ينتهي'))+'</td>'
+      +'<td style="padding:11px 8px;">'+actions+'</td>'
+    +'</tr>';
+  }
+
+  // ═══ بطاقات للجوال + جدول للابتوب ═══
+  return ''
+    // بطاقات الجوال (تختفي على الديسكتوب)
+    +'<div class="subs-cards-view">'
+      + rows.map(buildCard).join('')
+    +'</div>'
+    // جدول الديسكتوب (يختفي على الجوال)
+    +'<div class="subs-table-view" style="display:none;background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">'
+      +'<div style="overflow-x:auto;">'
+        +'<table style="width:100%;border-collapse:collapse;">'
+          +'<thead><tr style="background:var(--bg3);">'
+            +'<th style="padding:11px 8px;text-align:right;font-size:11px;font-weight:800;color:var(--text3);">النشاط</th>'
+            +'<th style="padding:11px 8px;text-align:right;font-size:11px;font-weight:800;color:var(--text3);">المالك</th>'
+            +'<th style="padding:11px 8px;text-align:right;font-size:11px;font-weight:800;color:var(--text3);">الجوال</th>'
+            +'<th style="padding:11px 8px;text-align:right;font-size:11px;font-weight:800;color:var(--text3);">الإيميل</th>'
+            +'<th style="padding:11px 8px;text-align:right;font-size:11px;font-weight:800;color:var(--text3);">الباقة</th>'
+            +'<th style="padding:11px 8px;text-align:right;font-size:11px;font-weight:800;color:var(--text3);">📅 البداية</th>'
+            +'<th style="padding:11px 8px;text-align:right;font-size:11px;font-weight:800;color:var(--text3);">⏰ الانتهاء</th>'
+            +'<th style="padding:11px 8px;text-align:right;font-size:11px;font-weight:800;color:var(--text3);">الإجراءات</th>'
+          +'</tr></thead>'
+          +'<tbody>'+rows.map(buildRow).join('')+'</tbody>'
+        +'</table>'
+      +'</div>'
+    +'</div>';
 }
 
 function showAddSubscriberModal(){
