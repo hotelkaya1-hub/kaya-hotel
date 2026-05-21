@@ -3344,12 +3344,22 @@ function filterSubscribers(query){
 }
 
 function deleteSubscriber(id, name){
-  if(!window.confirm('حذف مشترك "'+name+'"؟ لا يمكن التراجع.')) return;
-  sbFetch('biz_accounts','DELETE',null,'?id=eq.'+id).then(function(){
-    sbFetch('join_requests','PATCH',{status:'deleted'},'?email=eq.'+id).catch(function(){});
-    toast('تم حذف المشترك','success');
+  if(!window.confirm('حذف مشترك "'+name+'"؟\n\nسيتم حذف:\n• الحساب\n• كل الحجوزات\n• الإيرادات والمصروفات\n• الشقق والموظفين\n• كل البيانات المرتبطة\n\nلا يمكن التراجع!')) return;
+  
+  console.log('[حذف] حذف المشترك:', id);
+  
+  // DELETE واحد فقط — CASCADE في القاعدة يحذف كل الباقي تلقائياً
+  sbFetch('biz_accounts','DELETE',null,'?id=eq.'+encodeURIComponent(id)).then(function(){
+    console.log('[حذف] ✓ تم الحذف الكامل (CASCADE)');
+    // علّم الطلبات المرتبطة كـ deleted
+    sbFetch('join_requests','PATCH',{status:'deleted'},'?email=eq.'+encodeURIComponent(id)).catch(function(){});
+    toast('✅ تم حذف المشترك وكل بياناته','success');
     renderOwnerSubscribers();
-  }).catch(function(){toast('فشل الحذف','error');});
+    try{ renderOwnerHome(); }catch(e){}
+  }).catch(function(err){
+    console.error('[حذف] ❌ فشل الحذف:', err);
+    toast('فشل الحذف: ' + (err && err.message ? err.message : ''), 'error');
+  });
 }
 
 function editSubscriber(id){
@@ -4279,6 +4289,20 @@ function updateBadge(){
   // no-op - badge removed
 }
 
+// ══ WhatsApp ══
+function openWA(phone){
+  if(!phone){ toast('لا يوجد رقم جوال','error'); return; }
+  // تنظيف الرقم: شيل أي رمز غير رقمي
+  var clean = String(phone).replace(/\D/g,'');
+  // لو يبدأ بـ 05، حوله إلى 9665
+  if(clean.startsWith('05')) clean = '966'+clean.substring(1);
+  // لو يبدأ بـ 5، أضف 966
+  else if(clean.startsWith('5') && clean.length===9) clean = '966'+clean;
+  // لو يبدأ بـ 00، شيل الصفرين
+  else if(clean.startsWith('00')) clean = clean.substring(2);
+  window.open('https://wa.me/'+clean, '_blank');
+}
+
 // ══ CALENDAR ══
 function renderCalBooking(){
   showCBTab(_currentCBTab||1);
@@ -4363,6 +4387,7 @@ function renderBookingsList(){
       +'<div style="flex-shrink:0;text-align:left;">'+(b.total>0?'<div style="font-weight:900;font-size:15px;color:var(--accent);">'+fmtM(b.total)+'<span style="font-size:10px;color:var(--text3);"> ر.س</span></div>':'<button class="btn btn-xs btn-gold" onclick="openPE(this.dataset.id)" data-id="'+b.id+'">+ سعر</button>')+'</div>'
       +'</div><div class="b-acts">'
       +(b.total===0&&b.status!=='blocked'?'<button class="btn btn-xs btn-gold" onclick="openPE(this.dataset.id)" data-id="'+b.id+'"> سعر</button>':'')
+      +(b.phone?'<button class="btn btn-xs" style="background:#25D366;color:#fff;border:none;" onclick="openWA(this.dataset.phone)" data-phone="'+b.phone+'" title="واتساب">💬</button>':'')
       +'<button class="btn btn-xs btn-success" onclick="openEB(this.dataset.id)" data-id="'+b.id+'">تعديل</button>'
       +'<button class="btn btn-xs btn-danger" onclick="delB(this.dataset.id)" data-id="'+b.id+'">حذف</button>'
       +'</div></div>';
@@ -4471,6 +4496,7 @@ function renderBookings(){
       +'<div style="flex-shrink:0;text-align:left;">'+(b.total>0?'<div style="font-weight:900;font-size:15px;color:var(--accent);">'+fmtM(b.total)+'<span style="font-size:10px;color:var(--text3);"> ر.س</span></div>':'<button class="btn btn-xs btn-gold" onclick="openPE(\''+b.id+'\')">+ سعر</button>')+'</div>'
       +'</div><div class="b-acts">'
       +(b.total===0&&b.status!=='blocked'?'<button class="btn btn-xs btn-gold" onclick="openPE(\''+b.id+'\')"> سعر</button>':'')
+      +(b.phone?'<button class="btn btn-xs" style="background:#25D366;color:#fff;border:none;" onclick="openWA(\''+b.phone+'\')" title="واتساب">💬</button>':'')
       +'<button class="btn btn-xs btn-success" onclick="openEB(\''+b.id+'\')">تعديل</button>'
       +'<button class="btn btn-xs" style="background:var(--bg3);color:var(--text2);border:1px solid var(--border);" onclick="openDetail(\''+b.id+'\')"></button>'
       +'<button class="btn btn-xs btn-danger" onclick="delB(\''+b.id+'\')">حذف</button>'
@@ -6100,6 +6126,8 @@ function saveFieldEdit(id){
   if(id==='biz-name'){
     DB.bizName=val; updateBizLabels();
     sbFetch('app_config','POST',{key:'biz_name',value:val,biz_id:getBizId()},'?on_conflict=key').catch(function(){});
+    // حدّث biz_accounts أيضاً
+    sbFetch('biz_accounts','PATCH',{biz_name:val},'?id=eq.'+encodeURIComponent(getBizId())).catch(function(){});
     var cn=document.getElementById('current-biz-name'); if(cn) cn.textContent=val;
   } else if(id==='acc-name'){
     if(!DB.subscriberInfo) DB.subscriberInfo={};
@@ -6107,12 +6135,19 @@ function saveFieldEdit(id){
     if(currentUser) currentUser.fullname=val;
     var nm=document.getElementById('nm-set'); if(nm) nm.textContent=val;
     var av=document.getElementById('settings-avatar'); if(av) av.textContent=val.charAt(0);
+    sbFetch('biz_accounts','PATCH',{owner_name:val},'?id=eq.'+encodeURIComponent(getBizId())).catch(function(){});
   } else if(id==='acc-phone'){
     if(!DB.subscriberInfo) DB.subscriberInfo={};
     DB.subscriberInfo.phone=val;
+    sbFetch('biz_accounts','PATCH',{phone:val},'?id=eq.'+encodeURIComponent(getBizId())).catch(function(){});
   } else if(id==='acc-email'){
     if(!DB.subscriberInfo) DB.subscriberInfo={};
     DB.subscriberInfo.email=val;
+    sbFetch('biz_accounts','PATCH',{email:val},'?id=eq.'+encodeURIComponent(getBizId())).then(function(){
+      console.log('[إعدادات] ✓ تم تحديث الإيميل في القاعدة');
+    }).catch(function(err){
+      console.error('[إعدادات] ✗ فشل تحديث الإيميل:', err);
+    });
   } else if(id==='biz-phone'){
     DB.bizPhone=val;
   }
@@ -6175,6 +6210,20 @@ function renderSubscriberInfo(){
 
   // Admin — عرض بياناته مباشرة
   if(currentUser&&currentUser.role==='admin'){
+    // حمّل بيانات الحساب من القاعدة (الإيميل، الاسم، الجوال) لتظهر في الإعدادات
+    if(!DB.subscriberInfo || !DB.subscriberInfo._adminLoaded){
+      sbFetch('biz_accounts','GET',null,'?id=eq.'+encodeURIComponent(getBizId())+'&select=*').then(function(data){
+        if(data&&data.length){
+          var a=data[0];
+          DB.subscriberInfo=Object.assign(DB.subscriberInfo||{},{
+            email:a.email||'', name:a.owner_name||'', phone:a.phone||'',
+            _adminLoaded:true
+          });
+          try{_saveDB();}catch(e){}
+          renderProfileFields();
+        }
+      }).catch(function(){});
+    }
     el.innerHTML=
       '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">'
         +'<div style="background:linear-gradient(135deg,rgba(200,169,110,.1),transparent);padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">'
