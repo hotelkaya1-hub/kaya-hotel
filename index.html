@@ -1685,6 +1685,17 @@ function toggleRemember(val){
 var OWNER_PASS = '123123';
 var _ownerLoggedIn = false;
 var _ownerTab = -1;
+var _reqFilter = 'all'; // فلتر الطلبات الحالي
+
+// زر فلتر احترافي
+function _filterPill(value, label, active, color){
+  return '<button onclick="setReqFilter(\''+value+'\')" style="background:'+(active?color:'var(--bg3)')+';color:'+(active?'#fff':'var(--text2)')+';border:1px solid '+(active?color:'var(--border)')+';padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">'+label+'</button>';
+}
+
+function setReqFilter(v){
+  _reqFilter = v;
+  renderOwnerRequests();
+}
 
 var PKG_PRICES = {
   free:  { monthly:0,   yearly:0,    yearlyMonth:0,   label:'ابدأ مجاناً', units:2,   employees:1   },
@@ -2118,42 +2129,123 @@ function showOwnerTab(n){
 
 function renderOwnerPackages(){
   var pkgs = JSON.parse(localStorage.getItem('bodo_pkgs')||'null') || {
-    free:  {label:'ابدأ مجاناً',  monthly:0,   yearly:0,    units:2,   employees:1},
-    pro:   {label:'الاحترافية',   monthly:199, yearly:1592, units:20,  employees:5},
-    all:   {label:'الشاملة',      monthly:399, yearly:3192, units:999, employees:999}
+    free:  {label:'ابدأ مجاناً',  monthly:0,   yearly:0,    units:2,   employees:1, discountEnabled:false, discountMonthly:0, discountYearly:0},
+    pro:   {label:'الاحترافية',   monthly:199, yearly:1592, units:20,  employees:5, discountEnabled:false, discountMonthly:0, discountYearly:0},
+    all:   {label:'الشاملة',      monthly:399, yearly:3192, units:999, employees:999, discountEnabled:false, discountMonthly:0, discountYearly:0}
   };
+  // تأكد إن كل باقة فيها حقول الخصم (للترقية من نسخة قديمة)
+  Object.keys(pkgs).forEach(function(k){
+    if(typeof pkgs[k].discountEnabled === 'undefined') pkgs[k].discountEnabled = false;
+    if(typeof pkgs[k].discountMonthly === 'undefined') pkgs[k].discountMonthly = 0;
+    if(typeof pkgs[k].discountYearly === 'undefined') pkgs[k].discountYearly = 0;
+  });
   var content=document.getElementById('owner-content');
   function pkgForm(key,p){
+    var iconMap = {free:'🆓', pro:'⭐', all:'💎'};
+    var colorMap = {free:'var(--text3)', pro:'var(--yellow)', all:'var(--accent)'};
+    var discountSavedMonthly = p.discountEnabled && p.discountMonthly>0 ? Math.round(((p.monthly-p.discountMonthly)/p.monthly)*100) : 0;
+    var discountSavedYearly = p.discountEnabled && p.discountYearly>0 ? Math.round(((p.yearly-p.discountYearly)/p.yearly)*100) : 0;
     return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">'
-      +'<div style="font-size:13px;font-weight:800;color:var(--accent);margin-bottom:12px;">باقة '+key.toUpperCase()+'</div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">'
+        +'<div style="display:flex;align-items:center;gap:10px;">'
+          +'<div style="font-size:24px;">'+(iconMap[key]||'📦')+'</div>'
+          +'<div>'
+            +'<div style="font-size:14px;font-weight:900;color:'+(colorMap[key]||'var(--text)')+';">'+(p.label||key)+'</div>'
+            +'<div style="font-size:10px;color:var(--text3);">ID: '+key+'</div>'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+
+      // الحقول الأساسية
       +'<div class="form-row" style="margin-bottom:10px;">'
-        +'<div class="form-group" style="margin:0"><label class="form-label">الاسم</label><input class="fi pkg-field" data-pkg="'+key+'" data-field="label" value="'+p.label+'"></div>'
+        +'<div class="form-group" style="margin:0"><label class="form-label">الاسم</label><input class="fi pkg-field" data-pkg="'+key+'" data-field="label" value="'+(p.label||'')+'"></div>'
         +'<div class="form-group" style="margin:0"><label class="form-label">عدد الوحدات</label><input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="units" value="'+p.units+'"></div>'
       +'</div>'
-      +'<div class="form-row">'
-        +'<div class="form-group" style="margin:0"><label class="form-label">السعر الشهري (ر.س)</label><input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="monthly" value="'+p.monthly+'"></div>'
-        +'<div class="form-group" style="margin:0"><label class="form-label">السعر السنوي (ر.س)</label><input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="yearly" value="'+p.yearly+'"></div>'
+
+      // السعر الأساسي
+      +'<div style="background:var(--bg3);border-radius:10px;padding:12px;margin-bottom:10px;">'
+        +'<div style="font-size:11px;font-weight:800;color:var(--text2);margin-bottom:8px;">💰 السعر الأساسي</div>'
+        +'<div class="form-row">'
+          +'<div class="form-group" style="margin:0"><label class="form-label">شهرياً (ر.س)</label><input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="monthly" value="'+p.monthly+'"></div>'
+          +'<div class="form-group" style="margin:0"><label class="form-label">سنوياً (ر.س)</label><input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="yearly" value="'+p.yearly+'"></div>'
+        +'</div>'
       +'</div>'
+
+      // الخصم - زر التفعيل
+      +(key!=='free'?'<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:'+(p.discountEnabled?'rgba(220,38,38,.08)':'var(--bg3)')+';border:1px solid '+(p.discountEnabled?'var(--red)':'var(--border)')+';border-radius:10px;margin-bottom:10px;cursor:pointer;" onclick="togglePkgDiscount(\''+key+'\')">'
+        +'<div style="display:flex;align-items:center;gap:10px;">'
+          +'<div style="font-size:18px;">'+(p.discountEnabled?'🔥':'🏷️')+'</div>'
+          +'<div>'
+            +'<div style="font-size:12px;font-weight:800;color:'+(p.discountEnabled?'var(--red)':'var(--text2)')+';">'+(p.discountEnabled?'الخصم مفعّل':'تفعيل خصم')+'</div>'
+            +'<div style="font-size:10px;color:var(--text3);">'+(p.discountEnabled?'اضغط لإيقاف':'سعر مخفّض للعرض')+'</div>'
+          +'</div>'
+        +'</div>'
+        +'<div style="width:38px;height:22px;background:'+(p.discountEnabled?'var(--green)':'var(--border)')+';border-radius:22px;position:relative;transition:.2s;">'
+          +'<div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;'+(p.discountEnabled?'left:2px':'right:2px')+';transition:.2s;"></div>'
+        +'</div>'
+      +'</div>':'')
+
+      // حقول الخصم - تظهر فقط لو مفعّل
+      +(p.discountEnabled && key!=='free' ?
+        '<div style="background:rgba(220,38,38,.05);border:1px dashed var(--red);border-radius:10px;padding:12px;margin-bottom:10px;">'
+          +'<div style="font-size:11px;font-weight:800;color:var(--red);margin-bottom:8px;">🔥 السعر بعد الخصم</div>'
+          +'<div class="form-row">'
+            +'<div class="form-group" style="margin:0">'
+              +'<label class="form-label">شهرياً بعد الخصم</label>'
+              +'<input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="discountMonthly" value="'+p.discountMonthly+'">'
+              +(discountSavedMonthly>0?'<div style="font-size:10px;color:var(--green);font-weight:800;margin-top:4px;">توفير '+discountSavedMonthly+'%</div>':'')
+            +'</div>'
+            +'<div class="form-group" style="margin:0">'
+              +'<label class="form-label">سنوياً بعد الخصم</label>'
+              +'<input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="discountYearly" value="'+p.discountYearly+'">'
+              +(discountSavedYearly>0?'<div style="font-size:10px;color:var(--green);font-weight:800;margin-top:4px;">توفير '+discountSavedYearly+'%</div>':'')
+            +'</div>'
+          +'</div>'
+        +'</div>'
+      : '')
+
+      // حقل مخفي لحالة الخصم
+      +'<input type="hidden" class="pkg-field" data-pkg="'+key+'" data-field="discountEnabled" value="'+(p.discountEnabled?'1':'0')+'">'
     +'</div>';
   }
   content.innerHTML=
-    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:16px;">إدارة الباقات</div>'
+    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:16px;">إدارة الباقات والأسعار</div>'
     +pkgForm('free',pkgs.free)
     +pkgForm('pro',pkgs.pro)
     +pkgForm('all',pkgs.all)
     +'<button class="btn btn-primary btn-full" style="height:48px;font-size:15px;" onclick="saveOwnerPackages()">💾 حفظ الباقات</button>';
 }
 
+// زر تفعيل/إيقاف الخصم
+function togglePkgDiscount(key){
+  var pkgs = JSON.parse(localStorage.getItem('bodo_pkgs')||'null') || {};
+  if(!pkgs[key]) return;
+  // احفظ القيم الحالية أولاً
+  document.querySelectorAll('.pkg-field').forEach(function(el){
+    var k=el.dataset.pkg, field=el.dataset.field, val=el.value;
+    if(!pkgs[k]) pkgs[k]={};
+    if(field==='label') pkgs[k][field]=val;
+    else if(field==='discountEnabled') pkgs[k][field]= val==='1';
+    else pkgs[k][field]=parseFloat(val)||0;
+  });
+  // بدّل الحالة
+  pkgs[key].discountEnabled = !pkgs[key].discountEnabled;
+  localStorage.setItem('bodo_pkgs',JSON.stringify(pkgs));
+  renderOwnerPackages();
+}
+
 function saveOwnerPackages(){
   var pkgs = JSON.parse(localStorage.getItem('bodo_pkgs')||'null') || {
-    free:{label:'ابدأ مجاناً',monthly:0,yearly:0,units:2,employees:1},
-    pro:{label:'الاحترافية',monthly:199,yearly:1592,units:20,employees:5},
-    all:{label:'الشاملة',monthly:399,yearly:3192,units:999,employees:999}
+    free:{label:'ابدأ مجاناً',monthly:0,yearly:0,units:2,employees:1,discountEnabled:false,discountMonthly:0,discountYearly:0},
+    pro:{label:'الاحترافية',monthly:199,yearly:1592,units:20,employees:5,discountEnabled:false,discountMonthly:0,discountYearly:0},
+    all:{label:'الشاملة',monthly:399,yearly:3192,units:999,employees:999,discountEnabled:false,discountMonthly:0,discountYearly:0}
   };
   document.querySelectorAll('.pkg-field').forEach(function(el){
     var key=el.dataset.pkg, field=el.dataset.field, val=el.value;
     if(!pkgs[key]) pkgs[key]={};
-    pkgs[key][field]=field==='label'?val:parseFloat(val)||0;
+    if(field==='label') pkgs[key][field]=val;
+    else if(field==='discountEnabled') pkgs[key][field]= val==='1';
+    else pkgs[key][field]=parseFloat(val)||0;
   });
   localStorage.setItem('bodo_pkgs',JSON.stringify(pkgs));
   // Update PKG_PRICES in memory
@@ -2278,20 +2370,20 @@ function renderOwnerHome(){
           +'<div style="font-size:24px;font-weight:900;color:var(--accent);">'+paid.length+'</div>'
           +'<div style="font-size:11px;color:var(--text3);">مدفوع</div>'
         +'</button>'
-        +'<button onclick="showOwnerTab(2)" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:right;cursor:pointer;font-family:inherit;">'
-          +'<div style="font-size:24px;font-weight:900;color:var(--text2);">'+freePlan+'</div>'
-          +'<div style="font-size:11px;color:var(--text3);">مجاني</div>'
+        +'<button onclick="showOwnerTab(2)" style="background:'+(expiring.length?'rgba(217,119,6,.1)':'var(--card)')+';border:1px solid '+(expiring.length?'var(--yellow)':'var(--border)')+';border-radius:12px;padding:14px;text-align:right;cursor:pointer;font-family:inherit;">'
+          +'<div style="font-size:24px;font-weight:900;color:'+(expiring.length?'var(--yellow)':'var(--text3)')+';">⏰ '+expiring.length+'</div>'
+          +'<div style="font-size:11px;color:var(--text3);">قارب الانتهاء</div>'
         +'</button>'
       +'</div>'
 
-      // كرت اشتراكات قاربة الانتهاء (يظهر فقط لو فيه)
+      // كرت مفصّل للاشتراكات قاربة الانتهاء (لو فيه)
       +(expiring.length?
         '<button onclick="showOwnerTab(2)" style="width:100%;background:linear-gradient(135deg,rgba(217,119,6,.15),rgba(217,119,6,.04));border:1px solid var(--yellow);border-radius:14px;padding:16px;margin-bottom:14px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:14px;text-align:right;">'
           +'<div style="font-size:32px;">⏰</div>'
           +'<div style="flex:1;">'
             +'<div style="font-size:24px;font-weight:900;color:var(--yellow);line-height:1;">'+expiring.length+'</div>'
-            +'<div style="font-size:12px;color:var(--text2);font-weight:700;margin-top:3px;">اشتراك قارب على الانتهاء</div>'
-            +'<div style="font-size:10px;color:var(--text3);margin-top:2px;">٧ أيام أو أقل · يحتاج تجديد</div>'
+            +'<div style="font-size:12px;color:var(--text2);font-weight:700;margin-top:3px;">اشتراك يحتاج تجديد عاجل</div>'
+            +'<div style="font-size:10px;color:var(--text3);margin-top:2px;">٧ أيام أو أقل · اضغط للتجديد</div>'
           +'</div>'
           +'<div style="color:var(--text3);font-size:18px;">←</div>'
         +'</button>'
@@ -2515,7 +2607,7 @@ function renderOwnerRequests(){
         +'</div>'
       +'</div>'
       // إحصائيات الحالات
-      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px;">'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;">'
         +'<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;">'
           +'<div style="font-size:22px;font-weight:900;color:var(--yellow);">'+pending.length+'</div>'
           +'<div style="font-size:10px;color:var(--text3);">بانتظار</div>'
@@ -2529,11 +2621,33 @@ function renderOwnerRequests(){
           +'<div style="font-size:10px;color:var(--text3);">مرفوض</div>'
         +'</div>'
       +'</div>'
-      +(pending.length?renderGroup(pending,'🆕 طلبات انضمام جديدة','var(--green)'):'')
-      +(renewals.length?renderGroup(renewals,'⏰ طلبات تجديد','var(--yellow)'):'')
-      +(upgrades.length?renderGroup(upgrades,'⬆ طلبات ترقية','#a78bfa'):'')
-      +(approved.length?renderGroup(approved,'🟢 تم القبول','var(--green)'):'')
-      +(rejected.length?'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;margin-top:16px;"><div style="font-size:12px;font-weight:800;color:var(--red);">🔴 مرفوضة</div><button onclick="clearAllRejected()" style="background:rgba(220,38,38,.1);color:var(--red);border:1px solid rgba(220,38,38,.3);font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;cursor:pointer;font-family:inherit;">🗑 حذف الكل</button></div>'+(isDesktop?_tbl(['النوع','النشاط','المالك','الجوال','الإيميل','الباقة','السعر','التاريخ','إجراءات'], rejected.map(reqRow)):rejected.map(reqCard).join('')):'')
+
+      // ═══ فلتر الطلبات الاحترافي ═══
+      +'<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:14px;">'
+        +'<div style="font-size:10px;font-weight:800;color:var(--text3);margin-bottom:8px;">🔍 تصفية حسب النوع</div>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap;">'
+          +_filterPill('all','الكل ('+reqs.length+')',_reqFilter==='all','var(--accent)')
+          +_filterPill('pending','🆕 انضمام ('+pending.length+')',_reqFilter==='pending','var(--green)')
+          +_filterPill('renewal_pending','⏰ تجديد ('+renewals.length+')',_reqFilter==='renewal_pending','var(--yellow)')
+          +_filterPill('upgrade_pending','⬆ ترقية ('+upgrades.length+')',_reqFilter==='upgrade_pending','#a78bfa')
+          +_filterPill('approved','🟢 مقبول ('+approved.length+')',_reqFilter==='approved','var(--green)')
+          +_filterPill('rejected','🔴 مرفوض ('+rejected.length+')',_reqFilter==='rejected','var(--red)')
+        +'</div>'
+      +'</div>'
+
+      // عرض الطلبات حسب الفلتر
+      +(_reqFilter==='all'?
+        (pending.length?renderGroup(pending,'🆕 طلبات انضمام جديدة','var(--green)'):'')
+        +(renewals.length?renderGroup(renewals,'⏰ طلبات تجديد','var(--yellow)'):'')
+        +(upgrades.length?renderGroup(upgrades,'⬆ طلبات ترقية','#a78bfa'):'')
+        +(approved.length?renderGroup(approved,'🟢 تم القبول','var(--green)'):'')
+        +(rejected.length?'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;margin-top:16px;"><div style="font-size:12px;font-weight:800;color:var(--red);">🔴 مرفوضة</div><button onclick="clearAllRejected()" style="background:rgba(220,38,38,.1);color:var(--red);border:1px solid rgba(220,38,38,.3);font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;cursor:pointer;font-family:inherit;">🗑 حذف الكل</button></div>'+(isDesktop?_tbl(['النوع','النشاط','المالك','الجوال','الإيميل','الباقة','السعر','التاريخ','إجراءات'], rejected.map(reqRow)):rejected.map(reqCard).join('')):'')
+        : '') 
+      +(_reqFilter==='pending'?(pending.length?renderGroup(pending,'🆕 طلبات انضمام جديدة','var(--green)'):'<div style="text-align:center;padding:30px;color:var(--text3);">لا توجد طلبات انضمام</div>'):'')
+      +(_reqFilter==='renewal_pending'?(renewals.length?renderGroup(renewals,'⏰ طلبات تجديد','var(--yellow)'):'<div style="text-align:center;padding:30px;color:var(--text3);">لا توجد طلبات تجديد</div>'):'')
+      +(_reqFilter==='upgrade_pending'?(upgrades.length?renderGroup(upgrades,'⬆ طلبات ترقية','#a78bfa'):'<div style="text-align:center;padding:30px;color:var(--text3);">لا توجد طلبات ترقية</div>'):'')
+      +(_reqFilter==='approved'?(approved.length?renderGroup(approved,'🟢 تم القبول','var(--green)'):'<div style="text-align:center;padding:30px;color:var(--text3);">لا يوجد طلبات مقبولة</div>'):'')
+      +(_reqFilter==='rejected'?(rejected.length?'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-size:12px;font-weight:800;color:var(--red);">🔴 مرفوضة</div><button onclick="clearAllRejected()" style="background:rgba(220,38,38,.1);color:var(--red);border:1px solid rgba(220,38,38,.3);font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;cursor:pointer;font-family:inherit;">🗑 حذف الكل</button></div>'+(isDesktop?_tbl(['النوع','النشاط','المالك','الجوال','الإيميل','الباقة','السعر','التاريخ','إجراءات'], rejected.map(reqRow)):rejected.map(reqCard).join('')):'<div style="text-align:center;padding:30px;color:var(--text3);">لا يوجد طلبات مرفوضة</div>'):'')
       +(!reqs.length?'<div style="text-align:center;padding:40px;color:var(--text3);">لا توجد طلبات بعد</div>':'');
   }).catch(function(){
     content.innerHTML='<div style="text-align:center;padding:40px;color:var(--red);">فشل التحميل</div>';
@@ -2873,7 +2987,8 @@ function deleteJoinRequest(id){
     DB.joinRequests = DB.joinRequests.filter(function(r){return r.id!==id;});
   }
   try{_saveDB();}catch(e){}
-  renderOwnerRequests();
+  try{ renderOwnerRequests(); }catch(e){}
+  try{ if(_ownerTab===2) renderOwnerSubscribers(); }catch(e){}
 
   // حذف من Supabase بالخلفية
   sbFetch('join_requests','DELETE',null,'?id=eq.'+id).then(function(){
@@ -3028,6 +3143,7 @@ function _renderSubsList(accounts){
         +(!r.isKaled&&!a._fromRequest?'<button onclick="editSubscriber(\''+a.id+'\')" style="flex:1;padding:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text);">تعديل</button>':'')
         +(!r.isKaled&&!a._fromRequest?'<button onclick="deleteSubscriber(\''+a.id+'\',\''+(a.biz_name||a.id).replace(/'/g,"\\'")+'\')" style="flex:1;padding:8px;background:rgba(220,38,38,.1);border:1px solid var(--red);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--red);">حذف</button>':'')
         +(a._fromRequest?'<button onclick="approveRequest(\''+a._reqId+'\')" class="btn btn-primary" style="flex:1;padding:8px;font-size:12px;">إنشاء الحساب</button>':'')
+        +(a._fromRequest?'<button onclick="deleteJoinRequest(\''+a._reqId+'\')" style="flex:1;padding:8px;background:rgba(220,38,38,.1);border:1px solid var(--red);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--red);">حذف الطلب</button>':'')
         +(r.isKaled?'<div style="font-size:11px;color:var(--text3);padding:4px 0;">الحساب الرئيسي</div>':'')
       +'</div>'
     +'</div>';
@@ -3040,7 +3156,7 @@ function _renderSubsList(accounts){
     if(r.isKaled){
       actions = '<span style="font-size:11px;color:var(--text3);">الرئيسي</span>';
     } else if(a._fromRequest){
-      actions = '<button onclick="approveRequest(\''+a._reqId+'\')" class="btn btn-primary" style="padding:5px 10px;font-size:11px;">إنشاء الحساب</button>';
+      actions = '<button onclick="approveRequest(\''+a._reqId+'\')" class="btn btn-primary" style="padding:5px 10px;font-size:11px;">إنشاء الحساب</button> <button onclick="deleteJoinRequest(\''+a._reqId+'\')" style="padding:5px 10px;background:rgba(220,38,38,.1);border:1px solid var(--red);border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--red);">حذف الطلب</button>';
     } else {
       var btns = [];
       if(r.daysLeft!==null && r.daysLeft<=7 && r.isPaidPkg){
@@ -3344,18 +3460,34 @@ function filterSubscribers(query){
 }
 
 function deleteSubscriber(id, name){
-  if(!window.confirm('حذف مشترك "'+name+'"؟\n\nسيتم حذف:\n• الحساب\n• كل الحجوزات\n• الإيرادات والمصروفات\n• الشقق والموظفين\n• كل البيانات المرتبطة\n\nلا يمكن التراجع!')) return;
+  if(!window.confirm('حذف مشترك "'+name+'"؟\n\nسيتم حذف:\n• الحساب\n• كل الحجوزات\n• الإيرادات والمصروفات\n• الشقق والموظفين\n• الطلب المرتبط\n• كل البيانات المرتبطة\n\nلا يمكن التراجع!')) return;
   
   console.log('[حذف] حذف المشترك:', id);
   
-  // DELETE واحد فقط — CASCADE في القاعدة يحذف كل الباقي تلقائياً
+  // اجلب إيميل الحساب أولاً (عشان نحذف الطلب المرتبط)
+  var acct = (DB.bizAccounts||[]).find(function(a){return a.id===id;});
+  var acctEmail = acct ? acct.email : null;
+  
+  // DELETE الحساب — CASCADE يحذف كل البيانات المرتبطة
   sbFetch('biz_accounts','DELETE',null,'?id=eq.'+encodeURIComponent(id)).then(function(){
-    console.log('[حذف] ✓ تم الحذف الكامل (CASCADE)');
-    // علّم الطلبات المرتبطة كـ deleted
-    sbFetch('join_requests','PATCH',{status:'deleted'},'?email=eq.'+encodeURIComponent(id)).catch(function(){});
-    toast('✅ تم حذف المشترك وكل بياناته','success');
-    renderOwnerSubscribers();
-    try{ renderOwnerHome(); }catch(e){}
+    console.log('[حذف] ✓ تم حذف الحساب (CASCADE)');
+    
+    // احذف الطلب المرتبط نهائياً (بالإيميل الصحيح)
+    var delReqs = [];
+    if(acctEmail){
+      delReqs.push(sbFetch('join_requests','DELETE',null,'?email=eq.'+encodeURIComponent(acctEmail)).catch(function(){}));
+    }
+    // احتياطي: احذف أي طلب إيميله = id (لو كان متطابق)
+    delReqs.push(sbFetch('join_requests','DELETE',null,'?email=eq.'+encodeURIComponent(id)).catch(function(){}));
+    
+    Promise.all(delReqs).then(function(){
+      // نظّف محلياً
+      if(DB.bizAccounts) DB.bizAccounts = DB.bizAccounts.filter(function(a){return a.id!==id;});
+      if(DB.joinRequests && acctEmail) DB.joinRequests = DB.joinRequests.filter(function(r){return r.email!==acctEmail;});
+      toast('✅ تم حذف المشترك وكل بياناته','success');
+      renderOwnerSubscribers();
+      try{ renderOwnerHome(); }catch(e){}
+    });
   }).catch(function(err){
     console.error('[حذف] ❌ فشل الحذف:', err);
     toast('فشل الحذف: ' + (err && err.message ? err.message : ''), 'error');
