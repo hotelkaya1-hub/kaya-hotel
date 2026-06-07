@@ -2128,110 +2128,223 @@ function showOwnerTab(n){
 }
 
 function renderOwnerPackages(){
-  var pkgs = JSON.parse(localStorage.getItem('bodo_pkgs')||'null') || {
-    free:  {label:'ابدأ مجاناً',  monthly:0,   yearly:0,    units:2,   employees:1, discountEnabled:false, discountMonthly:0, discountYearly:0},
-    pro:   {label:'الاحترافية',   monthly:199, yearly:1592, units:20,  employees:5, discountEnabled:false, discountMonthly:0, discountYearly:0},
-    all:   {label:'الشاملة',      monthly:399, yearly:3192, units:999, employees:999, discountEnabled:false, discountMonthly:0, discountYearly:0}
+  // افتراضيات
+  var defaults = {
+    free: {label:'ابدأ مجاناً', monthly:0, yearly:0, units:2, employees:1, discountEnabled:false, discountMonthly:0, discountYearly:0},
+    pro:  {label:'الاحترافية',  monthly:199, yearly:1592, units:20, employees:5, discountEnabled:false, discountMonthly:0, discountYearly:0},
+    all:  {label:'الشاملة',     monthly:399, yearly:3192, units:999, employees:999, discountEnabled:false, discountMonthly:0, discountYearly:0}
   };
-  // تأكد إن كل باقة فيها حقول الخصم (للترقية من نسخة قديمة)
-  Object.keys(pkgs).forEach(function(k){
-    if(typeof pkgs[k].discountEnabled === 'undefined') pkgs[k].discountEnabled = false;
-    if(typeof pkgs[k].discountMonthly === 'undefined') pkgs[k].discountMonthly = 0;
-    if(typeof pkgs[k].discountYearly === 'undefined') pkgs[k].discountYearly = 0;
+  
+  // قراءة من localStorage مع دمج آمن
+  var saved = null;
+  try{ saved = JSON.parse(localStorage.getItem('bodo_pkgs')||'null'); }catch(e){}
+  var pkgs = {};
+  Object.keys(defaults).forEach(function(k){
+    pkgs[k] = Object.assign({}, defaults[k], (saved && saved[k]) || {});
+    // تأكيد أنواع البيانات
+    pkgs[k].discountEnabled = !!pkgs[k].discountEnabled;
+    pkgs[k].discountMonthly = parseFloat(pkgs[k].discountMonthly) || 0;
+    pkgs[k].discountYearly = parseFloat(pkgs[k].discountYearly) || 0;
   });
-  var content=document.getElementById('owner-content');
-  function pkgForm(key,p){
+  
+  // احفظ النسخة المُهيّأة
+  localStorage.setItem('bodo_pkgs', JSON.stringify(pkgs));
+  
+  var content = document.getElementById('owner-content');
+  
+  function pkgCard(key, p){
     var iconMap = {free:'🆓', pro:'⭐', all:'💎'};
-    var colorMap = {free:'var(--text3)', pro:'var(--yellow)', all:'var(--accent)'};
-    var discountSavedMonthly = p.discountEnabled && p.discountMonthly>0 ? Math.round(((p.monthly-p.discountMonthly)/p.monthly)*100) : 0;
-    var discountSavedYearly = p.discountEnabled && p.discountYearly>0 ? Math.round(((p.yearly-p.discountYearly)/p.yearly)*100) : 0;
-    return '<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">'
-        +'<div style="display:flex;align-items:center;gap:10px;">'
-          +'<div style="font-size:24px;">'+(iconMap[key]||'📦')+'</div>'
-          +'<div>'
-            +'<div style="font-size:14px;font-weight:900;color:'+(colorMap[key]||'var(--text)')+';">'+(p.label||key)+'</div>'
-            +'<div style="font-size:10px;color:var(--text3);">ID: '+key+'</div>'
+    var colorMap = {free:'#94a3b8', pro:'#f59e0b', all:'#c8a96e'};
+    var bgGradient = {free:'rgba(148,163,184,.08)', pro:'rgba(245,158,11,.08)', all:'rgba(200,169,110,.08)'};
+    var col = colorMap[key];
+    var isFree = key === 'free';
+    
+    // حساب التوفير بالمبلغ
+    var savedMonthly = (p.discountEnabled && p.discountMonthly > 0 && p.discountMonthly < p.monthly) ? (p.monthly - p.discountMonthly) : 0;
+    var savedYearly = (p.discountEnabled && p.discountYearly > 0 && p.discountYearly < p.yearly) ? (p.yearly - p.discountYearly) : 0;
+    
+    // السعر النهائي المعروض للمشترك
+    var displayMonthly = (p.discountEnabled && p.discountMonthly > 0) ? p.discountMonthly : p.monthly;
+    var displayYearly = (p.discountEnabled && p.discountYearly > 0) ? p.discountYearly : p.yearly;
+    
+    return ''
+      // ─── البطاقة الرئيسية ───
+      +'<div style="background:var(--card);border:1px solid '+col+';border-radius:18px;overflow:hidden;margin-bottom:16px;box-shadow:0 4px 12px rgba(0,0,0,.05);">'
+      
+        // الترويسة الملونة
+        +'<div style="background:linear-gradient(135deg,'+bgGradient[key]+',transparent);padding:18px 18px 14px;border-bottom:1px solid var(--border);">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;">'
+            +'<div style="display:flex;align-items:center;gap:12px;">'
+              +'<div style="font-size:32px;line-height:1;">'+(iconMap[key]||'📦')+'</div>'
+              +'<div>'
+                +'<div style="font-size:16px;font-weight:900;color:'+col+';">'+p.label+'</div>'
+                +'<div style="font-size:11px;color:var(--text3);margin-top:2px;">معرّف: <code style="background:var(--bg3);padding:1px 6px;border-radius:4px;font-size:10px;">'+key+'</code></div>'
+              +'</div>'
+            +'</div>'
+            +(p.discountEnabled && !isFree && (savedMonthly>0||savedYearly>0)?'<span style="background:var(--red);color:#fff;padding:5px 11px;border-radius:20px;font-size:10px;font-weight:900;animation:pulse 2s infinite;">🔥 خصم نشط</span>':'')
           +'</div>'
         +'</div>'
-      +'</div>'
 
-      // الحقول الأساسية
-      +'<div class="form-row" style="margin-bottom:10px;">'
-        +'<div class="form-group" style="margin:0"><label class="form-label">الاسم</label><input class="fi pkg-field" data-pkg="'+key+'" data-field="label" value="'+(p.label||'')+'"></div>'
-        +'<div class="form-group" style="margin:0"><label class="form-label">عدد الوحدات</label><input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="units" value="'+p.units+'"></div>'
-      +'</div>'
-
-      // السعر الأساسي
-      +'<div style="background:var(--bg3);border-radius:10px;padding:12px;margin-bottom:10px;">'
-        +'<div style="font-size:11px;font-weight:800;color:var(--text2);margin-bottom:8px;">💰 السعر الأساسي</div>'
-        +'<div class="form-row">'
-          +'<div class="form-group" style="margin:0"><label class="form-label">شهرياً (ر.س)</label><input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="monthly" value="'+p.monthly+'"></div>'
-          +'<div class="form-group" style="margin:0"><label class="form-label">سنوياً (ر.س)</label><input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="yearly" value="'+p.yearly+'"></div>'
-        +'</div>'
-      +'</div>'
-
-      // الخصم - زر التفعيل
-      +(key!=='free'?'<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:'+(p.discountEnabled?'rgba(220,38,38,.08)':'var(--bg3)')+';border:1px solid '+(p.discountEnabled?'var(--red)':'var(--border)')+';border-radius:10px;margin-bottom:10px;cursor:pointer;" onclick="togglePkgDiscount(\''+key+'\')">'
-        +'<div style="display:flex;align-items:center;gap:10px;">'
-          +'<div style="font-size:18px;">'+(p.discountEnabled?'🔥':'🏷️')+'</div>'
-          +'<div>'
-            +'<div style="font-size:12px;font-weight:800;color:'+(p.discountEnabled?'var(--red)':'var(--text2)')+';">'+(p.discountEnabled?'الخصم مفعّل':'تفعيل خصم')+'</div>'
-            +'<div style="font-size:10px;color:var(--text3);">'+(p.discountEnabled?'اضغط لإيقاف':'سعر مخفّض للعرض')+'</div>'
-          +'</div>'
-        +'</div>'
-        +'<div style="width:38px;height:22px;background:'+(p.discountEnabled?'var(--green)':'var(--border)')+';border-radius:22px;position:relative;transition:.2s;">'
-          +'<div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:2px;'+(p.discountEnabled?'left:2px':'right:2px')+';transition:.2s;"></div>'
-        +'</div>'
-      +'</div>':'')
-
-      // حقول الخصم - تظهر فقط لو مفعّل
-      +(p.discountEnabled && key!=='free' ?
-        '<div style="background:rgba(220,38,38,.05);border:1px dashed var(--red);border-radius:10px;padding:12px;margin-bottom:10px;">'
-          +'<div style="font-size:11px;font-weight:800;color:var(--red);margin-bottom:8px;">🔥 السعر بعد الخصم</div>'
-          +'<div class="form-row">'
+        // محتوى البطاقة
+        +'<div style="padding:18px;">'
+        
+          // معلومات أساسية
+          +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">'
             +'<div class="form-group" style="margin:0">'
-              +'<label class="form-label">شهرياً بعد الخصم</label>'
-              +'<input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="discountMonthly" value="'+p.discountMonthly+'">'
-              +(discountSavedMonthly>0?'<div style="font-size:10px;color:var(--green);font-weight:800;margin-top:4px;">توفير '+discountSavedMonthly+'%</div>':'')
+              +'<label class="form-label">اسم الباقة</label>'
+              +'<input class="fi pkg-field" data-pkg="'+key+'" data-field="label" value="'+p.label.replace(/"/g,'&quot;')+'" placeholder="مثال: '+p.label+'">'
             +'</div>'
             +'<div class="form-group" style="margin:0">'
-              +'<label class="form-label">سنوياً بعد الخصم</label>'
-              +'<input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="discountYearly" value="'+p.discountYearly+'">'
-              +(discountSavedYearly>0?'<div style="font-size:10px;color:var(--green);font-weight:800;margin-top:4px;">توفير '+discountSavedYearly+'%</div>':'')
+              +'<label class="form-label">عدد الوحدات</label>'
+              +'<input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="units" value="'+p.units+'" min="1">'
             +'</div>'
           +'</div>'
+          
+          // السعر الأساسي
+          +'<div style="margin-bottom:12px;">'
+            +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">'
+              +'<span style="font-size:11px;font-weight:900;color:var(--text2);">💰 الأسعار الأساسية</span>'
+              +'<div style="flex:1;height:1px;background:var(--border);"></div>'
+            +'</div>'
+            +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+              +'<div class="form-group" style="margin:0">'
+                +'<label class="form-label">شهري (ر.س)</label>'
+                +'<input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="monthly" value="'+p.monthly+'" min="0" '+(isFree?'readonly':'')+'>'
+              +'</div>'
+              +'<div class="form-group" style="margin:0">'
+                +'<label class="form-label">سنوي (ر.س)</label>'
+                +'<input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="yearly" value="'+p.yearly+'" min="0" '+(isFree?'readonly':'')+'>'
+              +'</div>'
+            +'</div>'
+          +'</div>'
+          
+          // قسم الخصم (للباقات غير المجانية)
+          +(!isFree ? (
+            // زر التفعيل
+            '<div style="margin-top:14px;">'
+              +'<button type="button" onclick="togglePkgDiscount(\''+key+'\')" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:'+(p.discountEnabled?'rgba(220,38,38,.08)':'var(--bg3)')+';border:1px solid '+(p.discountEnabled?'var(--red)':'var(--border)')+';border-radius:10px;cursor:pointer;font-family:inherit;transition:.2s;">'
+                +'<div style="display:flex;align-items:center;gap:10px;">'
+                  +'<div style="font-size:20px;">'+(p.discountEnabled?'🔥':'🏷️')+'</div>'
+                  +'<div style="text-align:right;">'
+                    +'<div style="font-size:12px;font-weight:800;color:'+(p.discountEnabled?'var(--red)':'var(--text)')+';">'+(p.discountEnabled?'الخصم مفعّل':'تفعيل خصم على هذه الباقة')+'</div>'
+                    +'<div style="font-size:10px;color:var(--text3);margin-top:2px;">'+(p.discountEnabled?'اضغط لإيقاف الخصم':'سعر مخفّض للعرض الترويجي')+'</div>'
+                  +'</div>'
+                +'</div>'
+                +'<div style="width:44px;height:24px;background:'+(p.discountEnabled?'var(--green)':'#94a3b8')+';border-radius:24px;position:relative;flex-shrink:0;transition:.2s;">'
+                  +'<div style="width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;'+(p.discountEnabled?'left:3px':'right:3px')+';transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2);"></div>'
+                +'</div>'
+              +'</button>'
+            +'</div>'
+            
+            // حقول الخصم (تظهر فقط عند التفعيل)
+            +(p.discountEnabled ?
+              '<div style="background:rgba(220,38,38,.04);border:1px dashed var(--red);border-radius:10px;padding:14px;margin-top:10px;">'
+                +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;">'
+                  +'<span style="font-size:11px;font-weight:900;color:var(--red);">🔥 السعر بعد الخصم</span>'
+                  +'<div style="flex:1;height:1px;background:rgba(220,38,38,.2);"></div>'
+                +'</div>'
+                
+                // الحقول
+                +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">'
+                  +'<div class="form-group" style="margin:0">'
+                    +'<label class="form-label">شهري بعد الخصم (ر.س)</label>'
+                    +'<input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="discountMonthly" value="'+p.discountMonthly+'" min="0" max="'+p.monthly+'" placeholder="مثال: 149">'
+                  +'</div>'
+                  +'<div class="form-group" style="margin:0">'
+                    +'<label class="form-label">سنوي بعد الخصم (ر.س)</label>'
+                    +'<input class="fi pkg-field" type="number" data-pkg="'+key+'" data-field="discountYearly" value="'+p.discountYearly+'" min="0" max="'+p.yearly+'" placeholder="مثال: 1200">'
+                  +'</div>'
+                +'</div>'
+                
+                // عرض التوفير بالمبلغ
+                +(savedMonthly>0||savedYearly>0 ?
+                  '<div style="background:var(--card);border-radius:8px;padding:10px;border:1px solid var(--green);">'
+                    +'<div style="font-size:10px;font-weight:800;color:var(--green);margin-bottom:6px;">💸 توفير المشترك</div>'
+                    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
+                      +(savedMonthly>0?'<div style="text-align:center;"><div style="font-size:16px;font-weight:900;color:var(--green);">'+fmtM(savedMonthly)+' ر.س</div><div style="font-size:9px;color:var(--text3);">في الاشتراك الشهري</div></div>':'<div></div>')
+                      +(savedYearly>0?'<div style="text-align:center;"><div style="font-size:16px;font-weight:900;color:var(--green);">'+fmtM(savedYearly)+' ر.س</div><div style="font-size:9px;color:var(--text3);">في الاشتراك السنوي</div></div>':'<div></div>')
+                    +'</div>'
+                  +'</div>'
+                  : ''
+                )
+              +'</div>'
+              : '')
+          ) : '')
+          
+          // معاينة للمشترك
+          +(!isFree ?
+            '<div style="margin-top:14px;background:var(--bg3);border-radius:10px;padding:12px;">'
+              +'<div style="font-size:10px;font-weight:800;color:var(--text3);margin-bottom:8px;">👁️ كيف يراها المشترك</div>'
+              +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">'
+                +'<div style="text-align:center;padding:10px;background:var(--card);border-radius:8px;">'
+                  +(p.discountEnabled && savedMonthly>0?'<div style="font-size:13px;color:var(--text3);text-decoration:line-through;text-decoration-color:var(--red);">'+fmtM(p.monthly)+'</div>':'')
+                  +'<div style="font-size:20px;font-weight:900;color:'+col+';">'+fmtM(displayMonthly)+' <span style="font-size:11px;">ر.س</span></div>'
+                  +'<div style="font-size:9px;color:var(--text3);">/شهرياً</div>'
+                +'</div>'
+                +'<div style="text-align:center;padding:10px;background:var(--card);border-radius:8px;">'
+                  +(p.discountEnabled && savedYearly>0?'<div style="font-size:13px;color:var(--text3);text-decoration:line-through;text-decoration-color:var(--red);">'+fmtM(p.yearly)+'</div>':'')
+                  +'<div style="font-size:20px;font-weight:900;color:'+col+';">'+fmtM(displayYearly)+' <span style="font-size:11px;">ر.س</span></div>'
+                  +'<div style="font-size:9px;color:var(--text3);">/سنوياً</div>'
+                +'</div>'
+              +'</div>'
+            +'</div>'
+          : '')
+          
+          // حقل مخفي لحالة الخصم
+          +'<input type="hidden" class="pkg-field" data-pkg="'+key+'" data-field="discountEnabled" value="'+(p.discountEnabled?'1':'0')+'">'
         +'</div>'
-      : '')
-
-      // حقل مخفي لحالة الخصم
-      +'<input type="hidden" class="pkg-field" data-pkg="'+key+'" data-field="discountEnabled" value="'+(p.discountEnabled?'1':'0')+'">'
-    +'</div>';
+      +'</div>';
   }
-  content.innerHTML=
-    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:16px;">إدارة الباقات والأسعار</div>'
-    +pkgForm('free',pkgs.free)
-    +pkgForm('pro',pkgs.pro)
-    +pkgForm('all',pkgs.all)
-    +'<button class="btn btn-primary btn-full" style="height:48px;font-size:15px;" onclick="saveOwnerPackages()">💾 حفظ الباقات</button>';
+  
+  content.innerHTML = ''
+    // الترويسة
+    +'<div style="margin-bottom:20px;">'
+      +'<div style="font-size:18px;font-weight:900;color:var(--text);margin-bottom:4px;">إدارة الباقات والأسعار</div>'
+      +'<div style="font-size:12px;color:var(--text3);">تحكم بالأسعار الأساسية، فعّل خصومات للعروض الترويجية، وشاهد المعاينة</div>'
+    +'</div>'
+    
+    // البطاقات
+    +pkgCard('free', pkgs.free)
+    +pkgCard('pro', pkgs.pro)
+    +pkgCard('all', pkgs.all)
+    
+    // زر الحفظ — ثابت أسفل الصفحة
+    +'<div style="position:sticky;bottom:0;padding-top:14px;background:linear-gradient(to top,var(--bg) 70%,transparent);">'
+      +'<button class="btn btn-primary btn-full" style="height:50px;font-size:14px;font-weight:900;" onclick="saveOwnerPackages()">💾 حفظ جميع التعديلات</button>'
+    +'</div>';
 }
 
-// زر تفعيل/إيقاف الخصم
+// تفعيل/إيقاف الخصم (تم الإصلاح)
 function togglePkgDiscount(key){
-  var pkgs = JSON.parse(localStorage.getItem('bodo_pkgs')||'null') || {};
-  if(!pkgs[key]) return;
-  // احفظ القيم الحالية أولاً
-  document.querySelectorAll('.pkg-field').forEach(function(el){
-    var k=el.dataset.pkg, field=el.dataset.field, val=el.value;
-    if(!pkgs[k]) pkgs[k]={};
-    if(field==='label') pkgs[k][field]=val;
-    else if(field==='discountEnabled') pkgs[k][field]= val==='1';
-    else pkgs[k][field]=parseFloat(val)||0;
+  // اقرأ من localStorage مع defaults آمنة
+  var defaults = {
+    free: {label:'ابدأ مجاناً', monthly:0, yearly:0, units:2, employees:1, discountEnabled:false, discountMonthly:0, discountYearly:0},
+    pro:  {label:'الاحترافية',  monthly:199, yearly:1592, units:20, employees:5, discountEnabled:false, discountMonthly:0, discountYearly:0},
+    all:  {label:'الشاملة',     monthly:399, yearly:3192, units:999, employees:999, discountEnabled:false, discountMonthly:0, discountYearly:0}
+  };
+  var saved = null;
+  try{ saved = JSON.parse(localStorage.getItem('bodo_pkgs')||'null'); }catch(e){}
+  var pkgs = {};
+  Object.keys(defaults).forEach(function(k){
+    pkgs[k] = Object.assign({}, defaults[k], (saved && saved[k]) || {});
   });
+  
+  // احفظ القيم الحالية من الحقول قبل التبديل
+  document.querySelectorAll('.pkg-field').forEach(function(el){
+    var k = el.dataset.pkg, field = el.dataset.field, val = el.value;
+    if(!pkgs[k]) pkgs[k] = {};
+    if(field === 'label') pkgs[k][field] = val;
+    else if(field === 'discountEnabled') pkgs[k][field] = (val === '1');
+    else pkgs[k][field] = parseFloat(val) || 0;
+  });
+  
   // بدّل الحالة
   pkgs[key].discountEnabled = !pkgs[key].discountEnabled;
-  localStorage.setItem('bodo_pkgs',JSON.stringify(pkgs));
+  
+  // احفظ وأعد الرسم
+  localStorage.setItem('bodo_pkgs', JSON.stringify(pkgs));
   renderOwnerPackages();
+  toast(pkgs[key].discountEnabled ? '🔥 الخصم مفعّل' : '🏷️ الخصم متوقف', 'success');
 }
 
 function saveOwnerPackages(){
