@@ -2308,10 +2308,8 @@ function renderOwnerPackages(){
     +pkgCard('pro', pkgs.pro)
     +pkgCard('all', pkgs.all)
     
-    // زر الحفظ — ثابت أسفل الصفحة
-    +'<div style="position:sticky;bottom:0;padding-top:14px;background:linear-gradient(to top,var(--bg) 70%,transparent);">'
-      +'<button class="btn btn-primary btn-full" style="height:50px;font-size:14px;font-weight:900;" onclick="saveOwnerPackages()">💾 حفظ جميع التعديلات</button>'
-    +'</div>';
+    // زر الحفظ في الأسفل بشكل طبيعي
+    +'<button class="btn btn-primary btn-full" style="height:50px;font-size:14px;font-weight:900;margin-top:8px;" onclick="saveOwnerPackages()">💾 حفظ جميع التعديلات</button>';
 }
 
 // تفعيل/إيقاف الخصم (تم الإصلاح)
@@ -2348,24 +2346,75 @@ function togglePkgDiscount(key){
 }
 
 function saveOwnerPackages(){
-  var pkgs = JSON.parse(localStorage.getItem('bodo_pkgs')||'null') || {
-    free:{label:'ابدأ مجاناً',monthly:0,yearly:0,units:2,employees:1,discountEnabled:false,discountMonthly:0,discountYearly:0},
-    pro:{label:'الاحترافية',monthly:199,yearly:1592,units:20,employees:5,discountEnabled:false,discountMonthly:0,discountYearly:0},
-    all:{label:'الشاملة',monthly:399,yearly:3192,units:999,employees:999,discountEnabled:false,discountMonthly:0,discountYearly:0}
+  console.log('[باقات] بدء الحفظ...');
+  
+  var defaults = {
+    free: {label:'ابدأ مجاناً', monthly:0, yearly:0, units:2, employees:1, discountEnabled:false, discountMonthly:0, discountYearly:0},
+    pro:  {label:'الاحترافية',  monthly:199, yearly:1592, units:20, employees:5, discountEnabled:false, discountMonthly:0, discountYearly:0},
+    all:  {label:'الشاملة',     monthly:399, yearly:3192, units:999, employees:999, discountEnabled:false, discountMonthly:0, discountYearly:0}
   };
-  document.querySelectorAll('.pkg-field').forEach(function(el){
-    var key=el.dataset.pkg, field=el.dataset.field, val=el.value;
-    if(!pkgs[key]) pkgs[key]={};
-    if(field==='label') pkgs[key][field]=val;
-    else if(field==='discountEnabled') pkgs[key][field]= val==='1';
-    else pkgs[key][field]=parseFloat(val)||0;
+  
+  // ابدأ من القيم المحفوظة الحالية
+  var saved = null;
+  try{ saved = JSON.parse(localStorage.getItem('bodo_pkgs')||'null'); }catch(e){}
+  var pkgs = {};
+  Object.keys(defaults).forEach(function(k){
+    pkgs[k] = Object.assign({}, defaults[k], (saved && saved[k]) || {});
   });
-  localStorage.setItem('bodo_pkgs',JSON.stringify(pkgs));
-  // Update PKG_PRICES in memory
-  if(window.PKG_PRICES){
-    Object.keys(pkgs).forEach(function(k){if(window.PKG_PRICES[k])Object.assign(window.PKG_PRICES[k],pkgs[k]);});
+  
+  // اقرأ كل الحقول من الواجهة
+  var fields = document.querySelectorAll('.pkg-field');
+  console.log('[باقات] عدد الحقول الموجودة:', fields.length);
+  
+  if(fields.length === 0){
+    toast('❌ لا توجد حقول للحفظ — أعد فتح الصفحة','error');
+    return;
   }
-  toast('✅ تم حفظ الباقات','success');
+  
+  fields.forEach(function(el){
+    var key = el.dataset.pkg;
+    var field = el.dataset.field;
+    var val = el.value;
+    if(!pkgs[key]) pkgs[key] = {};
+    if(field === 'label') pkgs[key][field] = val;
+    else if(field === 'discountEnabled') pkgs[key][field] = (val === '1');
+    else pkgs[key][field] = parseFloat(val) || 0;
+  });
+  
+  console.log('[باقات] القيم النهائية:', pkgs);
+  
+  // احفظ في localStorage
+  try{
+    localStorage.setItem('bodo_pkgs', JSON.stringify(pkgs));
+    console.log('[باقات] ✓ تم الحفظ في localStorage');
+  }catch(e){
+    console.error('[باقات] ✗ فشل الحفظ:', e);
+    toast('❌ فشل الحفظ — تحقق من السعة','error');
+    return;
+  }
+  
+  // حدّث PKG_PRICES في الذاكرة
+  if(window.PKG_PRICES){
+    Object.keys(pkgs).forEach(function(k){
+      if(window.PKG_PRICES[k]) Object.assign(window.PKG_PRICES[k], pkgs[k]);
+    });
+  }
+  
+  // احفظ في Supabase للمزامنة بين الأجهزة
+  sbFetch('app_config','POST',{
+    key:'global_packages',
+    value: JSON.stringify(pkgs),
+    biz_id:'kaled'
+  },'?on_conflict=key').then(function(){
+    console.log('[باقات] ✓ تم الحفظ في السحابة');
+  }).catch(function(err){
+    console.warn('[باقات] فشل حفظ السحابة (محلي فقط):', err);
+  });
+  
+  toast('✅ تم حفظ الباقات والأسعار','success');
+  
+  // أعد الرسم للتأكيد البصري
+  setTimeout(function(){ renderOwnerPackages(); }, 100);
 }
 
 function renderOwnerHome(){
