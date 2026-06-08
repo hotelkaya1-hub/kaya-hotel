@@ -1703,14 +1703,49 @@ var PKG_PRICES = {
   all:   { monthly:399, yearly:3192, yearlyMonth:266, label:'الشاملة',     units:999, employees:999 }
 };
 // yearly = monthly × 12 × 0.8 (20% off) | yearlyMonth = yearly/12
+
+// مزامنة الأسعار من إعدادات المالك (تطبق الخصم لو مفعّل)
+function _syncPkgPrices(){
+  var saved = null;
+  try{ saved = JSON.parse(localStorage.getItem('bodo_pkgs')||'null'); }catch(e){}
+  if(!saved) return;
+  
+  Object.keys(saved).forEach(function(key){
+    if(!PKG_PRICES[key]) return;
+    var p = saved[key];
+    
+    // الاسم والوحدات
+    if(p.label) PKG_PRICES[key].label = p.label;
+    if(p.units !== undefined) PKG_PRICES[key].units = p.units;
+    if(p.employees !== undefined) PKG_PRICES[key].employees = p.employees;
+    
+    // الأسعار - إذا الخصم مفعّل واستخدم السعر المخفّض
+    var effectiveMonthly = (p.discountEnabled && p.discountMonthly > 0) ? p.discountMonthly : (p.monthly || 0);
+    var effectiveYearly  = (p.discountEnabled && p.discountYearly > 0)  ? p.discountYearly  : (p.yearly || 0);
+    
+    PKG_PRICES[key].monthly = effectiveMonthly;
+    PKG_PRICES[key].yearly = effectiveYearly;
+    PKG_PRICES[key].yearlyMonth = effectiveYearly > 0 ? Math.round(effectiveYearly / 12) : 0;
+    
+    // معلومات إضافية (للعرض)
+    PKG_PRICES[key].originalMonthly = p.monthly || 0;
+    PKG_PRICES[key].originalYearly = p.yearly || 0;
+    PKG_PRICES[key].discountActive = !!(p.discountEnabled && (p.discountMonthly > 0 || p.discountYearly > 0));
+  });
+}
+// زامن مرة عند التحميل
+try{ _syncPkgPrices(); }catch(e){}
 // yearly = monthly×12×0.8 | yearlyMonth = yearly/12
 
 function _updatePrices(){
+  try{ _syncPkgPrices(); }catch(e){}
   ['free','pro','all'].forEach(function(p){
     var data = PKG_PRICES[p];
     var pel  = document.getElementById('price-'+p);
     var pper = document.getElementById('price-'+p+'-period');
     var pold = document.getElementById('price-'+p+'-old');
+    var plabel = document.getElementById('pkg-label-'+p);
+    if(plabel && data.label) plabel.textContent = data.label;
     if(!data) return;
     if(p==='free'){
       if(pel)  pel.textContent  = 'مجاناً';
@@ -1722,12 +1757,18 @@ function _updatePrices(){
       if(pel)  pel.textContent  = data.yearlyMonth;
       if(pper) pper.textContent = 'ر.س / شهر';
       if(pold) pold.innerHTML   =
-        '<span style="display:block;font-size:10px;font-weight:700;color:var(--accent);opacity:.85;">'+data.yearly+' ر.س/سنة &nbsp;<span style="background:rgba(52,211,153,.2);color:var(--green);padding:1px 5px;border-radius:6px;font-size:9px;">-20%</span></span>'
-        +'<span style="font-size:10px;text-decoration:line-through;opacity:.4;color:var(--text3);">'+data.monthly*12+' ر.س</span>';
+        '<span style="display:block;font-size:10px;font-weight:700;color:var(--accent);opacity:.85;">'+data.yearly+' ر.س/سنة'
+        +(data.discountActive && data.originalYearly > data.yearly ? ' &nbsp;<span style="background:rgba(220,38,38,.15);color:var(--red);padding:1px 5px;border-radius:6px;font-size:9px;font-weight:800;">🔥 خصم</span>' : ' &nbsp;<span style="background:rgba(52,211,153,.2);color:var(--green);padding:1px 5px;border-radius:6px;font-size:9px;">-20%</span>')
+        +'</span>'
+        +(data.discountActive && data.originalYearly > data.yearly
+          ? '<span style="font-size:10px;text-decoration:line-through;opacity:.5;color:var(--red);">'+data.originalYearly+' ر.س</span>'
+          : '<span style="font-size:10px;text-decoration:line-through;opacity:.4;color:var(--text3);">'+data.monthly*12+' ر.س</span>');
     } else {
       if(pel)  pel.textContent  = data.monthly;
       if(pper) pper.textContent = 'ر.س / شهر';
-      if(pold) pold.innerHTML   = '';
+      if(pold) pold.innerHTML   = data.discountActive && data.originalMonthly > data.monthly
+        ? '<span style="font-size:11px;text-decoration:line-through;color:var(--red);opacity:.7;">'+data.originalMonthly+' ر.س</span> <span style="background:rgba(220,38,38,.15);color:var(--red);padding:1px 5px;border-radius:6px;font-size:9px;font-weight:800;">🔥 خصم</span>'
+        : '';
     }
   });
   _updateSummaryBar();
