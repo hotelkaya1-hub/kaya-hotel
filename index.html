@@ -1709,32 +1709,38 @@ function _syncPkgPrices(){
   var saved = null;
   try{ saved = JSON.parse(localStorage.getItem('bodo_pkgs')||'null'); }catch(e){}
   if(!saved) return;
-  
   Object.keys(saved).forEach(function(key){
     if(!PKG_PRICES[key]) return;
     var p = saved[key];
-    
-    // الاسم والوحدات
     if(p.label) PKG_PRICES[key].label = p.label;
     if(p.units !== undefined) PKG_PRICES[key].units = p.units;
-    if(p.employees !== undefined) PKG_PRICES[key].employees = p.employees;
-    
-    // الأسعار - إذا الخصم مفعّل واستخدم السعر المخفّض
-    var effectiveMonthly = (p.discountEnabled && p.discountMonthly > 0) ? p.discountMonthly : (p.monthly || 0);
-    var effectiveYearly  = (p.discountEnabled && p.discountYearly > 0)  ? p.discountYearly  : (p.yearly || 0);
-    
-    PKG_PRICES[key].monthly = effectiveMonthly;
-    PKG_PRICES[key].yearly = effectiveYearly;
-    PKG_PRICES[key].yearlyMonth = effectiveYearly > 0 ? Math.round(effectiveYearly / 12) : 0;
-    
-    // معلومات إضافية (للعرض)
+    var m = (p.discountEnabled && p.discountMonthly > 0) ? p.discountMonthly : (p.monthly || 0);
+    var y = (p.discountEnabled && p.discountYearly > 0)  ? p.discountYearly  : (p.yearly || 0);
+    PKG_PRICES[key].monthly = m;
+    PKG_PRICES[key].yearly = y;
+    PKG_PRICES[key].yearlyMonth = y > 0 ? Math.round(y / 12) : 0;
     PKG_PRICES[key].originalMonthly = p.monthly || 0;
     PKG_PRICES[key].originalYearly = p.yearly || 0;
     PKG_PRICES[key].discountActive = !!(p.discountEnabled && (p.discountMonthly > 0 || p.discountYearly > 0));
   });
 }
-// زامن مرة عند التحميل
-try{ _syncPkgPrices(); }catch(e){}
+
+// جلب الباقات من السحابة
+function _fetchGlobalPackages(){
+  return sbFetch('app_config','GET',null,'?key=eq.global_packages&select=value')
+    .then(function(rows){
+      if(!rows || !rows.length) return;
+      var pkgs = typeof rows[0].value === 'string' ? JSON.parse(rows[0].value) : rows[0].value;
+      localStorage.setItem('bodo_pkgs', JSON.stringify(pkgs));
+      _syncPkgPrices();
+      if(typeof _updatePrices === 'function') try{_updatePrices();}catch(e){}
+    })
+    .catch(function(){});
+}
+
+// مرة عند التحميل
+_syncPkgPrices();
+_fetchGlobalPackages();
 // yearly = monthly×12×0.8 | yearlyMonth = yearly/12
 
 function _updatePrices(){
@@ -1862,6 +1868,8 @@ function showJoinScreen(){
   setBilling(false);
   selectPkg('pro');
   _showJoinStep(1);
+  // اجلب أحدث الأسعار من السحابة (تتحدث في الخلفية)
+  _fetchGlobalPackages();
 }
 function showLoginScreen(){
   document.getElementById('join-screen').style.display  = 'none';
@@ -2387,75 +2395,21 @@ function togglePkgDiscount(key){
 }
 
 function saveOwnerPackages(){
-  console.log('[باقات] بدء الحفظ...');
-  
-  var defaults = {
-    free: {label:'ابدأ مجاناً', monthly:0, yearly:0, units:2, employees:1, discountEnabled:false, discountMonthly:0, discountYearly:0},
-    pro:  {label:'الاحترافية',  monthly:199, yearly:1592, units:20, employees:5, discountEnabled:false, discountMonthly:0, discountYearly:0},
-    all:  {label:'الشاملة',     monthly:399, yearly:3192, units:999, employees:999, discountEnabled:false, discountMonthly:0, discountYearly:0}
-  };
-  
-  // ابدأ من القيم المحفوظة الحالية
-  var saved = null;
-  try{ saved = JSON.parse(localStorage.getItem('bodo_pkgs')||'null'); }catch(e){}
-  var pkgs = {};
-  Object.keys(defaults).forEach(function(k){
-    pkgs[k] = Object.assign({}, defaults[k], (saved && saved[k]) || {});
+  // اقرأ الحقول
+  var pkgs = JSON.parse(localStorage.getItem('bodo_pkgs')||'{}');
+  document.querySelectorAll('.pkg-field').forEach(function(el){
+    var k = el.dataset.pkg, f = el.dataset.field, v = el.value;
+    if(!pkgs[k]) pkgs[k] = {};
+    if(f === 'label') pkgs[k][f] = v;
+    else if(f === 'discountEnabled') pkgs[k][f] = (v === '1');
+    else pkgs[k][f] = parseFloat(v) || 0;
   });
-  
-  // اقرأ كل الحقول من الواجهة
-  var fields = document.querySelectorAll('.pkg-field');
-  console.log('[باقات] عدد الحقول الموجودة:', fields.length);
-  
-  if(fields.length === 0){
-    toast('❌ لا توجد حقول للحفظ — أعد فتح الصفحة','error');
-    return;
-  }
-  
-  fields.forEach(function(el){
-    var key = el.dataset.pkg;
-    var field = el.dataset.field;
-    var val = el.value;
-    if(!pkgs[key]) pkgs[key] = {};
-    if(field === 'label') pkgs[key][field] = val;
-    else if(field === 'discountEnabled') pkgs[key][field] = (val === '1');
-    else pkgs[key][field] = parseFloat(val) || 0;
-  });
-  
-  console.log('[باقات] القيم النهائية:', pkgs);
-  
-  // احفظ في localStorage
-  try{
-    localStorage.setItem('bodo_pkgs', JSON.stringify(pkgs));
-    console.log('[باقات] ✓ تم الحفظ في localStorage');
-  }catch(e){
-    console.error('[باقات] ✗ فشل الحفظ:', e);
-    toast('❌ فشل الحفظ — تحقق من السعة','error');
-    return;
-  }
-  
-  // حدّث PKG_PRICES في الذاكرة
-  if(window.PKG_PRICES){
-    Object.keys(pkgs).forEach(function(k){
-      if(window.PKG_PRICES[k]) Object.assign(window.PKG_PRICES[k], pkgs[k]);
-    });
-  }
-  
-  // احفظ في Supabase للمزامنة بين الأجهزة
-  sbFetch('app_config','POST',{
-    key:'global_packages',
-    value: JSON.stringify(pkgs),
-    biz_id:'kaled'
-  },'?on_conflict=key').then(function(){
-    console.log('[باقات] ✓ تم الحفظ في السحابة');
-  }).catch(function(err){
-    console.warn('[باقات] فشل حفظ السحابة (محلي فقط):', err);
-  });
-  
-  toast('✅ تم حفظ الباقات والأسعار','success');
-  
-  // أعد الرسم للتأكيد البصري
-  setTimeout(function(){ renderOwnerPackages(); }, 100);
+  // احفظ في 3 أماكن: localStorage + PKG_PRICES + السحابة
+  localStorage.setItem('bodo_pkgs', JSON.stringify(pkgs));
+  _syncPkgPrices();
+  sbFetch('app_config','POST',{key:'global_packages', value:JSON.stringify(pkgs), biz_id:'kaled'},'?on_conflict=key').catch(function(){});
+  toast('✅ تم حفظ الباقات','success');
+  renderOwnerPackages();
 }
 
 function renderOwnerHome(){
